@@ -1,0 +1,65 @@
+[tool.pytest.ini_options]
+addopts = """
+  --cov=app
+  --cov-report=term-missing
+  --cov-report=html
+"""
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+filterwarnings = [
+  "ignore::DeprecationWarning:pydantic.*",
+  "ignore::DeprecationWarning:sqlalchemy.*",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["app"]
+omit = [
+  "alembic/*",
+  "tests/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+precision = 2
+exclude_lines = [
+  "pragma: no cover",
+  "if __name__ == .__main__.:",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["alembic/"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = [
+  "F","E","W","I","UP","B","C4","SIM","RET","ARG","N","D","ANN","ASYNC"
+]
+ignore = [
+  "ANN001","ANN002","ANN101","ANN102",
+  "E501" # formatter handles line length
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["D104","F401"]
+"tests/*" = ["ANN","D103"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["app/**/*.py"]
+strict = true
+disallow_any_unimported = true
+warn_unreachable = true
+no_implicit_optional = true
+show_error_codes = true
+ignore_missing_imports = true
