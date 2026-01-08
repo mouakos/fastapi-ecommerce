@@ -7,3 +7,6 @@ python-dotenv
 aiosqlite
 ulid-py
 python-slugify
+pydantic[email]
+pyjwt
+pwdlib[argon2]
