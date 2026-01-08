@@ -8,7 +8,7 @@ from sqlmodel import Column, DateTime, Field, Relationship
 
 from app.models.base import TimestampMixin, UUIDMixin
 from app.models.category import Category
-from app.utils.time import utcnow
+from app.utils.utc_time import utcnow
 
 if TYPE_CHECKING:
     from app.models.category import Category

@@ -6,7 +6,7 @@ from uuid import UUID
 
 from sqlmodel import Column, DateTime, Field, Relationship
 
-from app.utils.time import utcnow
+from app.utils.utc_time import utcnow
 
 from .base import TimestampMixin, UUIDMixin
 
