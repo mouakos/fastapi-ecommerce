@@ -4,3 +4,6 @@ sqlmodel
 asyncpg
 pydantic-settings
 python-dotenv
+aiosqlite
+ulid-py
+python-slugify
