@@ -27,7 +27,7 @@ class Product(UUIDMixin, TimestampMixin, table=True):
     sku: str = Field(unique=True, index=True)
     image_url: str | None = None
     is_published: bool = Field(default=True)
-    category_id: UUID = Field(foreign_key="categories.id", ondelete="CASCADE")
+    category_id: UUID = Field(foreign_key="categories.id", ondelete="CASCADE", index=True)
     updated_at: datetime = Field(
         default_factory=utcnow,
         sa_column=Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False),
