@@ -3,7 +3,7 @@
 from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import create_async_engine
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, text
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.config import settings
@@ -30,3 +30,12 @@ async def init_db() -> None:
     """Create database tables."""
     async with async_engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
+
+
+async def check_db_health(session: AsyncSession) -> bool:
+    """Attempts to execute a minimal query to verify database connection."""
+    try:
+        await session.exec(text("SELECT 1 "))  # type: ignore [call-overload]
+        return True
+    except Exception:
+        return False
