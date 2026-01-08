@@ -1,0 +1,52 @@
+"""API Routes dependencies."""
+
+from typing import Annotated
+from uuid import UUID
+
+from fastapi import HTTPException, status
+from fastapi.params import Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app.core.security import decode_access_token
+from app.db.database import get_session
+from app.models.user import User
+from app.services.user import UserService
+
+oauth_scheme = HTTPBearer(
+    scheme_name="Bearer",
+    auto_error=False,
+    description="JWT Access Token in the Authorization header",
+)
+
+
+async def get_current_user(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(oauth_scheme)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> User:
+    """Get current authenticated user from JWT token."""
+    if credentials is None or not credentials.credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid Authorization header",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    decoded_token = decode_access_token(token=credentials.credentials)
+    if not decoded_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user_id = decoded_token.get("sub")
+
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return await UserService.get_by_id(session, UUID(user_id))
