@@ -1,11 +1,15 @@
 """User model for storing user information."""
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from sqlmodel import Column, DateTime, Field
+from sqlmodel import Column, DateTime, Field, Relationship
 
 from app.models.base import TimestampMixin, UUIDMixin
 from app.utils.utc_time import utcnow
+
+if TYPE_CHECKING:
+    from app.models.address import Address
 
 
 class User(UUIDMixin, TimestampMixin, table=True):
@@ -20,4 +24,8 @@ class User(UUIDMixin, TimestampMixin, table=True):
     updated_at: datetime = Field(
         default_factory=utcnow,
         sa_column=Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False),
+    )
+
+    addresses: list["Address"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
     )
