@@ -11,6 +11,19 @@ class Settings(BaseSettings):
     database_url: str = Field(
         default="", alias="DATABASE_URL", description="Database connection URL"
     )
+    jwt_secret_key: str = Field(
+        default="",
+        description="Secret key for JWT signing",
+        alias="JWT_SECRET_KEY",
+    )
+    jwt_default_exp_minutes: int = Field(
+        default=15,
+        description="Access token expiration time in minutes",
+        alias="JWT_DEFAULT_EXP_MINUTES",
+    )
+    jwt_algorithm: str = Field(
+        default="HS256", description="JWT signing algorithm", alias="JWT_ALGORITHM"
+    )
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
