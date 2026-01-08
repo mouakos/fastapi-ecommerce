@@ -48,8 +48,7 @@ class CategoryService:
         Raises:
             HTTPException: If the category is not found.
         """
-        stmt = select(Category).where(Category.id == category_id)
-        category = (await session.exec(stmt)).first()
+        category = await session.get(Category, category_id)
         if not category:
             raise HTTPException(status_code=404, detail="Category not found.")
         return category

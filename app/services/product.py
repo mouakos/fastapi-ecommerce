@@ -50,8 +50,7 @@ class ProductService:
         Raises:
             HTTPException: If the product is not found.
         """
-        stmt = select(Product).where(Product.id == product_id)
-        product = (await session.exec(stmt)).first()
+        product = await session.get(Product, product_id)
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
         return product
