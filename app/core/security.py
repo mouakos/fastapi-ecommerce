@@ -4,7 +4,6 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import jwt
-from fastapi import HTTPException, status
 from pwdlib import PasswordHash
 
 from app.core.config import settings
@@ -50,14 +49,14 @@ def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = 
     return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 
-def decode_access_token(token: str) -> dict[str, Any]:
+def decode_access_token(token: str) -> dict[str, Any] | None:
     """Verify and decode a JWT access token..
 
     Args:
         token (str): he JWT string to verify.
 
     Returns:
-        dict[str, Any]: decoded token data.
+        dict[str, Any] | None: decoded token data or None.
     """
     try:
         payload: dict[str, Any] = jwt.decode(
@@ -67,15 +66,5 @@ def decode_access_token(token: str) -> dict[str, Any]:
             options={"verify_signature": True, "verify_exp": True},
         )
         return payload
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired."
-        ) from None
-    except jwt.InvalidTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token."
-        ) from None
-    except jwt.DecodeError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Malformed token."
-        ) from None
+    except jwt.PyJWTError:
+        return None
