@@ -31,7 +31,7 @@ class CategoryCreate(CategoryBase):
     }
 
 
-class CategoryRead(CategoryCreate, UUIDMixin, TimestampMixin):
+class CategoryRead(CategoryBase, UUIDMixin, TimestampMixin):
     """Schema for reading category information."""
 
     slug: str

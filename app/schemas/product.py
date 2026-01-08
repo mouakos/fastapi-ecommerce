@@ -38,7 +38,7 @@ class ProductCreate(ProductBase):
     }
 
 
-class ProductRead(ProductCreate, UUIDMixin, TimestampMixin):
+class ProductRead(ProductBase, UUIDMixin, TimestampMixin):
     """Schema for reading a Product."""
 
     slug: str
