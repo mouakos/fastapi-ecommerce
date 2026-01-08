@@ -1,4 +1,4 @@
-"""API routes for category operations in the ecommerce API."""
+"""Category API routes."""
 
 # mypy: disable-error-code=return-value
 from typing import Annotated
