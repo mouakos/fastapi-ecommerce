@@ -145,7 +145,6 @@ class CategoryService:
         for key, value in category_data.items():
             setattr(category, key, value)
 
-        session.add(category)
         await session.flush()
         await session.refresh(category)
         return category

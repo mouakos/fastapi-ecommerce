@@ -145,7 +145,6 @@ class ProductService:
         for key, value in product_data.items():
             setattr(product, key, value)
 
-        session.add(product)
         await session.flush()
         await session.refresh(product)
         return product
