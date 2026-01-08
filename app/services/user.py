@@ -1,16 +1,34 @@
 """Service layer for user-related operations."""
 
+from uuid import UUID
+
 from fastapi import HTTPException, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.security import create_access_token, hash_password, verify_password
 from app.models.user import User
-from app.schemas.user import Login, Token, UserCreate
+from app.schemas.user import Login, Token, UserCreate, UserUpdate
 
 
 class UserService:
     """Service layer for user-related operations."""
+
+    @staticmethod
+    async def get_by_id(session: AsyncSession, user_id: UUID) -> User:
+        """Fetch a user by id.
+
+        Args:
+            session (AsyncSession): Database session.
+            user_id (UUID): User ID.
+
+        Raises:
+            HTTPException: If the user does not exist.
+        """
+        user = await session.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+        return user
 
     @staticmethod
     async def create(session: AsyncSession, data: UserCreate) -> User:
@@ -67,3 +85,38 @@ class UserService:
 
         token = create_access_token({"sub": str(user.id)})
         return Token(access_token=token)
+
+    @staticmethod
+    async def update(session: AsyncSession, user_id: UUID, data: UserUpdate) -> User:
+        """Update mutable profile fields (first/last name, phone number).
+
+        Args:
+            session (AsyncSession): Database session.
+            user_id (UUID): User ID.
+            data (UserUpdate): User data.
+
+        Raises:
+            HTTPException: If the user does not exist.
+        """
+        user = await UserService.get_by_id(session, user_id)
+        user_data = data.model_dump(exclude_unset=True)
+        for key, value in user_data.items():
+            setattr(user, key, value)
+        await session.flush()
+        await session.refresh(user)
+        return user
+
+    @staticmethod
+    async def delete(session: AsyncSession, user_id: UUID) -> None:
+        """Delete user.
+
+        Args:
+            session (AsyncSession): Database session.
+            user_id (UUID): User ID.
+
+        Raises:
+            HTTPException: If the user does not exist.
+        """
+        user = await UserService.get_by_id(session, user_id)
+        await session.delete(user)
+        await session.flush()
