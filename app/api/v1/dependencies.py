@@ -19,10 +19,13 @@ oauth_scheme = HTTPBearer(
     description="JWT Access Token in the Authorization header",
 )
 
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
+TokenDep = Annotated[HTTPAuthorizationCredentials, Depends(oauth_scheme)]
+
 
 async def get_current_user(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(oauth_scheme)],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    credentials: TokenDep,
+    session: SessionDep,
 ) -> User:
     """Get current authenticated user from JWT token."""
     if credentials is None or not credentials.credentials:
@@ -50,3 +53,6 @@ async def get_current_user(
         )
 
     return await UserService.get_by_id(session, UUID(user_id))
+
+
+CurrentUser = Annotated[User, Depends(get_current_user)]

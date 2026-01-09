@@ -1,15 +1,11 @@
 """User API Routes."""
 
 # mypy: disable-error-code=return-value
-from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel.ext.asyncio.session import AsyncSession
+from fastapi import APIRouter, HTTPException, status
 
-from app.api.v1.dependencies import get_current_user
-from app.db.database import get_session
-from app.models.user import User
+from app.api.v1.dependencies import CurrentUser, SessionDep
 from app.schemas.address import AddressCreate, AddressRead, AddressUpdate
 from app.schemas.user import Login, Token, UserCreate, UserRead, UserUpdate
 from app.services.address import AddressService
@@ -24,9 +20,7 @@ router = APIRouter(prefix="/api/v1/users", tags=["Users"])
     status_code=status.HTTP_201_CREATED,
     summary="Create a new user account.",
 )
-async def create_user(
-    data: UserCreate, session: Annotated[AsyncSession, Depends(get_session)]
-) -> UserRead:
+async def create_user(data: UserCreate, session: SessionDep) -> UserRead:
     """Register a new user."""
     return await UserService.create(session, data)
 
@@ -36,7 +30,7 @@ async def create_user(
     response_model=Token,
     summary="Authenticate a user and return a JWT token.",
 )
-async def login(data: Login, session: Annotated[AsyncSession, Depends(get_session)]) -> Token:
+async def login(data: Login, session: SessionDep) -> Token:
     """Register a new user."""
     return await UserService.login(session, data)
 
@@ -47,7 +41,7 @@ async def login(data: Login, session: Annotated[AsyncSession, Depends(get_sessio
     summary="Get the currently authenticated user's profile.",
 )
 async def get_user(
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: CurrentUser,
 ) -> UserRead:
     """Retrieve the profile of the currently authenticated user."""
     return current_user
@@ -60,8 +54,8 @@ async def get_user(
 )
 async def update_user(
     data: UserUpdate,
-    current_user: Annotated[User, Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    current_user: CurrentUser,
+    session: SessionDep,
 ) -> UserRead:
     """Update the profile of the currently authenticated user."""
     return await UserService.update(session, current_user.id, data)
@@ -73,8 +67,8 @@ async def update_user(
     summary="Delete the currently authenticated user's account.",
 )
 async def delete_user(
-    current_user: Annotated[User, Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    current_user: CurrentUser,
+    session: SessionDep,
 ) -> None:
     """Delete the current user's account."""
     await UserService.delete(session, current_user.id)
@@ -86,8 +80,8 @@ async def delete_user(
     summary="List all addresses for the current user.",
 )
 async def list_addresses(
-    current_user: Annotated[User, Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    current_user: CurrentUser,
+    session: SessionDep,
 ) -> list[AddressRead]:
     """List all addresses for the current user.."""
     return await AddressService.list_all(session, current_user.id)
@@ -101,8 +95,8 @@ async def list_addresses(
 )
 async def add_address(
     data: AddressCreate,
-    current_user: Annotated[User, Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    current_user: CurrentUser,
+    session: SessionDep,
 ) -> AddressRead:
     """Add a new address to the currently authenticated user's account."""
     return await AddressService.create(session, data, current_user.id)
@@ -116,8 +110,8 @@ async def add_address(
 async def update_address(
     address_id: UUID,
     data: AddressUpdate,
-    current_user: Annotated[User, Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    current_user: CurrentUser,
+    session: SessionDep,
 ) -> AddressRead:
     """Update an existing address for the currently authenticated user's account."""
     address = await AddressService.get_by_id(session, address_id)
@@ -136,8 +130,8 @@ async def update_address(
 )
 async def delete_address(
     address_id: UUID,
-    current_user: Annotated[User, Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    current_user: CurrentUser,
+    session: SessionDep,
 ) -> None:
     """Delete an existing address for the currently authenticated user's account."""
     address = await AddressService.get_by_id(session, address_id)
