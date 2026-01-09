@@ -1,6 +1,7 @@
 """Product model definitions for the ecommerce API."""
 
 from datetime import datetime
+from decimal import Decimal
 from uuid import UUID
 
 from roman_numerals import TYPE_CHECKING
@@ -22,7 +23,7 @@ class Product(UUIDMixin, TimestampMixin, table=True):
     name: str = Field(index=True)
     slug: str = Field(unique=True, index=True)
     description: str | None = None
-    price: float
+    price: Decimal
     stock: int
     sku: str = Field(unique=True, index=True)
     image_url: str | None = None

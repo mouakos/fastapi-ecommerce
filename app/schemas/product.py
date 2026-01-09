@@ -1,5 +1,6 @@
 """Pydantic Schemas for Product."""
 
+from decimal import Decimal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, HttpUrl
@@ -11,7 +12,7 @@ class ProductBase(BaseModel):
     """Base schema for Product."""
 
     name: str = Field(..., max_length=255, min_length=2)
-    price: float = Field(0, gt=0)
+    price: Decimal = Field(..., gt=0, max_digits=10, decimal_places=2)
     stock: int = Field(0, ge=0)
     category_id: UUID
 
@@ -49,7 +50,7 @@ class ProductUpdate(BaseModel):
     """Schema for updating a Product."""
 
     name: str = Field(..., max_length=255, min_length=2)
-    price: float | None = Field(None, gt=0)
+    price: Decimal | None = Field(None, gt=0, max_digits=10, decimal_places=2)
     stock: int | None = Field(None, ge=0)
     description: str | None = None
     image_url: HttpUrl | None = None
