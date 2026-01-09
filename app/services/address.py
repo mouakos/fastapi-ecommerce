@@ -80,7 +80,7 @@ class AddressService:
 
         address = Address(**data.model_dump(), user_id=user.id)
         session.add(address)
-        await session.flush()
+        await session.commit()
         await session.refresh(address)
         return address
 
@@ -112,7 +112,7 @@ class AddressService:
         for key, value in address_data.items():
             setattr(address, key, value)
 
-        await session.flush()
+        await session.commit()
         await session.refresh(address)
         return address
 
@@ -129,7 +129,7 @@ class AddressService:
         """
         addr = await AddressService.get_by_id(session, address_id)
         await session.delete(addr)
-        await session.flush()
+        await session.commit()
 
     @staticmethod
     async def _unset_default_shipping_address(session: AsyncSession, user_id: UUID) -> None:

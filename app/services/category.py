@@ -101,7 +101,7 @@ class CategoryService:
 
         new_category = Category(slug=slug, **category_data)
         session.add(new_category)
-        await session.flush()
+        await session.commit()
         await session.refresh(new_category)
         return new_category
 
@@ -144,7 +144,7 @@ class CategoryService:
         for key, value in category_data.items():
             setattr(category, key, value)
 
-        await session.flush()
+        await session.commit()
         await session.refresh(category)
         return category
 
@@ -164,4 +164,4 @@ class CategoryService:
         """
         category = await CategoryService.get_by_id(session, category_id)
         await session.delete(category)
-        await session.flush()
+        await session.commit()

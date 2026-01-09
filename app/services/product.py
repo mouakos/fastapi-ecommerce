@@ -108,7 +108,7 @@ class ProductService:
         new_product = Product(slug=slug, sku=sku, **product_data)
 
         session.add(new_product)
-        await session.flush()
+        await session.commit()
         await session.refresh(new_product)
         return new_product
 
@@ -144,7 +144,7 @@ class ProductService:
         for key, value in product_data.items():
             setattr(product, key, value)
 
-        await session.flush()
+        await session.commit()
         await session.refresh(product)
         return product
 
@@ -164,4 +164,4 @@ class ProductService:
         """
         product = await ProductService.get_by_id(session, product_id)
         await session.delete(product)
-        await session.flush()
+        await session.commit()

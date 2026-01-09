@@ -57,7 +57,7 @@ class UserService:
 
         new_user = User(hashed_password=hashed_password, **user_data)
         session.add(new_user)
-        await session.flush()
+        await session.commit()
         await session.refresh(new_user)
         return new_user
 
@@ -102,7 +102,7 @@ class UserService:
         user_data = data.model_dump(exclude_unset=True)
         for key, value in user_data.items():
             setattr(user, key, value)
-        await session.flush()
+        await session.commit()
         await session.refresh(user)
         return user
 
@@ -119,4 +119,4 @@ class UserService:
         """
         user = await UserService.get_by_id(session, user_id)
         await session.delete(user)
-        await session.flush()
+        await session.commit()
