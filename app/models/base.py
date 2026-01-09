@@ -6,7 +6,7 @@ These mixins can be used to add common fields like timestamps and UUIDs to your 
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import DateTime, Field, SQLModel, func
 
 from app.utils.utc_time import utcnow
 
@@ -14,7 +14,20 @@ from app.utils.utc_time import utcnow
 class TimestampMixin(SQLModel):
     """Mixin to add created_at and updated_at timestamps."""
 
-    created_at: datetime = Field(default_factory=utcnow)
+    created_at: datetime = Field(  # type: ignore[call-overload]
+        default_factory=utcnow,
+        sa_type=DateTime(timezone=True),
+        sa_column_kwargs={"nullable": False, "server_default": func.now()},
+    )
+    updated_at: datetime = Field(  # type: ignore[call-overload]
+        default_factory=utcnow,
+        sa_type=DateTime(timezone=True),
+        sa_column_kwargs={
+            "nullable": False,
+            "server_default": func.now(),
+            "onupdate": func.now(),
+        },
+    )
 
 
 class UUIDMixin(SQLModel):
