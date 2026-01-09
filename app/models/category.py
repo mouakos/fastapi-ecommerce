@@ -1,12 +1,9 @@
 """Category model with self-referencing parent-child relationships."""
 
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 from uuid import UUID
 
-from sqlmodel import Column, DateTime, Field, Relationship
-
-from app.utils.utc_time import utcnow
+from sqlmodel import Field, Relationship
 
 from .base import TimestampMixin, UUIDMixin
 
@@ -24,10 +21,6 @@ class Category(UUIDMixin, TimestampMixin, table=True):
     parent_id: UUID | None = Field(default=None, foreign_key="categories.id")
     description: str | None = None
     image_url: str | None = None
-    updated_at: datetime = Field(
-        default_factory=utcnow,
-        sa_column=Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False),
-    )
 
     # Relationships
     parent: Optional["Category"] = Relationship(

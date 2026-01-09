@@ -1,13 +1,11 @@
 """Address model for storing user address information."""
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlmodel import Column, DateTime, Field, Relationship
+from sqlmodel import Field, Relationship
 
 from app.models.base import TimestampMixin, UUIDMixin
-from app.utils.utc_time import utcnow
 
 if TYPE_CHECKING:
     from app.models.user import User
@@ -30,9 +28,5 @@ class Address(UUIDMixin, TimestampMixin, table=True):
     is_default_shipping: bool = False
     is_default_billing: bool = False
 
-    updated_at: datetime = Field(
-        default_factory=utcnow,
-        sa_column=Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False),
-    )
-
+    # Relationships
     user: "User" = Relationship(back_populates="addresses")
