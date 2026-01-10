@@ -1,0 +1,56 @@
+"""Cart schema for managing shopping cart data."""
+
+from decimal import Decimal
+from uuid import UUID
+
+from pydantic import BaseModel, Field, HttpUrl, computed_field
+
+from app.schemas.base import TimestampMixin, UUIDMixin
+
+
+class CartItemCreate(BaseModel):
+    """Schema for creating a new cart item."""
+
+    product_id: UUID
+    quantity: int = Field(default=1, ge=1)
+
+
+class CartItemUpdate(BaseModel):
+    """Schema for updating a cart item."""
+
+    quantity: int = Field(..., ge=1)
+
+
+class CartItemRead(BaseModel):
+    """Schema for reading cart items."""
+
+    product_id: UUID
+    quantity: int
+    unit_price: Decimal
+    product_name: str
+    image_url: HttpUrl | None = None
+
+    @property
+    @computed_field
+    def subtotal(self) -> Decimal:
+        """Calculate subtotal for the cart item."""
+        return self.quantity * self.unit_price
+
+
+class CartRead(UUIDMixin, TimestampMixin):
+    """Schema for reading cart."""
+
+    user_id: UUID | None = None
+    items: list[CartItemRead] = []
+
+    @property
+    @computed_field
+    def subtotal(self) -> Decimal:
+        """Calculate total price for the cart."""
+        return sum((item.subtotal for item in self.items), start=Decimal(0))
+
+    @property
+    @computed_field
+    def total_items(self) -> int:
+        """Calculate total number of items in the cart."""
+        return sum(item.quantity for item in self.items)

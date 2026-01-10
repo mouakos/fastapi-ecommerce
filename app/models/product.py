@@ -10,6 +10,7 @@ from app.models.base import TimestampMixin, UUIDMixin
 from app.models.category import Category
 
 if TYPE_CHECKING:
+    from app.models.cart_item import CartItem
     from app.models.category import Category
 
 
@@ -30,3 +31,7 @@ class Product(UUIDMixin, TimestampMixin, table=True):
 
     # Relationships
     category: "Category" = Relationship(back_populates="products")
+
+    cart_items: list["CartItem"] = Relationship(
+        back_populates="product", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
+    )

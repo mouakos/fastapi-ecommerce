@@ -1,6 +1,6 @@
 """User model for storing user information."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship
 
@@ -8,6 +8,7 @@ from app.models.base import TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
     from app.models.address import Address
+    from app.models.cart import Cart
 
 
 class User(UUIDMixin, TimestampMixin, table=True):
@@ -23,3 +24,4 @@ class User(UUIDMixin, TimestampMixin, table=True):
     addresses: list["Address"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
     )
+    cart: Optional["Cart"] = Relationship(back_populates="user")
