@@ -56,3 +56,19 @@ async def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+async def get_optional_current_user(
+    credentials: TokenDep,
+    session: SessionDep,
+) -> User | None:
+    """Get current authenticated user from JWT token, or None if not authenticated."""
+    try:
+        return await get_current_user(credentials, session)
+    except HTTPException as exc:
+        if exc.status_code == status.HTTP_401_UNAUTHORIZED:
+            return None
+        raise
+
+
+OptionalCurrentUser = Annotated[User | None, Depends(get_optional_current_user)]
