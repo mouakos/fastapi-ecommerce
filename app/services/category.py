@@ -93,6 +93,10 @@ class CategoryService:
         Raises:
             HTTPException: If the parent category does not exist.
         """
+        if data.parent_id:
+            # Ensure the parent category exists
+            _ = await CategoryService.get_by_id(session, data.parent_id)
+
         slug = await generate_slug(session, data.name)
 
         category_data = data.model_dump()
