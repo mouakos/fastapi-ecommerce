@@ -1,4 +1,4 @@
-"""Category model with self-referencing parent-child relationships."""
+"""Category model for organizing products into hierarchical categories."""
 
 from typing import TYPE_CHECKING, Optional
 from uuid import UUID

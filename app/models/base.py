@@ -14,11 +14,7 @@ from app.utils.utc_time import utcnow
 class TimestampMixin(SQLModel):
     """Mixin to add created_at and updated_at timestamps."""
 
-    created_at: datetime = Field(  # type: ignore[call-overload]
-        default_factory=utcnow,
-        sa_type=DateTime(timezone=True),
-        sa_column_kwargs={"nullable": False, "server_default": func.now()},
-    )
+    created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(  # type: ignore[call-overload]
         default_factory=utcnow,
         sa_type=DateTime(timezone=True),
