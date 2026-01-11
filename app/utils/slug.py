@@ -11,7 +11,7 @@ async def generate_slug(
     session: AsyncSession,
     name: str,
 ) -> str:
-    """Generate a unique slug for a category based on its name."""
+    """Generate a unique slug for a category or product based on its name."""
     base_slug = slugify(name)
     slug = base_slug
     counter = 1
