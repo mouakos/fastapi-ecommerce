@@ -99,7 +99,7 @@ class ProductService:
         if data.category_id:
             _ = await CategoryService.get_by_id(session, data.category_id)
 
-        slug = await generate_slug(session, data.name)
+        slug = await generate_slug(session, data.name, Product)
         sku = generate_sku(data.name)
 
         product_data = data.model_dump()

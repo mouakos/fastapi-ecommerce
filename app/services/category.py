@@ -97,7 +97,7 @@ class CategoryService:
             # Ensure the parent category exists
             _ = await CategoryService.get_by_id(session, data.parent_id)
 
-        slug = await generate_slug(session, data.name)
+        slug = await generate_slug(session, data.name, Category)
 
         category_data = data.model_dump()
         if isinstance(category_data.get("image_url"), HttpUrl):
