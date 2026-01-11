@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from app.api.v1.dependencies import SessionDep
 from app.db.database import check_db_health
 
-router = APIRouter(prefix="/api/v1/", tags=["Meta"])
+router = APIRouter(prefix="/api/v1", tags=["Meta"])
 
 
 @router.get("/health", summary="Database Health Check")
