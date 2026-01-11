@@ -1,9 +1,10 @@
 """Pydantic Schemas for Product."""
 
+from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, computed_field
 
 from app.schemas.base import UUIDMixin
 
@@ -31,7 +32,7 @@ class ProductCreate(ProductBase):
                 "price": 699.99,
                 "stock": 50,
                 "image_url": "https://example.com/smartphone.jpg",
-                "category_id": "123e4567-e89b-12d3-a456-426614174000",
+                "category_id": None,
                 "is_published": True,
             }
         }
@@ -43,6 +44,13 @@ class ProductRead(ProductBase, UUIDMixin):
 
     slug: str
     sku: str
+    created_at: datetime
+
+    @property
+    @computed_field
+    def in_stock(self) -> bool:
+        """Check if the product is in stock."""
+        return self.stock > 0
 
 
 class ProductUpdate(BaseModel):

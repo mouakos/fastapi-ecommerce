@@ -136,7 +136,7 @@ class ProductService:
 
         # Validate category existence if category_id is provided
         if data.category_id:
-            _ = CategoryService.get_by_id(session, data.category_id)
+            _ = await CategoryService.get_by_id(session, data.category_id)
 
         product_data = data.model_dump(exclude_unset=True)
         if isinstance(product_data.get("image_url"), HttpUrl):
