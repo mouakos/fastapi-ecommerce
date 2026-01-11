@@ -14,8 +14,7 @@ class ProductBase(BaseModel):
     name: str = Field(..., max_length=255, min_length=2)
     price: Decimal = Field(..., gt=0, max_digits=10, decimal_places=2)
     stock: int = Field(0, ge=0)
-    category_id: UUID
-
+    category_id: UUID | None = None
     description: str | None = None
     image_url: HttpUrl | None = None
     is_published: bool = True

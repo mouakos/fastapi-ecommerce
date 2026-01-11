@@ -95,8 +95,9 @@ class ProductService:
         Raises:
             HTTPException: If the category does not exist.
         """
-        # Validate category existence
-        _ = await CategoryService.get_by_id(session, data.category_id)
+        # Validate category existence if category_id is provided
+        if data.category_id:
+            _ = await CategoryService.get_by_id(session, data.category_id)
 
         slug = await generate_slug(session, data.name)
         sku = generate_sku(data.name)

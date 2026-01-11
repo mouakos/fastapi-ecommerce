@@ -1,6 +1,7 @@
-"""Product model definitions for the ecommerce API."""
+"""Product model for storing product information."""
 
 from decimal import Decimal
+from typing import Optional
 from uuid import UUID
 
 from roman_numerals import TYPE_CHECKING
@@ -27,10 +28,12 @@ class Product(UUIDMixin, TimestampMixin, table=True):
     sku: str = Field(unique=True, index=True)
     image_url: str | None = None
     is_published: bool = Field(default=True)
-    category_id: UUID = Field(foreign_key="categories.id", ondelete="CASCADE", index=True)
+    category_id: UUID | None = Field(
+        default=None, foreign_key="categories.id", ondelete="CASCADE", index=True
+    )
 
     # Relationships
-    category: "Category" = Relationship(back_populates="products")
+    category: Optional["Category"] = Relationship(back_populates="products")
 
     cart_items: list["CartItem"] = Relationship(
         back_populates="product", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
