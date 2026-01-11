@@ -30,8 +30,7 @@ class CartItemRead(BaseModel):
     product_name: str
     image_url: HttpUrl | None = None
 
-    @property
-    @computed_field
+    @computed_field(return_type=Decimal)
     def subtotal(self) -> Decimal:
         """Calculate subtotal for the cart item."""
         return self.quantity * self.unit_price
@@ -43,14 +42,12 @@ class CartRead(UUIDMixin):
     user_id: UUID | None = None
     items: list[CartItemRead] = []
 
-    @property
-    @computed_field
+    @computed_field(return_type=Decimal)
     def subtotal(self) -> Decimal:
         """Calculate total price for the cart."""
-        return sum((item.subtotal for item in self.items), start=Decimal(0))
+        return sum((item.quantity * item.unit_price for item in self.items), start=Decimal(0))
 
-    @property
-    @computed_field
+    @computed_field(return_type=int)
     def total_items(self) -> int:
         """Calculate total number of items in the cart."""
         return sum(item.quantity for item in self.items)

@@ -46,8 +46,7 @@ class ProductRead(ProductBase, UUIDMixin):
     sku: str
     created_at: datetime
 
-    @property
-    @computed_field
+    @computed_field(return_type=bool)
     def in_stock(self) -> bool:
         """Check if the product is in stock."""
         return self.stock > 0
