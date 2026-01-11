@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: ARG001
 
 
 app = FastAPI(
-    # lifespan=lifespan,
+    lifespan=lifespan,
     description="This is a simple RESTful  API to for managing the products catalog, user authentication, shopping cart, and order processing in an e-commerce platform.",
     docs_url="/api/v1/docs",
     redoc_url="/api/v1/redoc",
@@ -43,8 +43,12 @@ app = FastAPI(
     },
     openapi_tags=[
         {
-            "name": "HealthCheck",
+            "name": "Meta",
             "description": "Endpoints for checking the health status of the Database.",
+        },
+        {
+            "name": "Authentication",
+            "description": "Operations related to user authentication and registration.",
         },
         {
             "name": "Users",
@@ -57,6 +61,10 @@ app = FastAPI(
         {
             "name": "Categories",
             "description": "Operations related to category management.",
+        },
+        {
+            "name": "Cart",
+            "description": "Operations related to shopping cart management.",
         },
     ],
 )
