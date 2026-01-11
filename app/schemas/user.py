@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel, EmailStr, Field
 
-from app.schemas.base import TimestampMixin, UUIDMixin
+from app.schemas.base import UUIDMixin
 
 
 class UserCreate(BaseModel):
@@ -14,14 +14,14 @@ class UserCreate(BaseModel):
     model_config = {
         "json_schema_extra": {
             "example": {
-                "email": "test@example.com",
-                "password": "b4c14256-50ab-495c-bf9c-68eb022e8d8f",
+                "email": "user@example.com",
+                "password": "string",
             }
         }
     }
 
 
-class UserRead(UUIDMixin, TimestampMixin):
+class UserRead(UUIDMixin):
     """Schema for reading user information."""
 
     email: EmailStr

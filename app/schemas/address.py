@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.schemas.base import TimestampMixin, UUIDMixin
+from app.schemas.base import UUIDMixin
 
 
 class AddressBase(BaseModel):
@@ -45,7 +45,7 @@ class AddressCreate(AddressBase):
     }
 
 
-class AddressRead(AddressCreate, UUIDMixin, TimestampMixin):
+class AddressRead(AddressCreate, UUIDMixin):
     """Schema for reading address information."""
 
     user_id: UUID

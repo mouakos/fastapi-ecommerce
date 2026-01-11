@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, HttpUrl, computed_field
 
-from app.schemas.base import TimestampMixin, UUIDMixin
+from app.schemas.base import UUIDMixin
 
 
 class CartItemCreate(BaseModel):
@@ -37,7 +37,7 @@ class CartItemRead(BaseModel):
         return self.quantity * self.unit_price
 
 
-class CartRead(UUIDMixin, TimestampMixin):
+class CartRead(UUIDMixin):
     """Schema for reading cart."""
 
     user_id: UUID | None = None

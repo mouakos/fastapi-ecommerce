@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, HttpUrl
 
-from app.schemas.base import TimestampMixin, UUIDMixin
+from app.schemas.base import UUIDMixin
 
 
 class CategoryBase(BaseModel):
@@ -31,7 +31,7 @@ class CategoryCreate(CategoryBase):
     }
 
 
-class CategoryRead(CategoryBase, UUIDMixin, TimestampMixin):
+class CategoryRead(CategoryBase, UUIDMixin):
     """Schema for reading category information."""
 
     slug: str

@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, HttpUrl
 
-from app.schemas.base import TimestampMixin, UUIDMixin
+from app.schemas.base import UUIDMixin
 
 
 class ProductBase(BaseModel):
@@ -39,7 +39,7 @@ class ProductCreate(ProductBase):
     }
 
 
-class ProductRead(ProductBase, UUIDMixin, TimestampMixin):
+class ProductRead(ProductBase, UUIDMixin):
     """Schema for reading a Product."""
 
     slug: str
