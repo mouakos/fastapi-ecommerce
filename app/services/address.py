@@ -135,10 +135,7 @@ class AddressService:
     async def _unset_default_shipping_address(session: AsyncSession, user_id: UUID) -> None:
         """Unset an user address as the default shipping address."""
         # unset old default
-        stmt = select(Address).where(
-            Address.user_id == user_id,
-            Address.is_default_shipping == True,  # noqa: E712
-        )
+        stmt = select(Address).where(Address.user_id == user_id, Address.is_default_shipping)
         addresses = (await session.exec(stmt)).all()
         for a in addresses:
             a.is_default_shipping = False
@@ -150,7 +147,7 @@ class AddressService:
         # unset old default
         stmt = select(Address).where(
             Address.user_id == user_id,
-            Address.is_default_billing == True,  # noqa: E712
+            Address.is_default_billing,
         )
         addresses = (await session.exec(stmt)).all()
         for a in addresses:
