@@ -6,16 +6,17 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api.v1.routes import router
-from app.db.database import init_db
+from app.db.database import async_engine, init_db
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: ARG001
     """Lifespan context manager for startup and shutdown events."""
-    # Startup actions can be added here
+    # Startup actions
     await init_db()
     yield
-    # Shutdown actions can be added here
+    # Shutdown actions
+    await async_engine.dispose()
 
 
 app = FastAPI(
