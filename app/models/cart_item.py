@@ -1,5 +1,6 @@
 """Cart item model for storing items in a shopping cart."""
 
+from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -7,6 +8,7 @@ from uuid import UUID
 from sqlmodel import Field, Relationship, UniqueConstraint
 
 from app.models.base import UUIDMixin
+from app.utils.utc_time import utcnow
 
 if TYPE_CHECKING:
     from app.models.cart import Cart
@@ -22,6 +24,7 @@ class CartItem(UUIDMixin, table=True):
     cart_id: UUID = Field(foreign_key="carts.id", index=True, ondelete="CASCADE")
     product_id: UUID = Field(foreign_key="products.id", index=True, ondelete="CASCADE")
     quantity: int
+    added_at: datetime = Field(default_factory=utcnow)
 
     # snapshot fields to preserve product details at the time of addition
     unit_price: Decimal
