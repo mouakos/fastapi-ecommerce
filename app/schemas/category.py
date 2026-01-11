@@ -23,7 +23,7 @@ class CategoryCreate(CategoryBase):
         "json_schema_extra": {
             "example": {
                 "name": "Electronics",
-                "parent_id": None,
+                "parent_id": "123e4567-e89b-12d3-a456-426614174000",
                 "description": "Electronic devices and accessories",
                 "image_url": "https://example.com/electronics.jpg",
             }

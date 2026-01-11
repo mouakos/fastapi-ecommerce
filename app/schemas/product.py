@@ -32,7 +32,7 @@ class ProductCreate(ProductBase):
                 "price": 699.99,
                 "stock": 50,
                 "image_url": "https://example.com/smartphone.jpg",
-                "category_id": None,
+                "category_id": "123e4567-e89b-12d3-a456-426614174000",
                 "is_published": True,
             }
         }
