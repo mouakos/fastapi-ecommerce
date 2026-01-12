@@ -18,8 +18,8 @@ class User(ModelBase, TimestampMixin, table=True):
     __tablename__ = "users"
     email: str = Field(index=True, unique=True)
     hashed_password: str = Field(exclude=True)
-    first_name: str | None
-    last_name: str | None
+    first_name: str
+    last_name: str
     phone_number: str | None
 
     # Relationships

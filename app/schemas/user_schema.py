@@ -10,6 +10,8 @@ class UserCreate(BaseModel):
 
     email: EmailStr
     password: str = Field(..., min_length=6)
+    first_name: str = Field(..., min_length=2, max_length=50)
+    last_name: str = Field(..., min_length=2, max_length=50)
 
     model_config = {
         "json_schema_extra": {
@@ -25,8 +27,8 @@ class UserRead(UUIDMixin):
     """Schema for reading user information."""
 
     email: EmailStr
-    first_name: str | None
-    last_name: str | None
+    first_name: str
+    last_name: str
     phone_number: str | None
 
 
