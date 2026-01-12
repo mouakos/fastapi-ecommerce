@@ -6,6 +6,7 @@ from types import TracebackType
 from app.interfaces.address_repository import AddressRepository
 from app.interfaces.cart_repository import CartRepository
 from app.interfaces.category_repository import CategoryRepository
+from app.interfaces.order_repository import OrderRepository
 from app.interfaces.product_repository import ProductRepository
 from app.interfaces.user_repository import UserRepository
 
@@ -18,6 +19,7 @@ class UnitOfWork(ABC):
     categories: CategoryRepository
     users: UserRepository
     addresses: AddressRepository
+    orders: OrderRepository
 
     async def __aenter__(self) -> "UnitOfWork":
         """Enter the runtime context related to this object."""
