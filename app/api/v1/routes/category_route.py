@@ -7,10 +7,10 @@ from fastapi import APIRouter, status
 from app.api.v1.dependencies import CategoryServiceDep
 from app.schemas.category_schema import CategoryCreate, CategoryRead, CategoryUpdate
 
-router = APIRouter(prefix="/api/v1/categories", tags=["Categories"])
+category_router = APIRouter(prefix="/api/v1/categories", tags=["Categories"])
 
 
-@router.get(
+@category_router.get(
     "/",
     response_model=list[CategoryRead],
 )
@@ -21,7 +21,7 @@ async def list_categories(
     return await category_service.list_all()
 
 
-@router.post(
+@category_router.post(
     "/",
     response_model=CategoryRead,
     status_code=status.HTTP_201_CREATED,
@@ -34,7 +34,7 @@ async def create_category(
     return await category_service.create(data)
 
 
-@router.get(
+@category_router.get(
     "/id/{category_id}",
     response_model=CategoryRead,
     summary="Retrieve a category by its ID",
@@ -44,7 +44,7 @@ async def get_category(category_id: UUID, category_service: CategoryServiceDep) 
     return await category_service.get_by_id(category_id)
 
 
-@router.get(
+@category_router.get(
     "/slug/{slug}",
     response_model=CategoryRead,
     summary="Retrieve a category by its slug",
@@ -54,7 +54,7 @@ async def get_category_by_slug(slug: str, category_service: CategoryServiceDep) 
     return await category_service.get_by_slug(slug)
 
 
-@router.put(
+@category_router.put(
     "/{category_id}",
     response_model=CategoryRead,
     summary="Update a category by its ID",
@@ -66,7 +66,7 @@ async def update_category(
     return await category_service.update(category_id, data)
 
 
-@router.delete(
+@category_router.delete(
     "/{category_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a category by its ID",

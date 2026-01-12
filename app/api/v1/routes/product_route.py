@@ -7,10 +7,10 @@ from fastapi import APIRouter, status
 from app.api.v1.dependencies import ProductServiceDep
 from app.schemas.product_schema import ProductCreate, ProductRead, ProductUpdate
 
-router = APIRouter(prefix="/api/v1/products", tags=["Products"])
+product_router = APIRouter(prefix="/api/v1/products", tags=["Products"])
 
 
-@router.get(
+@product_router.get(
     "/",
     response_model=list[ProductRead],
     summary="List all products",
@@ -22,7 +22,7 @@ async def list_products(
     return await product_service.list_all()
 
 
-@router.post(
+@product_router.post(
     "/",
     response_model=ProductRead,
     status_code=status.HTTP_201_CREATED,
@@ -33,7 +33,7 @@ async def create_product(data: ProductCreate, product_service: ProductServiceDep
     return await product_service.create(data)
 
 
-@router.get(
+@product_router.get(
     "/id/{product_id}",
     response_model=ProductRead,
     summary="Retrieve a product by its ID",
@@ -43,7 +43,7 @@ async def get_product(product_id: UUID, product_service: ProductServiceDep) -> P
     return await product_service.get_by_id(product_id)
 
 
-@router.get(
+@product_router.get(
     "/slug/{slug}",
     response_model=ProductRead,
     summary="Retrieve a product by its slug",
@@ -53,7 +53,7 @@ async def get_product_by_slug(slug: str, product_service: ProductServiceDep) -> 
     return await product_service.get_by_slug(slug)
 
 
-@router.put(
+@product_router.put(
     "/{product_id}",
     response_model=ProductRead,
     summary="Update a product by its ID",
@@ -65,7 +65,7 @@ async def update_product(
     return await product_service.update(product_id, data)
 
 
-@router.delete(
+@product_router.delete(
     "/{product_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a product by its ID",

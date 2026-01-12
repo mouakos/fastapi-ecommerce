@@ -11,10 +11,10 @@ from app.api.v1.dependencies import (
 )
 from app.schemas.cart_schema import CartItemCreate, CartItemUpdate, CartRead
 
-router = APIRouter(prefix="/cart", tags=["Cart"])
+cart_router = APIRouter(prefix="/cart", tags=["Cart"])
 
 
-@router.get("/", response_model=CartRead, summary="Get current user's cart or session cart")
+@cart_router.get("/", response_model=CartRead, summary="Get current user's cart or session cart")
 async def get_cart(
     session_id: CartSessionIdOrCreateDep,
     current_user: OptionalCurrentUserDep,
@@ -27,7 +27,7 @@ async def get_cart(
     )
 
 
-@router.post("/items/", response_model=CartRead, summary="Add item to cart")
+@cart_router.post("/items/", response_model=CartRead, summary="Add item to cart")
 async def add_item(
     data: CartItemCreate,
     session_id: CartSessionIdOrCreateDep,
@@ -42,7 +42,9 @@ async def add_item(
     )
 
 
-@router.put("/items/{product_id}/", response_model=CartRead, summary="Update cart item quantity")
+@cart_router.put(
+    "/items/{product_id}/", response_model=CartRead, summary="Update cart item quantity"
+)
 async def update_item(
     product_id: UUID,
     data: CartItemUpdate,
@@ -59,7 +61,9 @@ async def update_item(
     )
 
 
-@router.delete("/items/{product_id}/", response_model=CartRead, summary="Remove item from cart")
+@cart_router.delete(
+    "/items/{product_id}/", response_model=CartRead, summary="Remove item from cart"
+)
 async def remove_item(
     product_id: UUID,
     session_id: CartSessionIdOrCreateDep,
@@ -74,7 +78,7 @@ async def remove_item(
     )
 
 
-@router.delete("/", response_model=CartRead, summary="Clear cart")
+@cart_router.delete("/", response_model=CartRead, summary="Clear cart")
 async def clear_cart(
     session_id: CartSessionIdOrCreateDep,
     current_user: OptionalCurrentUserDep,

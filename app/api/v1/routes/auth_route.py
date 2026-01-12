@@ -5,10 +5,10 @@ from fastapi import APIRouter, status
 from app.api.v1.dependencies import CartServiceDep, CartSessionIdDep, UserServiceDep
 from app.schemas.user_schema import Login, Token, UserCreate, UserRead
 
-router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
+auth_router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
 
 
-@router.post(
+@auth_router.post(
     "/register",
     response_model=UserRead,
     status_code=status.HTTP_201_CREATED,
@@ -19,7 +19,7 @@ async def create_user(data: UserCreate, user_service: UserServiceDep) -> UserRea
     return await user_service.create(data)
 
 
-@router.post(
+@auth_router.post(
     "/login",
     response_model=Token,
     summary="Authenticate a user and return a JWT token.",
