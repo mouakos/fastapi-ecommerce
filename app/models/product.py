@@ -1,10 +1,9 @@
 """Product model for storing product information."""
 
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 from uuid import UUID
 
-from roman_numerals import TYPE_CHECKING
 from sqlmodel import Field, Relationship
 
 from app.models.base import TimestampMixin, UUIDMixin

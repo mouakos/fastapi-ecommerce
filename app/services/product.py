@@ -1,43 +1,39 @@
 """Service layer for product-related operations."""
 
+# mypy: disable-error-code=return-value
 from uuid import UUID
 
 from fastapi import HTTPException
 from pydantic import HttpUrl
-from sqlmodel import select
-from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.interfaces.unit_of_work import UnitOfWork
 from app.models.product import Product
-from app.schemas.product import ProductCreate, ProductUpdate
-from app.services.category import CategoryService
+from app.schemas.product import ProductCreate, ProductRead, ProductUpdate
 from app.utils.sku import generate_sku
-from app.utils.slug import generate_slug
 
 
 class ProductService:
     """Service class for product-related operations."""
 
-    @staticmethod
-    async def list_all(
-        session: AsyncSession,
-    ) -> list[Product]:
+    def __init__(self, uow: UnitOfWork) -> None:
+        """Initialize the service with a unit of work."""
+        self.uow = uow
+
+    async def list_all(self) -> list[ProductRead]:
         """List all products.
 
         Args:
             session (AsyncSession): The database session.
 
         Returns:
-            list[Product]: A list of all products.
+            list[ProductRead]: A list of all products.
         """
-        stmt = select(Product)
-        result = await session.exec(stmt)
-        return list(result.all())
+        return await self.uow.products.list_all()
 
-    @staticmethod
     async def get_by_id(
-        session: AsyncSession,
+        self,
         product_id: UUID,
-    ) -> Product:
+    ) -> ProductRead:
         """Retrieve a product by its ID.
 
         Args:
@@ -45,44 +41,40 @@ class ProductService:
             product_id (UUID): The ID of the product to retrieve.
 
         Returns:
-            Product: The product with the specified ID.
+            ProductRead: The product with the specified ID.
 
         Raises:
             HTTPException: If the product is not found.
         """
-        product = await session.get(Product, product_id)
+        product = await self.uow.products.get_by_id(product_id)
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
         return product
 
-    @staticmethod
     async def get_by_slug(
-        session: AsyncSession,
+        self,
         slug: str,
-    ) -> Product:
+    ) -> ProductRead:
         """Retrieve a product by its slug.
 
         Args:
-            session (AsyncSession): The database session.
             slug (str): The slug of the product to retrieve.
 
         Returns:
-            Product: The product with the specified slug.
+            ProductRead: The product with the specified slug.
 
         Raises:
             HTTPException: If the product is not found.
         """
-        stmt = select(Product).where(Product.slug == slug)
-        product = (await session.exec(stmt)).first()
+        product = await self.uow.products.get_by_slug(slug)
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
         return product
 
-    @staticmethod
     async def create(
-        session: AsyncSession,
+        self,
         data: ProductCreate,
-    ) -> Product:
+    ) -> ProductRead:
         """Create a new product.
 
         Args:
@@ -90,16 +82,18 @@ class ProductService:
             data (ProductCreate): The product data.
 
         Returns:
-            Product: The created product.
+            ProductRead: The created product.
 
         Raises:
             HTTPException: If the category does not exist.
         """
         # Validate category existence if category_id is provided
         if data.category_id:
-            _ = await CategoryService.get_by_id(session, data.category_id)
+            category = await self.uow.categories.get_by_id(data.category_id)
+            if not category:
+                raise HTTPException(status_code=404, detail="Category not found.")
 
-        slug = await generate_slug(session, data.name, Product)
+        slug = await self.uow.products.generate_slug(data.name)
         sku = generate_sku(data.name)
 
         product_data = data.model_dump()
@@ -108,35 +102,34 @@ class ProductService:
 
         new_product = Product(slug=slug, sku=sku, **product_data)
 
-        session.add(new_product)
-        await session.commit()
-        await session.refresh(new_product)
-        return new_product
+        return await self.uow.products.add(new_product)
 
-    @staticmethod
     async def update(
-        session: AsyncSession,
+        self,
         product_id: UUID,
         data: ProductUpdate,
-    ) -> Product:
+    ) -> ProductRead:
         """Update an existing product.
 
         Args:
-            session (AsyncSession): The database session.
             product_id (UUID): The ID of the product to update.
             data (ProductUpdate): The updated product data.
 
         Returns:
-            Product: The updated product.
+            ProductRead: The updated product.
 
         Raises:
             HTTPException: If the product or category does not exist.
         """
-        product = await ProductService.get_by_id(session, product_id)
+        product = await self.uow.products.get_by_id(product_id)
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found.")
 
         # Validate category existence if category_id is provided
         if data.category_id:
-            _ = await CategoryService.get_by_id(session, data.category_id)
+            category = await self.uow.categories.get_by_id(data.category_id)
+            if not category:
+                raise HTTPException(status_code=404, detail="Category not found.")
 
         product_data = data.model_dump(exclude_unset=True)
         if isinstance(product_data.get("image_url"), HttpUrl):
@@ -145,24 +138,19 @@ class ProductService:
         for key, value in product_data.items():
             setattr(product, key, value)
 
-        await session.commit()
-        await session.refresh(product)
-        return product
+        return await self.uow.products.update(product)
 
-    @staticmethod
     async def delete(
-        session: AsyncSession,
+        self,
         product_id: UUID,
     ) -> None:
         """Delete a product by its ID.
 
         Args:
-            session (AsyncSession): The database session.
             product_id (UUID): The ID of the product to delete.
 
         Raises:
             HTTPException: If the product does not exist.
         """
-        product = await ProductService.get_by_id(session, product_id)
-        await session.delete(product)
-        await session.commit()
+        product = await self.get_by_id(product_id)
+        await self.uow.products.delete(product.id)
