@@ -13,11 +13,11 @@ from app.core.security import decode_access_token
 from app.db.database import AsyncSessionLocal
 from app.interfaces.unit_of_work import UnitOfWork
 from app.schemas.user import UserRead
-from app.services.address import AddressService
-from app.services.cart import CartService
-from app.services.category import CategoryService
-from app.services.product import ProductService
-from app.services.user import UserService
+from app.services.address_service import AddressService
+from app.services.cart_service import CartService
+from app.services.category_service import CategoryService
+from app.services.product_service import ProductService
+from app.services.user_service import UserService
 from app.uow.sql_unit_of_work import SqlUnitOfWork
 
 oauth_scheme = HTTPBearer(
