@@ -12,6 +12,7 @@ from app.models.category import Category
 if TYPE_CHECKING:
     from app.models.cart import CartItem
     from app.models.category import Category
+    from app.models.order import OrderItem
 
 
 class Product(ModelBase, TimestampMixin, table=True):
@@ -35,5 +36,8 @@ class Product(ModelBase, TimestampMixin, table=True):
     category: Optional["Category"] = Relationship(back_populates="products")
 
     cart_items: list["CartItem"] = Relationship(
+        back_populates="product", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
+    )
+    order_items: list["OrderItem"] = Relationship(
         back_populates="product", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
     )

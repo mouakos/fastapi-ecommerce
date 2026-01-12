@@ -9,6 +9,7 @@ from app.models.base import ModelBase, TimestampMixin
 if TYPE_CHECKING:
     from app.models.address import Address
     from app.models.cart import Cart
+    from app.models.order import Order
 
 
 class User(ModelBase, TimestampMixin, table=True):
@@ -21,7 +22,11 @@ class User(ModelBase, TimestampMixin, table=True):
     last_name: str | None
     phone_number: str | None
 
+    # Relationships
     addresses: list["Address"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
     )
     cart: Optional["Cart"] = Relationship(back_populates="user")
+    orders: list["Order"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
+    )
