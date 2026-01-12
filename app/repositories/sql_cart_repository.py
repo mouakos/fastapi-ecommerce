@@ -6,8 +6,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.interfaces.cart_repository import CartRepository
-from app.models.cart import Cart
-from app.models.cart_item import CartItem
+from app.models.cart import Cart, CartItem
 from app.repositories.sql_generic_repository import SqlGenericRepository
 
 

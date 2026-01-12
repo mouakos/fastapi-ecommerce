@@ -4,8 +4,7 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 
 from app.interfaces.generic_repository import GenericRepository
-from app.models.cart import Cart
-from app.models.cart_item import CartItem
+from app.models.cart import Cart, CartItem
 
 
 class CartRepository(GenericRepository[Cart], ABC):

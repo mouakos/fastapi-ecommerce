@@ -10,7 +10,7 @@ from app.models.base import ModelBase, TimestampMixin
 from app.models.category import Category
 
 if TYPE_CHECKING:
-    from app.models.cart_item import CartItem
+    from app.models.cart import CartItem
     from app.models.category import Category
 
 

@@ -6,8 +6,7 @@ from uuid import UUID
 from fastapi import HTTPException
 
 from app.interfaces.unit_of_work import UnitOfWork
-from app.models.cart import Cart
-from app.models.cart_item import CartItem
+from app.models.cart import Cart, CartItem
 from app.schemas.cart_schema import CartItemCreate, CartItemUpdate, CartRead
 
 
