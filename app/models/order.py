@@ -9,7 +9,6 @@ from sqlalchemy import Column, UniqueConstraint
 from sqlalchemy import Enum as SQLEnum
 from sqlmodel import Field, Relationship
 
-from app.core.enums import OrderStatus
 from app.models.base import ModelBase, TimestampMixin
 from app.utils.utc_time import utcnow
 
@@ -17,6 +16,19 @@ if TYPE_CHECKING:
     from app.models.address import Address
     from app.models.product import Product
     from app.models.user import User
+
+
+from enum import StrEnum
+
+
+class OrderStatus(StrEnum):
+    """Enumeration for order statuses."""
+
+    PENDING = "pending"
+    PROCESSING = "paid"
+    SHIPPED = "shipped"
+    DELIVERED = "delivered"
+    CANCELED = "canceled"
 
 
 class Order(ModelBase, TimestampMixin, table=True):

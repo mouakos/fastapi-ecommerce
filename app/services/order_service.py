@@ -6,9 +6,8 @@ from uuid import UUID
 import ulid
 from fastapi import HTTPException
 
-from app.core.enums import OrderStatus
 from app.interfaces.unit_of_work import UnitOfWork
-from app.models.order import Order, OrderItem
+from app.models.order import Order, OrderItem, OrderStatus
 from app.schemas.order_schema import OrderCreate, OrderRead
 
 
