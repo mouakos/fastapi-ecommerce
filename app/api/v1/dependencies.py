@@ -12,7 +12,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.core.security import decode_access_token
 from app.db.database import AsyncSessionLocal
 from app.interfaces.unit_of_work import UnitOfWork
-from app.schemas.user import UserRead
+from app.schemas.user_schema import UserRead
 from app.services.address_service import AddressService
 from app.services.cart_service import CartService
 from app.services.category_service import CategoryService

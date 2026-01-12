@@ -8,7 +8,7 @@ from pydantic import HttpUrl
 
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.category import Category
-from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
+from app.schemas.category_schema import CategoryCreate, CategoryRead, CategoryUpdate
 
 
 class CategoryService:

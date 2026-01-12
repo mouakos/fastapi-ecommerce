@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, status
 
 from app.api.v1.dependencies import ProductServiceDep
-from app.schemas.product import ProductCreate, ProductRead, ProductUpdate
+from app.schemas.product_schema import ProductCreate, ProductRead, ProductUpdate
 
 router = APIRouter(prefix="/api/v1/products", tags=["Products"])
 

@@ -9,7 +9,7 @@ from app.api.v1.dependencies import (
     CartSessionIdOrCreateDep,
     OptionalCurrentUserDep,
 )
-from app.schemas.cart import CartItemCreate, CartItemUpdate, CartRead
+from app.schemas.cart_schema import CartItemCreate, CartItemUpdate, CartRead
 
 router = APIRouter(prefix="/cart", tags=["Cart"])
 

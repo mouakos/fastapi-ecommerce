@@ -8,7 +8,7 @@ from pydantic import HttpUrl
 
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.product import Product
-from app.schemas.product import ProductCreate, ProductRead, ProductUpdate
+from app.schemas.product_schema import ProductCreate, ProductRead, ProductUpdate
 from app.utils.sku import generate_sku
 
 

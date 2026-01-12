@@ -8,7 +8,7 @@ from fastapi import HTTPException, status
 from app.core.security import create_access_token, hash_password, verify_password
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.user import User
-from app.schemas.user import Login, Token, UserCreate, UserRead, UserUpdate
+from app.schemas.user_schema import Login, Token, UserCreate, UserRead, UserUpdate
 
 
 class UserService:

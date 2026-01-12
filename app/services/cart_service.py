@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.cart import Cart
 from app.models.cart_item import CartItem
-from app.schemas.cart import CartItemCreate, CartItemUpdate, CartRead
+from app.schemas.cart_schema import CartItemCreate, CartItemUpdate, CartRead
 
 
 class CartService:

@@ -7,7 +7,7 @@ from fastapi import HTTPException, status
 
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.address import Address
-from app.schemas.address import AddressCreate, AddressRead, AddressUpdate
+from app.schemas.address_schema import AddressCreate, AddressRead, AddressUpdate
 
 
 class AddressService:
