@@ -16,6 +16,7 @@ from app.schemas.user_schema import UserRead
 from app.services.address_service import AddressService
 from app.services.cart_service import CartService
 from app.services.category_service import CategoryService
+from app.services.order_service import OrderService
 from app.services.product_service import ProductService
 from app.services.user_service import UserService
 from app.uow.sql_unit_of_work import SqlUnitOfWork
@@ -72,6 +73,12 @@ def get_cart_service(uow: UnitOfWorkDep) -> CartService:
     return CartService(uow)
 
 
+def get_order_service(uow: UnitOfWorkDep) -> OrderService:
+    """Get Order Service."""
+    return OrderService(uow)
+
+
+OrderServiceDep = Annotated[OrderService, Depends(get_order_service)]
 UserServiceDep = Annotated[UserService, Depends(get_user_service)]
 AddressServiceDep = Annotated[AddressService, Depends(get_address_service)]
 ProductServiceDep = Annotated[ProductService, Depends(get_product_service)]

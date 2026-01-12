@@ -46,7 +46,7 @@ class CartItem(ModelBase, table=True):
     added_at: datetime = Field(default_factory=utcnow)
 
     # snapshot fields to preserve product details at the time of addition
-    unit_price: Decimal
+    unit_price: Decimal = Field(default=0, max_digits=10, decimal_places=2)
     product_name: str
     product_image_url: str | None = None
 

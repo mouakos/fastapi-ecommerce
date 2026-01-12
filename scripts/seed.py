@@ -4,7 +4,7 @@ import asyncio
 
 from sqlmodel import select
 
-from app.db.database import AsyncSessionLocal
+from app.db.database import AsyncSessionLocal, async_engine
 from app.models.category import Category
 from app.models.product import Product
 
@@ -138,7 +138,7 @@ async def seed_data() -> None:
 async def main() -> None:
     """Main entry point that properly closes the engine."""
     await seed_data()
-    # await async_engine.dispose()
+    await async_engine.dispose()
 
 
 if __name__ == "__main__":
