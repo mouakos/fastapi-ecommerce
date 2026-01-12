@@ -6,6 +6,7 @@ from app.interfaces.unit_of_work import UnitOfWork
 from app.repositories.sql_address_repository import SqlAddressRepository
 from app.repositories.sql_cart_repository import SqlCartRepository
 from app.repositories.sql_category_repository import SqlCategoryRepository
+from app.repositories.sql_order_repository import SqlOrderRepository
 from app.repositories.sql_product_repository import SqlProductRepository
 from app.repositories.sql_user_repository import SqlUserRepository
 
@@ -35,3 +36,4 @@ class SqlUnitOfWork(UnitOfWork):
         self.categories = SqlCategoryRepository(self._session)
         self.products = SqlProductRepository(self._session)
         self.users = SqlUserRepository(self._session)
+        self.orders = SqlOrderRepository(self._session)
