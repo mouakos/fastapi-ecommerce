@@ -3,9 +3,8 @@
 import asyncio
 
 from sqlmodel import select
-from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.db.database import async_engine
+from app.db.database import AsyncSessionLocal
 from app.models.category import Category
 from app.models.product import Product
 
@@ -103,7 +102,7 @@ products = [
 
 async def seed_data() -> None:
     """Seed database with sample categories and products."""
-    async with AsyncSession(async_engine) as session:
+    async with AsyncSessionLocal() as session:
         print("Starting database seeding...")
 
         # Clear existing data
@@ -139,7 +138,7 @@ async def seed_data() -> None:
 async def main() -> None:
     """Main entry point that properly closes the engine."""
     await seed_data()
-    await async_engine.dispose()
+    # await async_engine.dispose()
 
 
 if __name__ == "__main__":
