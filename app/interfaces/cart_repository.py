@@ -1,0 +1,51 @@
+"""Interface for Cart repository."""
+
+from abc import ABC, abstractmethod
+from uuid import UUID
+
+from app.interfaces.generic_repository import GenericRepository
+from app.models.cart import Cart
+from app.models.cart_item import CartItem
+
+
+class CartRepository(GenericRepository[Cart], ABC):
+    """Interface for Cart repository."""
+
+    @abstractmethod
+    async def get_by_user_id(self, user_id: UUID) -> Cart | None:
+        """Get a single cart by user ID.
+
+        Args:
+            user_id (UUID): User ID.
+
+        Returns:
+            Cart | None: Cart or none.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def get_by_session_id(self, session_id: str) -> Cart | None:
+        """Get a single cart by session ID.
+
+        Args:
+            session_id (str): Session ID.
+
+        Returns:
+            Cart | None: Cart or none.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def get_item_by_cart_and_product(
+        self, cart_id: UUID, product_id: UUID
+    ) -> CartItem | None:
+        """Get a single cart item by cart ID and product ID.
+
+        Args:
+            cart_id (UUID): Cart ID.
+            product_id (UUID): Product ID.
+
+        Returns:
+            Cart | None: Cart item or none.
+        """
+        raise NotImplementedError()
