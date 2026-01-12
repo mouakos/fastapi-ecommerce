@@ -1,12 +1,9 @@
 """Authentication API Routes."""
 
-# mypy: disable-error-code=return-value
-
 from fastapi import APIRouter, status
 
-from app.api.v1.dependencies import SessionDep
+from app.api.v1.dependencies import CartServiceDep, CartSessionIdDep, UserServiceDep
 from app.schemas.user import Login, Token, UserCreate, UserRead
-from app.services.user import UserService
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
 
@@ -17,9 +14,9 @@ router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
     status_code=status.HTTP_201_CREATED,
     summary="Create a new user account.",
 )
-async def create_user(data: UserCreate, session: SessionDep) -> UserRead:
+async def create_user(data: UserCreate, user_service: UserServiceDep) -> UserRead:
     """Register a new user."""
-    return await UserService.create(session, data)
+    return await user_service.create(data)
 
 
 @router.post(
@@ -27,6 +24,14 @@ async def create_user(data: UserCreate, session: SessionDep) -> UserRead:
     response_model=Token,
     summary="Authenticate a user and return a JWT token.",
 )
-async def login(data: Login, session: SessionDep) -> Token:
+async def login(
+    data: Login,
+    session_id: CartSessionIdDep,
+    user_service: UserServiceDep,
+    cart_service: CartServiceDep,
+) -> Token:
     """Register a new user."""
-    return await UserService.login(session, data)
+    token, user = await user_service.login(data)
+    if session_id:
+        await cart_service.merge_carts(user.id, session_id)
+    return token

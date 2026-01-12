@@ -1,13 +1,11 @@
 """Category API routes."""
 
-# mypy: disable-error-code=return-value
 from uuid import UUID
 
 from fastapi import APIRouter, status
 
-from app.api.v1.dependencies import SessionDep
+from app.api.v1.dependencies import CategoryServiceDep
 from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
-from app.services.category import CategoryService
 
 router = APIRouter(prefix="/api/v1/categories", tags=["Categories"])
 
@@ -17,10 +15,10 @@ router = APIRouter(prefix="/api/v1/categories", tags=["Categories"])
     response_model=list[CategoryRead],
 )
 async def list_categories(
-    session: SessionDep,
+    category_service: CategoryServiceDep,
 ) -> list[CategoryRead]:
     """List all categories."""
-    return await CategoryService.list_all(session)
+    return await category_service.list_all()
 
 
 @router.post(
@@ -29,9 +27,11 @@ async def list_categories(
     status_code=status.HTTP_201_CREATED,
     summary="Create a new category",
 )
-async def create_category(data: CategoryCreate, session: SessionDep) -> CategoryRead:
+async def create_category(
+    data: CategoryCreate, category_service: CategoryServiceDep
+) -> CategoryRead:
     """Create a new category."""
-    return await CategoryService.create(session, data)
+    return await category_service.create(data)
 
 
 @router.get(
@@ -39,9 +39,9 @@ async def create_category(data: CategoryCreate, session: SessionDep) -> Category
     response_model=CategoryRead,
     summary="Retrieve a category by its ID",
 )
-async def get_category(category_id: UUID, session: SessionDep) -> CategoryRead:
+async def get_category(category_id: UUID, category_service: CategoryServiceDep) -> CategoryRead:
     """Retrieve a category by its ID."""
-    return await CategoryService.get_by_id(session, category_id)
+    return await category_service.get_by_id(category_id)
 
 
 @router.get(
@@ -49,9 +49,9 @@ async def get_category(category_id: UUID, session: SessionDep) -> CategoryRead:
     response_model=CategoryRead,
     summary="Retrieve a category by its slug",
 )
-async def get_category_by_slug(slug: str, session: SessionDep) -> CategoryRead:
+async def get_category_by_slug(slug: str, category_service: CategoryServiceDep) -> CategoryRead:
     """Retrieve a category by its slug."""
-    return await CategoryService.get_by_slug(session, slug)
+    return await category_service.get_by_slug(slug)
 
 
 @router.put(
@@ -60,10 +60,10 @@ async def get_category_by_slug(slug: str, session: SessionDep) -> CategoryRead:
     summary="Update a category by its ID",
 )
 async def update_category(
-    category_id: UUID, data: CategoryUpdate, session: SessionDep
+    category_id: UUID, data: CategoryUpdate, category_service: CategoryServiceDep
 ) -> CategoryRead:
     """Update a category by its ID."""
-    return await CategoryService.update(session, category_id, data)
+    return await category_service.update(category_id, data)
 
 
 @router.delete(
@@ -71,6 +71,6 @@ async def update_category(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a category by its ID",
 )
-async def delete_category(category_id: UUID, session: SessionDep) -> None:
+async def delete_category(category_id: UUID, category_service: CategoryServiceDep) -> None:
     """Delete a category by its ID."""
-    return await CategoryService.delete(session, category_id)
+    return await category_service.delete(category_id)

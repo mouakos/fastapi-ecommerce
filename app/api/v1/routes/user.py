@@ -1,15 +1,16 @@
 """User API Routes."""
 
-# mypy: disable-error-code=return-value
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
 
-from app.api.v1.dependencies import CurrentUser, SessionDep
+from app.api.v1.dependencies import (
+    AddressServiceDep,
+    CurrentUserDep,
+    UserServiceDep,
+)
 from app.schemas.address import AddressCreate, AddressRead, AddressUpdate
 from app.schemas.user import UserRead, UserUpdate
-from app.services.address import AddressService
-from app.services.user import UserService
 
 router = APIRouter(prefix="/api/v1/users", tags=["Users"])
 
@@ -20,7 +21,7 @@ router = APIRouter(prefix="/api/v1/users", tags=["Users"])
     summary="Get the currently authenticated user's profile.",
 )
 async def get_user(
-    current_user: CurrentUser,
+    current_user: CurrentUserDep,
 ) -> UserRead:
     """Retrieve the profile of the currently authenticated user."""
     return current_user
@@ -33,11 +34,11 @@ async def get_user(
 )
 async def update_user(
     data: UserUpdate,
-    current_user: CurrentUser,
-    session: SessionDep,
+    current_user: CurrentUserDep,
+    user_service: UserServiceDep,
 ) -> UserRead:
     """Update the profile of the currently authenticated user."""
-    return await UserService.update(session, current_user.id, data)
+    return await user_service.update(current_user.id, data)
 
 
 @router.delete(
@@ -46,11 +47,11 @@ async def update_user(
     summary="Delete the currently authenticated user's account.",
 )
 async def delete_user(
-    current_user: CurrentUser,
-    session: SessionDep,
+    current_user: CurrentUserDep,
+    user_service: UserServiceDep,
 ) -> None:
     """Delete the current user's account."""
-    await UserService.delete(session, current_user.id)
+    await user_service.delete(current_user.id)
 
 
 @router.get(
@@ -59,11 +60,11 @@ async def delete_user(
     summary="List all addresses for the current user.",
 )
 async def list_addresses(
-    current_user: CurrentUser,
-    session: SessionDep,
+    current_user: CurrentUserDep,
+    address_service: AddressServiceDep,
 ) -> list[AddressRead]:
     """List all addresses for the current user.."""
-    return await AddressService.list_all(session, current_user.id)
+    return await address_service.list_all(current_user.id)
 
 
 @router.post(
@@ -74,11 +75,11 @@ async def list_addresses(
 )
 async def add_address(
     data: AddressCreate,
-    current_user: CurrentUser,
-    session: SessionDep,
+    current_user: CurrentUserDep,
+    address_service: AddressServiceDep,
 ) -> AddressRead:
     """Add a new address to the currently authenticated user's account."""
-    return await AddressService.create(session, data, current_user.id)
+    return await address_service.create(current_user.id, data)
 
 
 @router.put(
@@ -89,17 +90,17 @@ async def add_address(
 async def update_address(
     address_id: UUID,
     data: AddressUpdate,
-    current_user: CurrentUser,
-    session: SessionDep,
+    current_user: CurrentUserDep,
+    address_service: AddressServiceDep,
 ) -> AddressRead:
     """Update an existing address for the currently authenticated user's account."""
-    address = await AddressService.get_by_id(session, address_id)
+    address = await address_service.get_by_id(address_id)
     if address.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have enough permissions to perform this action.",
         )
-    return await AddressService.update(session, data, address_id)
+    return await address_service.update(address_id, data)
 
 
 @router.delete(
@@ -109,14 +110,14 @@ async def update_address(
 )
 async def delete_address(
     address_id: UUID,
-    current_user: CurrentUser,
-    session: SessionDep,
+    current_user: CurrentUserDep,
+    address_service: AddressServiceDep,
 ) -> None:
     """Delete an existing address for the currently authenticated user's account."""
-    address = await AddressService.get_by_id(session, address_id)
+    address = await address_service.get_by_id(address_id)
     if address.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have enough permissions to perform this action.",
         )
-    await AddressService.delete(session, address_id)
+    await address_service.delete(address_id)
