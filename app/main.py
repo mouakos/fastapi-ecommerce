@@ -56,12 +56,16 @@ app = FastAPI(
             "description": "Operations related to user management.",
         },
         {
+            "name": "Categories",
+            "description": "Operations related to category management.",
+        },
+        {
             "name": "Products",
             "description": "Operations related to product management.",
         },
         {
-            "name": "Categories",
-            "description": "Operations related to category management.",
+            "name": "Wishlist",
+            "description": "Operations related to wishlist management.",
         },
         {
             "name": "Cart",

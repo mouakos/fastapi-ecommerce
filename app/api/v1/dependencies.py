@@ -19,6 +19,7 @@ from app.services.category_service import CategoryService
 from app.services.order_service import OrderService
 from app.services.product_service import ProductService
 from app.services.user_service import UserService
+from app.services.wishlist_service import WishlistService
 from app.uow.sql_unit_of_work import SqlUnitOfWork
 
 oauth_scheme = HTTPBearer(
@@ -78,12 +79,18 @@ def get_order_service(uow: UnitOfWorkDep) -> OrderService:
     return OrderService(uow)
 
 
+def get_wishlist_service(uow: UnitOfWorkDep) -> WishlistService:
+    """Get Wishlist Service."""
+    return WishlistService(uow)
+
+
 OrderServiceDep = Annotated[OrderService, Depends(get_order_service)]
 UserServiceDep = Annotated[UserService, Depends(get_user_service)]
 AddressServiceDep = Annotated[AddressService, Depends(get_address_service)]
 ProductServiceDep = Annotated[ProductService, Depends(get_product_service)]
 CategoryServiceDep = Annotated[CategoryService, Depends(get_category_service)]
 CartServiceDep = Annotated[CartService, Depends(get_cart_service)]
+WishlistServiceDep = Annotated[WishlistService, Depends(get_wishlist_service)]
 
 
 async def get_current_user(
