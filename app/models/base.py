@@ -26,7 +26,7 @@ class TimestampMixin(SQLModel):
     )
 
 
-class UUIDMixin(SQLModel):
-    """Mixin to add a UUID primary key."""
+class ModelBase(SQLModel):
+    """Base model with UUID primary key."""
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)

@@ -5,13 +5,13 @@ from uuid import UUID
 
 from sqlmodel import Field, Relationship
 
-from app.models.base import TimestampMixin, UUIDMixin
+from app.models.base import ModelBase, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.user import User
 
 
-class Address(UUIDMixin, TimestampMixin, table=True):
+class Address(ModelBase, TimestampMixin, table=True):
     """Address model for storing user address information."""
 
     __tablename__ = "addresses"

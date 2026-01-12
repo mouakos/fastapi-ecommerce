@@ -4,14 +4,14 @@ from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship
 
-from app.models.base import TimestampMixin, UUIDMixin
+from app.models.base import ModelBase, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.address import Address
     from app.models.cart import Cart
 
 
-class User(UUIDMixin, TimestampMixin, table=True):
+class User(ModelBase, TimestampMixin, table=True):
     """User model for storing user information."""
 
     __tablename__ = "users"

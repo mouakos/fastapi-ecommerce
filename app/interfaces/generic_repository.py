@@ -4,7 +4,9 @@ from abc import ABC, abstractmethod
 from typing import Any, Generic, TypeVar
 from uuid import UUID
 
-T_model = TypeVar("T_model")
+from app.models.base import ModelBase
+
+T_model = TypeVar("T_model", bound=ModelBase)
 
 
 class GenericRepository(Generic[T_model], ABC):  # noqa: UP046

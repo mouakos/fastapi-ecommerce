@@ -7,7 +7,7 @@ from uuid import UUID
 from sqlalchemy import Column
 from sqlmodel import DateTime, Field, Relationship
 
-from app.models.base import TimestampMixin, UUIDMixin
+from app.models.base import ModelBase, TimestampMixin
 from app.utils.utc_time import utcnow
 
 if TYPE_CHECKING:
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from app.models.user import User
 
 
-class Cart(UUIDMixin, TimestampMixin, table=True):
+class Cart(ModelBase, TimestampMixin, table=True):
     """Cart model for storing shopping cart information."""
 
     __tablename__ = "carts"

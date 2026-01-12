@@ -7,7 +7,7 @@ from uuid import UUID
 
 from sqlmodel import Field, Relationship, UniqueConstraint
 
-from app.models.base import UUIDMixin
+from app.models.base import ModelBase
 from app.utils.utc_time import utcnow
 
 if TYPE_CHECKING:
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from app.models.product import Product
 
 
-class CartItem(UUIDMixin, table=True):
+class CartItem(ModelBase, table=True):
     """Cart item model for storing items in a shopping cart."""
 
     __tablename__ = "cart_items"

@@ -5,13 +5,13 @@ from uuid import UUID
 
 from sqlmodel import Field, Relationship
 
-from .base import TimestampMixin, UUIDMixin
+from .base import ModelBase, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.product import Product
 
 
-class Category(UUIDMixin, TimestampMixin, table=True):
+class Category(ModelBase, TimestampMixin, table=True):
     """Category model for organizing products into hierarchical categories."""
 
     __tablename__ = "categories"

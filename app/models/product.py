@@ -6,7 +6,7 @@ from uuid import UUID
 
 from sqlmodel import Field, Relationship
 
-from app.models.base import TimestampMixin, UUIDMixin
+from app.models.base import ModelBase, TimestampMixin
 from app.models.category import Category
 
 if TYPE_CHECKING:
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from app.models.category import Category
 
 
-class Product(UUIDMixin, TimestampMixin, table=True):
+class Product(ModelBase, TimestampMixin, table=True):
     """Product model for storing product information."""
 
     __tablename__ = "products"
