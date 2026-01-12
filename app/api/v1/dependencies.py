@@ -18,7 +18,7 @@ from app.services.cart import CartService
 from app.services.category import CategoryService
 from app.services.product import ProductService
 from app.services.user import UserService
-from app.uow.sql_unit_of_work import SqlModelUnitOfWork
+from app.uow.sql_unit_of_work import SqlUnitOfWork
 
 oauth_scheme = HTTPBearer(
     scheme_name="Bearer",
@@ -40,7 +40,7 @@ SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 async def get_uow(session: SessionDep) -> AsyncGenerator[UnitOfWork, None]:
     """Get Unit of Work."""
-    async with SqlModelUnitOfWork(session) as uow:
+    async with SqlUnitOfWork(session) as uow:
         yield uow
 
 

@@ -10,8 +10,8 @@ from app.repositories.sql_product_repository import SqlProductRepository
 from app.repositories.sql_user_repository import SqlUserRepository
 
 
-class SqlModelUnitOfWork(UnitOfWork):
-    """SQLModel Unit of Work implementation."""
+class SqlUnitOfWork(UnitOfWork):
+    """Model Unit of Work implementation."""
 
     def __init__(self, session: AsyncSession) -> None:
         """Creates a new uow instance.
