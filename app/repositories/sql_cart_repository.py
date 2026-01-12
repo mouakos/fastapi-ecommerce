@@ -1,0 +1,63 @@
+"""SQLModel Cart repository implementation."""
+
+from uuid import UUID
+
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app.interfaces.cart_repository import CartRepository
+from app.models.cart import Cart
+from app.models.cart_item import CartItem
+from app.repositories.sql_generic_repository import SqlGenericRepository
+
+
+class SqlCartRepository(SqlGenericRepository[Cart], CartRepository):
+    """SQL Cart repository implementation."""
+
+    def __init__(self, session: AsyncSession) -> None:
+        """Initialize the repository with a database session."""
+        super().__init__(session, Cart)
+
+    async def get_by_user_id(self, user_id: UUID) -> Cart | None:
+        """Get a single cart by user ID.
+
+        Args:
+            user_id (UUID): User ID.
+
+        Returns:
+            Cart | None: Cart or none.
+        """
+        stmt = select(Cart).where(Cart.user_id == user_id)
+        result = await self._session.exec(stmt)
+        return result.first()
+
+    async def get_by_session_id(self, session_id: str) -> Cart | None:
+        """Get a single cart by session ID.
+
+        Args:
+            session_id (str): Session ID.
+
+        Returns:
+            Cart | None: Cart or none.
+        """
+        stmt = select(Cart).where(Cart.session_id == session_id)
+        result = await self._session.exec(stmt)
+        return result.first()
+
+    async def get_item_by_cart_and_product(
+        self, cart_id: UUID, product_id: UUID
+    ) -> CartItem | None:
+        """Get a cart item by cart ID and product ID.
+
+        Args:
+            cart_id (UUID): Cart ID.
+            product_id (UUID): Product ID.
+
+        Returns:
+            CartItem | None: Cart item or none.
+        """
+        stmt = select(CartItem).where(
+            (CartItem.cart_id == cart_id) & (CartItem.product_id == product_id)
+        )
+        result = await self._session.exec(stmt)
+        return result.first()
