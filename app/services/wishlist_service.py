@@ -161,7 +161,14 @@ class WishlistService:
         if cart_item:
             cart_item.quantity += 1
         else:
-            new_cart_item = CartItem(cart_id=user_cart.id, product_id=product_id, quantity=1)
+            new_cart_item = CartItem(
+                cart_id=user_cart.id,
+                product_id=product_id,
+                quantity=1,
+                product_name=product.name,
+                product_image_url=product.image_url,
+                unit_price=product.price,
+            )
             user_cart.items.append(new_cart_item)
 
         await self.uow.carts.update(user_cart)

@@ -2,6 +2,7 @@
 
 from uuid import UUID
 
+from sqlalchemy.orm import selectinload
 from sqlmodel import delete, func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -26,7 +27,11 @@ class SqlWishlistRepository(SqlGenericRepository[WishlistItem], WishlistReposito
         Returns:
             list[WishlistItem]: List of wishlist items.
         """
-        stmt = select(WishlistItem).where(WishlistItem.user_id == user_id)
+        stmt = (
+            select(WishlistItem)
+            .where(WishlistItem.user_id == user_id)
+            .options(selectinload(WishlistItem.product))  # type: ignore  [arg-type]
+        )
         result = await self._session.exec(stmt)
         return list(result.all())
 

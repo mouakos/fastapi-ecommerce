@@ -55,7 +55,7 @@ async def remove_product_from_wishlist(
 
 
 @wishlist_route.delete(
-    "/clear/",
+    "/",
     summary="Clear user's wishlist",
     response_model=WishlistActionRead,
 )
