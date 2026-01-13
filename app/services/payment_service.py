@@ -58,9 +58,8 @@ class PaymentService:
                     }
                 ],
                 mode="payment",
-                success_url=settings.frontend_url
-                + "/payment-success?session_id={CHECKOUT_SESSION_ID}",
-                cancel_url=settings.frontend_url + "/payment-cancelled",
+                success_url=settings.domain + "/payment-success?session_id={CHECKOUT_SESSION_ID}",
+                cancel_url=settings.domain + "/payment-cancelled",
                 metadata={"order_id": str(order_id), "user_id": str(user_id)},
             )
         except stripe.error.StripeError as e:

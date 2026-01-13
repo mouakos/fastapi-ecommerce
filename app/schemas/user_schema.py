@@ -12,8 +12,8 @@ class UserCreate(BaseModel):
 
     email: EmailStr
     password: str = Field(..., min_length=6)
-    first_name: str = Field(..., min_length=2, max_length=50)
-    last_name: str = Field(..., min_length=2, max_length=50)
+    first_name: str | None = Field(default=None, min_length=2, max_length=50)
+    last_name: str | None = Field(default=None, min_length=2, max_length=50)
 
     model_config = {
         "json_schema_extra": {

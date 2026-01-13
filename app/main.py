@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: ARG001
     # Startup actions
     await create_tables()
     yield
-    # Shutdown actions
+    # Shutdown actions (dispose happens automatically)
     await async_engine.dispose()
 
 
