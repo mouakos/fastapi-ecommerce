@@ -72,7 +72,7 @@ class OrderService:
             await self.uow.products.update(item.product)
 
         # Clear cart
-        await self.uow.carts.delete(cart.id)
+        await self.uow.carts.delete_by_id(cart.id)
 
         return await self.uow.orders.update(created_order)
 

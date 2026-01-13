@@ -148,5 +148,5 @@ class CategoryService:
         Raises:
             HTTPException: If the category is not found.
         """
-        category = await self.get_by_id(category_id)
-        await self.uow.categories.delete(category.id)
+        if not await self.uow.categories.delete_by_id(category_id):
+            raise HTTPException(status_code=404, detail="Category not found.")

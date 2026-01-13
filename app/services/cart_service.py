@@ -222,4 +222,4 @@ class CartService:
                 user_cart.items.append(item)
 
         await self.uow.carts.update(user_cart)
-        await self.uow.carts.delete(guest_cart.id)
+        await self.uow.carts.delete_by_id(guest_cart.id)

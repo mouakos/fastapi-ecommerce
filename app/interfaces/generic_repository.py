@@ -64,10 +64,26 @@ class GenericRepository(Generic[T_model], ABC):  # noqa: UP046
         raise NotImplementedError()
 
     @abstractmethod
-    async def delete(self, id: UUID) -> None:
+    async def update_by_id(self, id: UUID, fields: dict[str, Any]) -> T_model | None:
+        """Updates specific fields of a record by id.
+
+        Args:
+            id (UUID): Record id.
+            fields (dict[str, Any]): Fields to update.
+
+        Returns:
+            T_model | None: Updated record or none if not found.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def delete_by_id(self, id: UUID) -> bool:
         """Deletes a record by id.
 
         Args:
             id (UUID): Record id.
+
+        Returns:
+            bool: True if deleted, False otherwise.
         """
         raise NotImplementedError()

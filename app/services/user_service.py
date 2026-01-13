@@ -114,5 +114,8 @@ class UserService:
         Raises:
             HTTPException: If the user does not exist.
         """
-        user = await self.get_by_id(user_id)
-        await self.uow.users.delete(user.id)
+        if not await self.uow.users.delete_by_id(user_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found.",
+            )

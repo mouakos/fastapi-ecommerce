@@ -124,5 +124,8 @@ class AddressService:
         Raises:
             HTTPException: If the address does not exists.
         """
-        address = await self.get_by_id(address_id)
-        await self.uow.addresses.delete(address.id)
+        if not await self.uow.addresses.delete_by_id(address_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Address not found.",
+            )

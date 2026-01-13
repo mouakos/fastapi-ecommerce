@@ -93,7 +93,7 @@ class WishlistService:
         if not wishlist_item:
             raise HTTPException(status_code=404, detail="Product not found in wishlist.")
 
-        await self.uow.wishlists.delete(wishlist_item.id)
+        await self.uow.wishlists.delete_by_id(wishlist_item.id)
 
         return WishlistActionRead(
             message="Product removed from wishlist successfully.",
@@ -174,7 +174,7 @@ class WishlistService:
         await self.uow.carts.update(user_cart)
 
         # Remove from wishlist
-        await self.uow.wishlists.delete(wishlist_item.id)
+        await self.uow.wishlists.delete_by_id(wishlist_item.id)
 
         return WishlistActionRead(
             message="Product moved to cart successfully.",

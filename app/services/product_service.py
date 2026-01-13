@@ -152,5 +152,5 @@ class ProductService:
         Raises:
             HTTPException: If the product does not exist.
         """
-        product = await self.get_by_id(product_id)
-        await self.uow.products.delete(product.id)
+        if not await self.uow.products.delete_by_id(product_id):
+            raise HTTPException(status_code=404, detail="Product not found.")

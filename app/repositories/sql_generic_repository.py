@@ -3,7 +3,7 @@
 from typing import Any
 from uuid import UUID
 
-from sqlmodel import select
+from sqlmodel import delete, select, update
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.interfaces.generic_repository import GenericRepository, T_model
@@ -81,13 +81,35 @@ class SqlGenericRepository(GenericRepository[T_model]):
         await self._session.refresh(record)
         return record
 
-    async def delete(self, id: UUID) -> None:
+    async def update_by_id(self, id: UUID, fields: dict[str, Any]) -> T_model | None:
+        """Updates specific fields of a record by id.
+
+        Args:
+            id (UUID): Record id.
+            fields (dict[str, Any]): Fields to update.
+
+        Returns:
+            T_model: The updated record
+        """
+        stmt = (
+            update(self._model)
+            .where(self._model.id == id)  # type: ignore[arg-type]
+            .values(**fields)
+            .returning(self._model)
+        )
+        result = await self._session.exec(stmt)
+        return result.first()  # type: ignore[return-value]
+
+    async def delete_by_id(self, id: UUID) -> bool:
         """Deletes a record by id.
 
         Args:
             id (UUID): Record id.
         """
-        record = await self.get_by_id(id)
-        if record:
-            await self._session.delete(record)
+        result = await self._session.exec(
+            delete(self._model).where(self._model.id == id)  # type: ignore[arg-type]
+        )
+        if result.rowcount > 0:
             await self._session.flush()
+            return True
+        return False
