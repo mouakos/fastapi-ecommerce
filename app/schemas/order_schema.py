@@ -1,6 +1,5 @@
 """Schemas for Order operations."""
 
-from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
@@ -24,7 +23,6 @@ class OrderItemRead(BaseModel):
     quantity: int
     unit_price: Decimal
     product_name: str
-    order_at: datetime
     image_url: HttpUrl | None = None
 
 

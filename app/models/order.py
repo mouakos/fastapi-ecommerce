@@ -39,6 +39,7 @@ class Order(ModelBase, table=True):
     __tablename__ = "orders"
     user_id: UUID = Field(default=None, foreign_key="users.id", index=True, ondelete="CASCADE")
     shipping_address_id: UUID = Field(foreign_key="addresses.id", index=True)
+    billing_address_id: UUID = Field(foreign_key="addresses.id", index=True)
     status: OrderStatus = Field(
         default=OrderStatus.PENDING,
         sa_column=Column(

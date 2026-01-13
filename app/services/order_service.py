@@ -51,6 +51,7 @@ class OrderService:
             shipping_address_id=data.shipping_address_id,
             total_amount=total_amount,
             status=OrderStatus.PENDING,
+            payment_status=OrderStatus.PENDING,
             order_number=self._order_number(),
         )
         created_order = await self.uow.orders.add(new_order)
