@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.models.address import Address
     from app.models.cart import Cart
     from app.models.order import Order
+    from app.models.review import Review
     from app.models.wishlist_item import WishlistItem
 
 
@@ -60,5 +61,8 @@ class User(ModelBase, TimestampMixin, table=True):
         back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
     )
     wishlist_items: list["WishlistItem"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
+    )
+    reviews: list["Review"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
     )

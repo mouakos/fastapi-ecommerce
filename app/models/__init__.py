@@ -4,5 +4,6 @@ from .category import Category
 from .order import Order, OrderItem
 from .payment import Payment
 from .product import Product
+from .review import Review
 from .user import User
 from .wishlist_item import WishlistItem
