@@ -11,7 +11,6 @@ from sqlmodel import Field, Relationship
 
 from app.models.base import ModelBase, TimestampMixin
 from app.models.payment import PaymentStatus
-from app.utils.utc_time import utcnow
 
 if TYPE_CHECKING:
     from app.models.address import Address
@@ -33,7 +32,7 @@ class OrderStatus(StrEnum):
     CANCELED = "canceled"
 
 
-class Order(ModelBase, table=True):
+class Order(ModelBase, TimestampMixin, table=True):
     """Order model for storing order information."""
 
     __tablename__ = "orders"
@@ -73,14 +72,15 @@ class Order(ModelBase, table=True):
     )
     total_amount: Decimal = Field(default=0.0)
     order_number: str = Field(index=True, unique=True)
-    created_at: datetime = Field(default_factory=utcnow)
     shipped_at: datetime | None = Field(default=None)
     paid_at: datetime | None = Field(default=None)
     canceled_at: datetime | None = Field(default=None)
     delivered_at: datetime | None = Field(default=None)
 
     # Relationships
-    user: Optional["User"] = Relationship(back_populates="orders")
+    user: Optional["User"] = Relationship(
+        back_populates="orders", sa_relationship_kwargs={"lazy": "selectin"}
+    )
     items: list["OrderItem"] = Relationship(
         back_populates="order", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
     )
@@ -95,7 +95,7 @@ class Order(ModelBase, table=True):
     )
 
 
-class OrderItem(ModelBase, TimestampMixin, table=True):
+class OrderItem(ModelBase, table=True):
     """OrderItem model for storing order item information."""
 
     __tablename__ = "order_items"

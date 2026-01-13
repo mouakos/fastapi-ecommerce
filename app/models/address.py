@@ -29,4 +29,6 @@ class Address(ModelBase, TimestampMixin, table=True):
     is_default_billing: bool = False
 
     # Relationships
-    user: "User" = Relationship(back_populates="addresses")
+    user: "User" = Relationship(
+        back_populates="addresses", sa_relationship_kwargs={"lazy": "selectin"}
+    )

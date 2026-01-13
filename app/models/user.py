@@ -27,7 +27,9 @@ class User(ModelBase, TimestampMixin, table=True):
     addresses: list["Address"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
     )
-    cart: Optional["Cart"] = Relationship(back_populates="user")
+    cart: Optional["Cart"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
+    )
     orders: list["Order"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
     )

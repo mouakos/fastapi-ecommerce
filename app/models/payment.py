@@ -95,4 +95,6 @@ class Payment(ModelBase, TimestampMixin, table=True):
     )
 
     # Relationships
-    order: "Order" = Relationship(back_populates="payments")
+    order: "Order" = Relationship(
+        back_populates="payments", sa_relationship_kwargs={"lazy": "selectin"}
+    )
