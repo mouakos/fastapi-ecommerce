@@ -24,6 +24,15 @@ class Settings(BaseSettings):
     jwt_algorithm: str = Field(
         default="HS256", description="JWT signing algorithm", alias="JWT_ALGORITHM"
     )
+    stripe_webhook_secret: str = Field(
+        default="", description="Stripe webhook secret", alias="STRIPE_WEBHOOK_SECRET"
+    )
+    stripe_api_key: str = Field(default="", description="Stripe API key", alias="STRIPE_API_KEY")
+    frontend_url: str = Field(
+        default="http://localhost:8000",
+        description="Frontend application URL",
+        alias="FRONTEND_URL",
+    )
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

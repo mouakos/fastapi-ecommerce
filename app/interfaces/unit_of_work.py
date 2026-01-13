@@ -7,6 +7,7 @@ from app.interfaces.address_repository import AddressRepository
 from app.interfaces.cart_repository import CartRepository
 from app.interfaces.category_repository import CategoryRepository
 from app.interfaces.order_repository import OrderRepository
+from app.interfaces.payment_repository import PaymentRepository
 from app.interfaces.product_repository import ProductRepository
 from app.interfaces.user_repository import UserRepository
 from app.interfaces.wishlist_repository import WishlistRepository
@@ -22,6 +23,7 @@ class UnitOfWork(ABC):
     addresses: AddressRepository
     orders: OrderRepository
     wishlists: WishlistRepository
+    payments: PaymentRepository
 
     async def __aenter__(self) -> "UnitOfWork":
         """Enter the runtime context related to this object."""

@@ -10,10 +10,12 @@ from sqlalchemy import Enum as SQLEnum
 from sqlmodel import Field, Relationship
 
 from app.models.base import ModelBase, TimestampMixin
+from app.models.payment import PaymentStatus
 from app.utils.utc_time import utcnow
 
 if TYPE_CHECKING:
     from app.models.address import Address
+    from app.models.payment import Payment
     from app.models.product import Product
     from app.models.user import User
 
@@ -25,19 +27,18 @@ class OrderStatus(StrEnum):
     """Enumeration for order statuses."""
 
     PENDING = "pending"
-    PROCESSING = "paid"
+    PAID = "paid"
     SHIPPED = "shipped"
     DELIVERED = "delivered"
     CANCELED = "canceled"
 
 
-class Order(ModelBase, TimestampMixin, table=True):
+class Order(ModelBase, table=True):
     """Order model for storing order information."""
 
     __tablename__ = "orders"
     user_id: UUID = Field(default=None, foreign_key="users.id", index=True, ondelete="CASCADE")
     shipping_address_id: UUID = Field(foreign_key="addresses.id", index=True)
-    billing_address_id: UUID = Field(foreign_key="addresses.id", index=True)
     status: OrderStatus = Field(
         default=OrderStatus.PENDING,
         sa_column=Column(
@@ -54,10 +55,28 @@ class Order(ModelBase, TimestampMixin, table=True):
             index=True,
         ),
     )
+    payment_status: PaymentStatus = Field(
+        sa_column=Column(
+            SQLEnum(
+                PaymentStatus,
+                values_callable=lambda x: [e.value for e in x],
+                native_enum=False,
+                create_constraint=True,
+                length=50,
+                validate_strings=True,
+                name="payment_status",
+            ),
+            nullable=False,
+            index=True,
+        ),
+    )
     total_amount: Decimal = Field(default=0.0)
     order_number: str = Field(index=True, unique=True)
-    ordered_at: datetime = Field(default_factory=utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
     shipped_at: datetime | None = Field(default=None)
+    paid_at: datetime | None = Field(default=None)
+    canceled_at: datetime | None = Field(default=None)
+    delivered_at: datetime | None = Field(default=None)
 
     # Relationships
     user: Optional["User"] = Relationship(back_populates="orders")
@@ -69,6 +88,9 @@ class Order(ModelBase, TimestampMixin, table=True):
     )
     billing_address: "Address" = Relationship(
         sa_relationship_kwargs={"foreign_keys": "[Order.billing_address_id]"}
+    )
+    payments: list["Payment"] = Relationship(
+        back_populates="order", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
     )
 
 

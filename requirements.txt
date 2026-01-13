@@ -10,3 +10,4 @@ python-slugify
 pydantic[email]
 pyjwt
 pwdlib[argon2]
+stripe
