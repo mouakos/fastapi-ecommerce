@@ -7,7 +7,7 @@ from fastapi import APIRouter, status
 from app.api.v1.dependencies import AdminRoleDep, ProductServiceDep
 from app.schemas.product_schema import ProductCreate, ProductRead, ProductUpdate
 
-product_router = APIRouter(prefix="/api/v1/products", tags=["Products"])
+product_router = APIRouter(prefix="/products", tags=["Products"])
 
 
 @product_router.get(

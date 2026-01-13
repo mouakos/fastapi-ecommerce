@@ -12,7 +12,7 @@ from app.api.v1.dependencies import (
 from app.schemas.address_schema import AddressCreate, AddressRead, AddressUpdate
 from app.schemas.user_schema import UserRead, UserUpdate
 
-user_router = APIRouter(prefix="/api/v1/users", tags=["Users"])
+user_router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @user_router.get(

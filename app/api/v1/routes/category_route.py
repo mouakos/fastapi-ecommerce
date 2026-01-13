@@ -7,7 +7,7 @@ from fastapi import APIRouter, status
 from app.api.v1.dependencies import AdminRoleDep, CategoryServiceDep
 from app.schemas.category_schema import CategoryCreate, CategoryRead, CategoryUpdate
 
-category_router = APIRouter(prefix="/api/v1/categories", tags=["Categories"])
+category_router = APIRouter(prefix="/categories", tags=["Categories"])
 
 
 @category_router.get(

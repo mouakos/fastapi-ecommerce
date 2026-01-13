@@ -44,8 +44,8 @@ app = FastAPI(
     },
     openapi_tags=[
         {
-            "name": "Meta",
-            "description": "Endpoints for checking the health status of the Database.",
+            "name": "Healthcheck",
+            "description": "Endpoints to check the health status of the database connection.",
         },
         {
             "name": "Authentication",

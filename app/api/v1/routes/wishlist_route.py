@@ -12,7 +12,7 @@ from app.schemas.wishlist_schema import (
     WishlistStatsRead,
 )
 
-wishlist_route = APIRouter(prefix="/api/v1/wishlist", tags=["Wishlist"])
+wishlist_route = APIRouter(prefix="/wishlist", tags=["Wishlist"])
 
 
 @wishlist_route.get(
