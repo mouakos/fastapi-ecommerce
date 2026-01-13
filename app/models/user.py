@@ -22,6 +22,7 @@ class User(ModelBase, TimestampMixin, table=True):
     first_name: str | None = None
     last_name: str | None = None
     phone_number: str | None = None
+    is_superuser: bool = Field(default=False)
 
     # Relationships
     addresses: list["Address"] = Relationship(

@@ -33,6 +33,10 @@ class Settings(BaseSettings):
         description="Frontend application URL",
         alias="DOMAIN",
     )
+    superuser_email: str = Field(..., description="Superuser email", alias="SUPERUSER_EMAIL")
+    superuser_password: str = Field(
+        ..., description="Superuser password", alias="SUPERUSER_PASSWORD"
+    )
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
