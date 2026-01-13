@@ -9,6 +9,7 @@ from app.repositories.sql_category_repository import SqlCategoryRepository
 from app.repositories.sql_order_repository import SqlOrderRepository
 from app.repositories.sql_payment_repository import SqlPaymentRepository
 from app.repositories.sql_product_repository import SqlProductRepository
+from app.repositories.sql_review_repository import SqlReviewRepository
 from app.repositories.sql_user_repository import SqlUserRepository
 from app.repositories.sql_wishlist_repository import SqlWishlistRepository
 
@@ -41,3 +42,4 @@ class SqlUnitOfWork(UnitOfWork):
         self.orders = SqlOrderRepository(self._session)
         self.wishlists = SqlWishlistRepository(self._session)
         self.payments = SqlPaymentRepository(self._session)
+        self.reviews = SqlReviewRepository(self._session)

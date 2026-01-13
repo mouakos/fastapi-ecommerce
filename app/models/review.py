@@ -6,15 +6,14 @@ from uuid import UUID
 
 from sqlmodel import Field, Relationship
 
-from app.models.base import ModelBase
-from app.utils.utc_time import utcnow
+from app.models.base import ModelBase, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.product import Product
     from app.models.user import User
 
 
-class Review(ModelBase, table=True):
+class Review(ModelBase, TimestampMixin, table=True):
     """Review model for storing product reviews."""
 
     __tablename__ = "reviews"
@@ -24,13 +23,14 @@ class Review(ModelBase, table=True):
     )
     rating: int = Field(ge=1, le=5)
     comment: str | None = None
-    approved: bool = Field(default=False)
+    is_approved: bool = Field(default=False)
     approved_at: datetime | None = Field(default=None)
-    created_at: datetime | None = Field(default_factory=utcnow)
+    approved_by: UUID | None = Field(default=None, foreign_key="users.id", index=True)
 
     # Relationships
     user: "User" = Relationship(
-        back_populates="reviews", sa_relationship_kwargs={"lazy": "selectin"}
+        back_populates="reviews",
+        sa_relationship_kwargs={"lazy": "selectin", "foreign_keys": "[Review.user_id]"},
     )
     product: "Product" = Relationship(
         back_populates="reviews", sa_relationship_kwargs={"lazy": "selectin"}

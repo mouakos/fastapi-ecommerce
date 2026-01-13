@@ -64,5 +64,10 @@ class User(ModelBase, TimestampMixin, table=True):
         back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
     )
     reviews: list["Review"] = Relationship(
-        back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
+        back_populates="user",
+        sa_relationship_kwargs={
+            "lazy": "selectin",
+            "foreign_keys": "Review.user_id",
+        },
+        cascade_delete=True,
     )

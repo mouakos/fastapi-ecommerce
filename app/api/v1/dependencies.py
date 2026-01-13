@@ -19,6 +19,7 @@ from app.services.category_service import CategoryService
 from app.services.order_service import OrderService
 from app.services.payment_service import PaymentService
 from app.services.product_service import ProductService
+from app.services.review_service import ReviewService
 from app.services.user_service import UserService
 from app.services.wishlist_service import WishlistService
 from app.uow.sql_unit_of_work import SqlUnitOfWork
@@ -42,6 +43,11 @@ async def get_uow(session: SessionDep) -> AsyncGenerator[UnitOfWork, None]:
 
 
 UnitOfWorkDep = Annotated[UnitOfWork, Depends(get_uow)]
+
+
+def get_payment_service(uow: UnitOfWorkDep) -> PaymentService:
+    """Get Payment Service."""
+    return PaymentService(uow)
 
 
 def get_user_service(uow: UnitOfWorkDep) -> UserService:
@@ -79,9 +85,9 @@ def get_wishlist_service(uow: UnitOfWorkDep) -> WishlistService:
     return WishlistService(uow)
 
 
-def get_payment_service(uow: UnitOfWorkDep) -> PaymentService:
-    """Get Payment Service."""
-    return PaymentService(uow)
+def get_review_service(uow: UnitOfWorkDep) -> ReviewService:
+    """Get Review Service."""
+    return ReviewService(uow)
 
 
 OrderServiceDep = Annotated[OrderService, Depends(get_order_service)]
@@ -92,6 +98,7 @@ CategoryServiceDep = Annotated[CategoryService, Depends(get_category_service)]
 CartServiceDep = Annotated[CartService, Depends(get_cart_service)]
 WishlistServiceDep = Annotated[WishlistService, Depends(get_wishlist_service)]
 PaymentServiceDep = Annotated[PaymentService, Depends(get_payment_service)]
+ReviewServiceDep = Annotated[ReviewService, Depends(get_review_service)]
 
 
 async def get_current_user(
