@@ -96,6 +96,8 @@ class PaymentService:
             event = stripe.Webhook.construct_event(  # type: ignore [no-untyped-call]
                 payload, stripe_signature, settings.stripe_webhook_secret
             )
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail="Invalid payload") from e
         except stripe.error.SignatureVerificationError as e:
             raise HTTPException(status_code=400, detail="Invalid signature") from e
 
@@ -122,7 +124,6 @@ class PaymentService:
         session_id = session["id"]
         payment = await self.uow.payments.get_by_session_id(session_id)
 
-        # Payment not found - might be race condition, trigger retry
         if not payment:
             raise HTTPException(
                 status_code=500,
