@@ -65,6 +65,6 @@ class SqlWishlistRepository(SqlGenericRepository[WishlistItem], WishlistReposito
         Returns:
             int: Count of wishlist items.
         """
-        stmt = select(func.count()).where(WishlistItem.user_id == user_id)
+        stmt = select(func.count()).select_from(WishlistItem).where(WishlistItem.user_id == user_id)
         result = await self._session.exec(stmt)
         return result.first() or 0

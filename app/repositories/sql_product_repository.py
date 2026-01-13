@@ -1,11 +1,14 @@
 """SQL Product repository implementation."""
 
+from uuid import UUID
+
 from slugify import slugify
-from sqlmodel import select
+from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.interfaces.product_repository import ProductRepository
 from app.models.product import Product
+from app.models.review import Review
 from app.repositories.sql_generic_repository import SqlGenericRepository
 
 
@@ -52,3 +55,30 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
 
             slug = f"{base_slug}-{index}"
             index += 1
+
+    async def review_count(self, product_id: UUID) -> int:
+        """Get the total number of reviews for a product.
+
+        Args:
+            product_id (UUID): Product ID.
+
+        Returns:
+            int: Total number of reviews.
+        """
+        stmt = select(func.count()).select_from(Review).where(Review.product_id == product_id)
+        result = await self._session.exec(stmt)
+        return result.first() or 0
+
+    async def average_rating(self, product_id: UUID) -> float | None:
+        """Get the average rating for a product.
+
+        Args:
+            product_id (UUID): Product ID.
+
+        Returns:
+            float | None: Average rating or none if no reviews.
+        """
+        stmt = select(func.avg(Review.rating)).where(Review.product_id == product_id)
+        result = await self._session.exec(stmt)
+        avg_rating = result.first()
+        return float(avg_rating) if avg_rating is not None else None

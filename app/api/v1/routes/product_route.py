@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, status
 
 from app.api.v1.dependencies import AdminRoleDep, ProductServiceDep
-from app.schemas.product_schema import ProductCreate, ProductRead, ProductUpdate
+from app.schemas.product_schema import ProductCreate, ProductDetailRead, ProductRead, ProductUpdate
 
 product_router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -24,45 +24,47 @@ async def list_products(
 
 @product_router.post(
     "/",
-    response_model=ProductRead,
+    response_model=ProductDetailRead,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new product",
     dependencies=[AdminRoleDep],
 )
-async def create_product(data: ProductCreate, product_service: ProductServiceDep) -> ProductRead:
+async def create_product(
+    data: ProductCreate, product_service: ProductServiceDep
+) -> ProductDetailRead:
     """Create a new product."""
     return await product_service.create(data)
 
 
 @product_router.get(
     "/id/{product_id}",
-    response_model=ProductRead,
+    response_model=ProductDetailRead,
     summary="Retrieve a product by its ID",
 )
-async def get_product(product_id: UUID, product_service: ProductServiceDep) -> ProductRead:
+async def get_product(product_id: UUID, product_service: ProductServiceDep) -> ProductDetailRead:
     """Retrieve a product by its ID."""
     return await product_service.get_by_id(product_id)
 
 
 @product_router.get(
     "/slug/{slug}",
-    response_model=ProductRead,
+    response_model=ProductDetailRead,
     summary="Retrieve a product by its slug",
 )
-async def get_product_by_slug(slug: str, product_service: ProductServiceDep) -> ProductRead:
+async def get_product_by_slug(slug: str, product_service: ProductServiceDep) -> ProductDetailRead:
     """Retrieve a product by its slug."""
     return await product_service.get_by_slug(slug)
 
 
 @product_router.put(
     "/{product_id}",
-    response_model=ProductRead,
+    response_model=ProductDetailRead,
     summary="Update a product by its ID",
     dependencies=[AdminRoleDep],
 )
 async def update_product(
     product_id: UUID, data: ProductUpdate, product_service: ProductServiceDep
-) -> ProductRead:
+) -> ProductDetailRead:
     """Update a product by its ID."""
     return await product_service.update(product_id, data)
 

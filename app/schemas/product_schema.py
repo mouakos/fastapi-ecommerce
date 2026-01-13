@@ -4,7 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, HttpUrl, computed_field
+from pydantic import BaseModel, Field, HttpUrl
 
 from app.schemas.base import UUIDMixin
 
@@ -46,10 +46,15 @@ class ProductRead(ProductBase, UUIDMixin):
     sku: str
     created_at: datetime
 
-    @computed_field(return_type=bool)
-    def in_stock(self) -> bool:
-        """Check if the product is in stock."""
-        return self.stock > 0
+
+class ProductDetailRead(ProductRead, UUIDMixin):
+    """Schema for reading a Product."""
+
+    average_rating: float | None = Field(
+        None, ge=1, le=5, description="Average rating from reviews (1-5)"
+    )
+    review_count: int = Field(default=1, ge=0, description="Total number of reviews")
+    in_stock: bool
 
 
 class ProductUpdate(BaseModel):
