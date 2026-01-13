@@ -1,5 +1,7 @@
 """Schemas for user-related operations."""
 
+from uuid import UUID
+
 from pydantic import BaseModel, EmailStr, Field
 
 from app.schemas.base import UUIDMixin
@@ -18,6 +20,8 @@ class UserCreate(BaseModel):
             "example": {
                 "email": "user@example.com",
                 "password": "string",
+                "first_name": "John",
+                "last_name": "Doe",
             }
         }
     }
@@ -52,3 +56,9 @@ class Token(BaseModel):
 
     access_token: str
     token_type: str = "bearer"
+
+
+class TokenData(BaseModel):
+    """Schema for token data."""
+
+    user_id: UUID

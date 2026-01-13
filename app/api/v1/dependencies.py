@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator
 from typing import Annotated
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from fastapi import HTTPException, Request, Response, status
 from fastapi.params import Depends
@@ -10,7 +10,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.security import decode_access_token
-from app.db.database import AsyncSessionLocal
+from app.db.database import get_session
 from app.interfaces.unit_of_work import UnitOfWork
 from app.schemas.user_schema import UserRead
 from app.services.address_service import AddressService
@@ -30,12 +30,6 @@ oauth_scheme = HTTPBearer(
 )
 
 TokenDep = Annotated[HTTPAuthorizationCredentials, Depends(oauth_scheme)]
-
-
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """Get a database session for the duration of a request."""
-    async with AsyncSessionLocal() as session:
-        yield session
 
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
@@ -112,25 +106,16 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    decoded_token = decode_access_token(token=credentials.credentials)
-    if not decoded_token:
+    token_data = decode_access_token(token=credentials.credentials)
+    if not token_data:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    user_id = decoded_token.get("sub")
-
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
     try:
-        return await user_service.get_by_id(UUID(user_id))
+        return await user_service.get_by_id(token_data.user_id)
     except HTTPException as exc:
         if exc.status_code == status.HTTP_404_NOT_FOUND:
             raise HTTPException(

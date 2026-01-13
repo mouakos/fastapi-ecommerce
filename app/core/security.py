@@ -2,11 +2,13 @@
 
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from uuid import UUID
 
 import jwt
 from pwdlib import PasswordHash
 
 from app.core.config import settings
+from app.schemas.user_schema import TokenData
 
 password_hash = PasswordHash.recommended()
 
@@ -49,14 +51,14 @@ def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = 
     return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 
-def decode_access_token(token: str) -> dict[str, Any] | None:
+def decode_access_token(token: str) -> TokenData | None:
     """Verify and decode a JWT access token..
 
     Args:
         token (str): he JWT string to verify.
 
     Returns:
-        dict[str, Any] | None: decoded token data or None.
+        TokenData | None: The decoded token data or None if verification fails.
     """
     try:
         payload: dict[str, Any] = jwt.decode(
@@ -65,6 +67,9 @@ def decode_access_token(token: str) -> dict[str, Any] | None:
             algorithms=[settings.jwt_algorithm],
             options={"verify_signature": True, "verify_exp": True},
         )
-        return payload
+        user_id = payload.get("sub")
+        if user_id:
+            return TokenData(user_id=UUID(user_id))
+        return None
     except jwt.PyJWTError:
         return None

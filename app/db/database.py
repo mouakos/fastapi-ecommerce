@@ -1,5 +1,7 @@
 """Database session management for asynchronous SQLModel operations."""
 
+from collections.abc import AsyncGenerator
+
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel, text
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -16,6 +18,15 @@ AsyncSessionLocal = async_sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False,
 )
+
+
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    """Get a database session for the duration of a request."""
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
 
 
 # Optional: create tables for quick local dev (use Alembic in real flows)
