@@ -1,8 +1,10 @@
 """User model for storing user information."""
 
+from enum import StrEnum
 from typing import TYPE_CHECKING, Optional
 
-from sqlmodel import Field, Relationship
+from sqlalchemy import Enum as SQLEnum
+from sqlmodel import Column, Field, Relationship
 
 from app.models.base import ModelBase, TimestampMixin
 
@@ -11,6 +13,13 @@ if TYPE_CHECKING:
     from app.models.cart import Cart
     from app.models.order import Order
     from app.models.wishlist_item import WishlistItem
+
+
+class UserRole(StrEnum):
+    """Enumeration for user roles."""
+
+    USER = "user"
+    ADMIN = "admin"
 
 
 class User(ModelBase, TimestampMixin, table=True):
@@ -22,6 +31,22 @@ class User(ModelBase, TimestampMixin, table=True):
     first_name: str | None = None
     last_name: str | None = None
     phone_number: str | None = None
+    role: UserRole = Field(
+        default=UserRole.USER,
+        sa_column=Column(
+            SQLEnum(
+                UserRole,
+                values_callable=lambda x: [e.value for e in x],
+                native_enum=False,
+                create_constraint=True,
+                length=50,
+                validate_strings=True,
+                name="user_role",
+            ),
+            nullable=False,
+            index=True,
+        ),
+    )
     is_superuser: bool = Field(default=False)
 
     # Relationships

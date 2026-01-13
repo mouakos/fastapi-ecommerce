@@ -4,14 +4,14 @@ from collections.abc import AsyncGenerator
 from typing import Annotated
 from uuid import uuid4
 
-from fastapi import HTTPException, Request, Response, status
-from fastapi.params import Depends
+from fastapi import Depends, HTTPException, Request, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.security import decode_access_token
 from app.db.database import get_session
 from app.interfaces.unit_of_work import UnitOfWork
+from app.models.user import UserRole
 from app.schemas.user_schema import UserRead
 from app.services.address_service import AddressService
 from app.services.cart_service import CartService
@@ -186,3 +186,24 @@ def get_or_create_cart_session_id(request: Request, response: Response) -> str:
 
 CartSessionIdDep = Annotated[str | None, Depends(get_cart_session_id)]
 CartSessionIdOrCreateDep = Annotated[str, Depends(get_or_create_cart_session_id)]
+
+
+class RoleChecker:
+    """Dependency to check if the current user has one of the allowed roles."""
+
+    def __init__(self, allowed_roles: list[UserRole]) -> None:
+        """Initialize the RoleChecker with allowed roles."""
+        self.allowed_roles = allowed_roles
+
+    def __call__(self, current_user: CurrentUserDep) -> bool:
+        """Check if the current user has one of the allowed roles."""
+        if current_user.role in self.allowed_roles:
+            return True
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to perform this action.",
+        )
+
+
+AdminRoleDep = Depends(RoleChecker([UserRole.ADMIN]))

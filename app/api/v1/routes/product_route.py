@@ -4,7 +4,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, status
 
-from app.api.v1.dependencies import ProductServiceDep
+from app.api.v1.dependencies import AdminRoleDep, ProductServiceDep
 from app.schemas.product_schema import ProductCreate, ProductRead, ProductUpdate
 
 product_router = APIRouter(prefix="/api/v1/products", tags=["Products"])
@@ -27,6 +27,7 @@ async def list_products(
     response_model=ProductRead,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new product",
+    dependencies=[AdminRoleDep],
 )
 async def create_product(data: ProductCreate, product_service: ProductServiceDep) -> ProductRead:
     """Create a new product."""
@@ -57,6 +58,7 @@ async def get_product_by_slug(slug: str, product_service: ProductServiceDep) -> 
     "/{product_id}",
     response_model=ProductRead,
     summary="Update a product by its ID",
+    dependencies=[AdminRoleDep],
 )
 async def update_product(
     product_id: UUID, data: ProductUpdate, product_service: ProductServiceDep
@@ -69,6 +71,7 @@ async def update_product(
     "/{product_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a product by its ID",
+    dependencies=[AdminRoleDep],
 )
 async def delete_product(product_id: UUID, product_service: ProductServiceDep) -> None:
     """Delete a product by its ID."""

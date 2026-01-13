@@ -8,7 +8,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.config import settings
 from app.core.security import hash_password
-from app.models.user import User
+from app.models.user import User, UserRole
 
 async_engine = create_async_engine(
     url=settings.database_url,
@@ -52,6 +52,7 @@ async def init_db() -> None:
                 email=settings.superuser_email,
                 hashed_password=hash_password(settings.superuser_password),
                 is_superuser=True,
+                role=UserRole.ADMIN,
             )
             session.add(new_user)
             await session.commit()

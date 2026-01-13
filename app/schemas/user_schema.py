@@ -4,6 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
 
+from app.models.user import UserRole
 from app.schemas.base import UUIDMixin
 
 
@@ -31,9 +32,11 @@ class UserRead(UUIDMixin):
     """Schema for reading user information."""
 
     email: EmailStr
-    first_name: str
-    last_name: str
-    phone_number: str | None
+    is_superuser: bool
+    role: UserRole
+    first_name: str | None = None
+    last_name: str | None = None
+    phone_number: str | None = None
 
 
 class UserUpdate(BaseModel):
