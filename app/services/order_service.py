@@ -36,8 +36,7 @@ class OrderService:
 
         # Validate stock
         for item in cart.items:
-            product = await self.uow.products.get_by_id(item.product_id)
-            if not product or item.quantity > product.stock:
+            if item.quantity > item.product.stock:
                 raise HTTPException(
                     status_code=400,
                     detail=f"{item.product_name} out of stock.",
