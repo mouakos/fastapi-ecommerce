@@ -1,4 +1,4 @@
-"""SQLModel generic repository implementation."""
+"""SQL generic repository implementation."""
 
 from typing import Any
 from uuid import UUID

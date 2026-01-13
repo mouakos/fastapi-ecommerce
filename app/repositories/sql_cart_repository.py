@@ -1,4 +1,4 @@
-"""SQLModel Cart repository implementation."""
+"""SQL Cart repository implementation."""
 
 from uuid import UUID
 

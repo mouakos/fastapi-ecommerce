@@ -1,4 +1,4 @@
-"""SQLModel Category repository implementation."""
+"""SQL Category repository implementation."""
 
 from slugify import slugify
 from sqlmodel import select

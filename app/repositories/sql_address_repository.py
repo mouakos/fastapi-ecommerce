@@ -1,4 +1,4 @@
-"""SQLModel Address repository implementation."""
+"""SQL Address repository implementation."""
 
 from uuid import UUID
 

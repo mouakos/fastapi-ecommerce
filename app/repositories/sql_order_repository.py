@@ -1,4 +1,4 @@
-"""SQLModel User repository implementation."""
+"""SQL User repository implementation."""
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 

@@ -1,4 +1,4 @@
-"""SQLModel Product repository implementation."""
+"""SQL Product repository implementation."""
 
 from slugify import slugify
 from sqlmodel import select
