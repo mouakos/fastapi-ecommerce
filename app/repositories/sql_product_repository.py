@@ -55,7 +55,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         per_page = max(min(per_page, 100), 1)
 
         # Base query
-        stmt = select(Product).where(Product.is_published)
+        stmt = select(Product).where(Product.is_active)
 
         # Apply filters
         if search:

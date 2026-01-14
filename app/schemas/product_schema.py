@@ -18,7 +18,7 @@ class ProductBase(BaseModel):
     category_id: UUID | None = None
     description: str | None = None
     image_url: HttpUrl | None = None
-    is_published: bool = True
+    is_active: bool = True
 
 
 class ProductCreate(ProductBase):
@@ -33,7 +33,7 @@ class ProductCreate(ProductBase):
                 "stock": 50,
                 "image_url": "https://example.com/smartphone.jpg",
                 "category_id": "123e4567-e89b-12d3-a456-426614174000",
-                "is_published": True,
+                "is_active": True,
             }
         }
     }
@@ -66,4 +66,4 @@ class ProductUpdate(BaseModel):
     description: str | None = None
     image_url: HttpUrl | None = None
     category_id: UUID | None = None
-    is_published: bool | None = None
+    is_active: bool | None = None

@@ -29,7 +29,7 @@ class Product(ModelBase, TimestampMixin, table=True):
     stock: int
     sku: str = Field(unique=True, index=True)
     image_url: str | None = None
-    is_published: bool = Field(default=True)
+    is_active: bool = Field(default=True)
     category_id: UUID | None = Field(
         default=None, foreign_key="categories.id", ondelete="CASCADE", index=True
     )

@@ -45,7 +45,7 @@ products = [
         "stock": 50,
         "sku": "WH-001",
         "image_url": "https://example.com/images/wireless-headphones.jpg",
-        "is_published": True,
+        "is_active": True,
     },
     {
         "name": "Science Fiction Novel",
@@ -55,7 +55,7 @@ products = [
         "stock": 200,
         "sku": "BK-001",
         "image_url": "https://example.com/images/science-fiction-novel.jpg",
-        "is_published": True,
+        "is_active": True,
     },
     {
         "name": "Men's T-Shirt",
@@ -65,7 +65,7 @@ products = [
         "stock": 100,
         "sku": "CL-001",
         "image_url": "https://example.com/images/mens-tshirt.jpg",
-        "is_published": True,
+        "is_active": True,
     },
     {
         "name": "Blender",
@@ -75,7 +75,7 @@ products = [
         "stock": 30,
         "sku": "HK-001",
         "image_url": "https://example.com/images/blender.jpg",
-        "is_published": True,
+        "is_active": True,
     },
     {
         "name": "Yoga Mat",
@@ -85,7 +85,7 @@ products = [
         "stock": 75,
         "sku": "SO-001",
         "image_url": "https://example.com/images/yoga-mat.jpg",
-        "is_published": True,
+        "is_active": True,
     },
     {
         "name": "Smartphone",
@@ -95,7 +95,7 @@ products = [
         "stock": 40,
         "sku": "WH-002",
         "image_url": "https://example.com/images/smartphone.jpg",
-        "is_published": True,
+        "is_active": True,
     },
 ]
 

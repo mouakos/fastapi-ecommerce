@@ -24,7 +24,7 @@ class WishlistItemRead(UUIDMixin):
     product_price: Decimal
     product_image_url: str | None = None
     product_stock_quantity: int
-    product_is_published: bool
+    product_is_active: bool
     added_at: datetime
 
 

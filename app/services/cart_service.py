@@ -54,7 +54,7 @@ class CartService:
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
 
-        if not product.is_published:
+        if not product.is_active:
             raise HTTPException(status_code=400, detail="Product is not available.")
 
         item = await self.uow.carts.get_item_by_cart_and_product(cart.id, product.id)
@@ -111,7 +111,7 @@ class CartService:
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
 
-        if not product.is_published:
+        if not product.is_active:
             raise HTTPException(status_code=400, detail="Product is not available.")
 
         if product.stock < data.quantity:

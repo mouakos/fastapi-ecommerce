@@ -69,7 +69,7 @@ class WishlistService:
                     product_image_url=wishlist_item.product.image_url,
                     product_slug=wishlist_item.product.slug,
                     product_stock_quantity=wishlist_item.product.stock,
-                    product_is_published=wishlist_item.product.is_published,
+                    product_is_active=wishlist_item.product.is_active,
                     added_at=wishlist_item.created_at,
                 )
             )
@@ -141,7 +141,7 @@ class WishlistService:
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
 
-        if not product.is_published:
+        if not product.is_active:
             raise HTTPException(status_code=400, detail="Product is not available")
 
         if product.stock < 1:
