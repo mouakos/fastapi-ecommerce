@@ -3,7 +3,7 @@
 from typing import TypeVar
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class UUIDMixin(BaseModel):
@@ -25,6 +25,8 @@ class PaginationMeta(BaseModel):
     from_item: int | None = Field(None, description="Starting item index (1-based)")
     to_item: int | None = Field(None, description="Ending item index (1-based)")
 
+    model_config = ConfigDict(frozen=True)
+
 
 class PaginationLinks(BaseModel):
     """HATEOAS links for pagination."""
@@ -35,6 +37,8 @@ class PaginationLinks(BaseModel):
     next: str | None = Field(None, description="URL to the next page, or null if none")
     last: str | None = Field(None, description="URL to the last page")
 
+    model_config = ConfigDict(frozen=True)
+
 
 class PaginatedRead[T](BaseModel):
     """Generic paginated response schema."""
@@ -42,3 +46,5 @@ class PaginatedRead[T](BaseModel):
     data: list[T] = Field(..., description="List of items for the current page")
     meta: PaginationMeta = Field(..., description="Pagination metadata")
     links: PaginationLinks | None = Field(None, description="HATEOAS links for navigation")
+
+    model_config = ConfigDict(frozen=True)

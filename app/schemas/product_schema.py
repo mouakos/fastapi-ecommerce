@@ -4,7 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 from app.schemas.common import UUIDMixin
 
@@ -24,19 +24,20 @@ class ProductBase(BaseModel):
 class ProductCreate(ProductBase):
     """Schema for creating a Product."""
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        frozen=True,
+        json_schema_extra={
             "example": {
-                "name": "Smartphone",
-                "description": "A high-end smartphone with a great camera.",
-                "price": 699.99,
-                "stock": 50,
-                "image_url": "https://example.com/smartphone.jpg",
+                "name": "Sample Product",
+                "price": 19.99,
+                "stock": 100,
                 "category_id": "123e4567-e89b-12d3-a456-426614174000",
+                "description": "This is a sample product description.",
+                "image_url": "https://example.com/image.png",
                 "is_active": True,
             }
-        }
-    }
+        },
+    )
 
 
 class ProductRead(ProductBase, UUIDMixin):
@@ -45,6 +46,8 @@ class ProductRead(ProductBase, UUIDMixin):
     slug: str
     sku: str
     created_at: datetime
+
+    model_config = ConfigDict(frozen=True)
 
 
 class ProductDetailRead(ProductRead, UUIDMixin):
@@ -55,6 +58,8 @@ class ProductDetailRead(ProductRead, UUIDMixin):
     )
     review_count: int = Field(default=1, ge=0, description="Total number of reviews")
     in_stock: bool
+
+    model_config = ConfigDict(frozen=True)
 
 
 class ProductUpdate(BaseModel):
@@ -67,3 +72,5 @@ class ProductUpdate(BaseModel):
     image_url: HttpUrl | None = None
     category_id: UUID | None = None
     is_active: bool | None = None
+
+    model_config = ConfigDict(frozen=True)

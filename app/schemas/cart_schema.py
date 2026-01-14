@@ -3,7 +3,7 @@
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, HttpUrl, computed_field
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, computed_field
 
 from app.schemas.common import UUIDMixin
 
@@ -14,11 +14,14 @@ class CartItemCreate(BaseModel):
     product_id: UUID
     quantity: int = Field(default=1, ge=1)
 
+    model_config = ConfigDict(frozen=True)
+
 
 class CartItemUpdate(BaseModel):
     """Schema for updating a cart item."""
 
     quantity: int = Field(..., ge=1)
+    model_config = ConfigDict(frozen=True)
 
 
 class CartItemRead(BaseModel):
@@ -34,6 +37,8 @@ class CartItemRead(BaseModel):
     def subtotal(self) -> Decimal:
         """Calculate subtotal for the cart item."""
         return self.quantity * self.unit_price
+
+    model_config = ConfigDict(frozen=True)
 
 
 class CartRead(UUIDMixin):
@@ -51,3 +56,5 @@ class CartRead(UUIDMixin):
     def total_items(self) -> int:
         """Calculate total number of items in the cart."""
         return sum(item.quantity for item in self.items)
+
+    model_config = ConfigDict(frozen=True)

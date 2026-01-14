@@ -3,7 +3,7 @@
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, ConfigDict, HttpUrl
 
 from app.models.order import OrderStatus
 from app.schemas.common import UUIDMixin
@@ -15,6 +15,8 @@ class OrderCreate(BaseModel):
     shipping_address_id: UUID
     billing_address_id: UUID
 
+    model_config = ConfigDict(frozen=True)
+
 
 class OrderItemRead(BaseModel):
     """Schema for reading order items."""
@@ -25,6 +27,8 @@ class OrderItemRead(BaseModel):
     product_name: str
     image_url: HttpUrl | None = None
 
+    model_config = ConfigDict(frozen=True)
+
 
 class OrderRead(UUIDMixin):
     """Schema for reading orders."""
@@ -33,3 +37,5 @@ class OrderRead(UUIDMixin):
     total_amount: float
     status: OrderStatus
     items: list[OrderItemRead]
+
+    model_config = ConfigDict(frozen=True)

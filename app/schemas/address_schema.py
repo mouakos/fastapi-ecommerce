@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.common import UUIDMixin
 
@@ -26,8 +26,9 @@ class AddressBase(BaseModel):
 class AddressCreate(AddressBase):
     """Schema for creating a new address."""
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        frozen=True,
+        json_schema_extra={
             "example": {
                 "full_name": "John Doe",
                 "company": "Acme Inc.",
@@ -41,14 +42,16 @@ class AddressCreate(AddressBase):
                 "is_default_shipping": True,
                 "is_default_billing": False,
             }
-        }
-    }
+        },
+    )
 
 
 class AddressRead(AddressCreate, UUIDMixin):
     """Schema for reading address information."""
 
     user_id: UUID
+
+    model_config = ConfigDict(frozen=True)
 
 
 class AddressUpdate(BaseModel):
@@ -66,3 +69,5 @@ class AddressUpdate(BaseModel):
     phone_number: str | None = Field(None, max_length=20)
     is_default_shipping: bool | None = None
     is_default_billing: bool | None = None
+
+    model_config = ConfigDict(frozen=True)

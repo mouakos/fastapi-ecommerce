@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models.user import UserRole
 from app.schemas.common import UUIDMixin
@@ -16,16 +16,17 @@ class UserCreate(BaseModel):
     first_name: str | None = Field(default=None, min_length=2, max_length=50)
     last_name: str | None = Field(default=None, min_length=2, max_length=50)
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        frozen=True,
+        json_schema_extra={
             "example": {
                 "email": "user@example.com",
                 "password": "string",
                 "first_name": "John",
                 "last_name": "Doe",
             }
-        }
-    }
+        },
+    )
 
 
 class UserRead(UUIDMixin):
@@ -38,6 +39,8 @@ class UserRead(UUIDMixin):
     last_name: str | None = None
     phone_number: str | None = None
 
+    model_config = ConfigDict(frozen=True)
+
 
 class UserUpdate(BaseModel):
     """Schema for updating user information."""
@@ -46,12 +49,16 @@ class UserUpdate(BaseModel):
     last_name: str | None = Field(None, min_length=2, max_length=50)
     phone_number: str | None = None
 
+    model_config = ConfigDict(frozen=True)
+
 
 class Login(BaseModel):
     """Schema for user login."""
 
     email: EmailStr
     password: str = Field(..., min_length=6)
+
+    model_config = ConfigDict(frozen=True)
 
 
 class Token(BaseModel):
@@ -60,8 +67,12 @@ class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
+    model_config = ConfigDict(frozen=True)
+
 
 class TokenData(BaseModel):
     """Schema for token data."""
 
     user_id: UUID
+
+    model_config = ConfigDict(frozen=True)

@@ -1,8 +1,8 @@
-"""Schemas for category operations in the ecommerce API."""
+"""Schemas for category operations."""
 
 from uuid import UUID
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 from app.schemas.common import UUIDMixin
 
@@ -15,26 +15,31 @@ class CategoryBase(BaseModel):
     description: str | None = None
     image_url: HttpUrl | None = None
 
+    model_config = ConfigDict(frozen=True)
+
 
 class CategoryCreate(CategoryBase):
     """Schema for creating a new category."""
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        frozen=True,
+        json_schema_extra={
             "example": {
                 "name": "Electronics",
-                "parent_id": "123e4567-e89b-12d3-a456-426614174000",
-                "description": "Electronic devices and accessories",
-                "image_url": "https://example.com/electronics.jpg",
+                "parent_id": None,
+                "description": "Category for electronic products",
+                "image_url": "https://example.com/images/electronics.png",
             }
-        }
-    }
+        },
+    )
 
 
 class CategoryRead(CategoryBase, UUIDMixin):
     """Schema for reading category information."""
 
     slug: str
+
+    model_config = ConfigDict(frozen=True)
 
 
 class CategoryUpdate(BaseModel):
@@ -44,3 +49,5 @@ class CategoryUpdate(BaseModel):
     parent_id: UUID | None = None
     description: str | None = None
     image_url: HttpUrl | None = None
+
+    model_config = ConfigDict(frozen=True)

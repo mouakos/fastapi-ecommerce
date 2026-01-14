@@ -4,7 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.schemas.common import UUIDMixin
 
@@ -13,6 +13,8 @@ class WishlistCreate(BaseModel):
     """Schema for adding an item to the wishlist."""
 
     product_id: UUID
+
+    model_config = ConfigDict(frozen=True)
 
 
 class WishlistItemRead(UUIDMixin):
@@ -27,6 +29,8 @@ class WishlistItemRead(UUIDMixin):
     product_is_active: bool
     added_at: datetime
 
+    model_config = ConfigDict(frozen=True)
+
 
 class WishlistRead(BaseModel):
     """Schema for reading wishlist items."""
@@ -34,11 +38,15 @@ class WishlistRead(BaseModel):
     items: list[WishlistItemRead]
     total_items: int
 
+    model_config = ConfigDict(frozen=True)
+
 
 class WishlistStatsRead(BaseModel):
     """Schema for reading wishlist statistics."""
 
     count: int
+
+    model_config = ConfigDict(frozen=True)
 
 
 class WishlistActionRead(BaseModel):
@@ -46,3 +54,5 @@ class WishlistActionRead(BaseModel):
 
     message: str
     product_id: UUID | None = None
+
+    model_config = ConfigDict(frozen=True)
