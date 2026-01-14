@@ -5,7 +5,7 @@ from uuid import UUID
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.interfaces.address_repository import AddressRepository
+from app.interfaces.address_repository import AddressRepository, AddressType
 from app.models.address import Address
 from app.repositories.sql_generic_repository import SqlGenericRepository
 
@@ -17,26 +17,30 @@ class SqlAddressRepository(SqlGenericRepository[Address], AddressRepository):
         """Initialize the repository with a database session."""
         super().__init__(session, Address)
 
-    async def unset_user_default_shipping_address(self, user_id: UUID) -> None:
-        """Unset the default shipping address for a user.
+    async def unset_default(self, user_id: UUID, address_type: AddressType) -> None:
+        """Unset the default address for a user and address type.
 
         Args:
-            user_id (UUID): The ID of the user.
-        """
-        stmt = select(Address).where(Address.user_id == user_id, Address.is_default_shipping)
-        addresses = (await self._session.exec(stmt)).all()
-        for a in addresses:
-            a.is_default_shipping = False
-        await self._session.flush()
+            user_id (UUID): User ID.
+            address_type (AddressType): Address type (shipping or billing).
 
-    async def unset_user_default_billing_address(self, user_id: UUID) -> None:
-        """Unset the default billing address for a user.
-
-        Args:
-            user_id (UUID): The ID of the user.
+        Raises:
+            ValueError: If the address type is invalid.
         """
-        stmt = select(Address).where(Address.user_id == user_id, Address.is_default_billing)
-        addresses = (await self._session.exec(stmt)).all()
-        for a in addresses:
-            a.is_default_billing = False
+        stmt = select(Address).where(Address.user_id == user_id)
+
+        if address_type == "shipping":
+            stmt = stmt.where(Address.is_default_shipping)
+        elif address_type == "billing":
+            stmt = stmt.where(Address.is_default_billing)
+        else:
+            raise ValueError("Invalid address type")
+        result = await self._session.exec(stmt)
+        addresses = result.all()
+        for address in addresses:
+            if address_type == "shipping":
+                address.is_default_shipping = False
+            elif address_type == "billing":
+                address.is_default_billing = False
+            self._session.add(address)
         await self._session.flush()
