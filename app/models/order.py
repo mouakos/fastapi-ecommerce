@@ -9,7 +9,7 @@ from sqlalchemy import Column, UniqueConstraint
 from sqlalchemy import Enum as SQLEnum
 from sqlmodel import Field, Relationship
 
-from app.models.base import ModelBase, TimestampMixin
+from app.models.common import ModelBase, TimestampMixin
 from app.models.payment import PaymentStatus
 
 if TYPE_CHECKING:

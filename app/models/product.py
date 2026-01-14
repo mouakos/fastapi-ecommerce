@@ -6,8 +6,8 @@ from uuid import UUID
 
 from sqlmodel import Field, Relationship
 
-from app.models.base import ModelBase, TimestampMixin
 from app.models.category import Category
+from app.models.common import ModelBase, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.cart import CartItem

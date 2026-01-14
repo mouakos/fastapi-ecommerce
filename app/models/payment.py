@@ -8,7 +8,7 @@ from uuid import UUID
 from sqlalchemy import Enum as SQLEnum
 from sqlmodel import Column, Field, Relationship
 
-from app.models.base import ModelBase, TimestampMixin
+from app.models.common import ModelBase, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.order import Order

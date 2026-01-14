@@ -6,7 +6,7 @@ from uuid import UUID
 
 from sqlmodel import Field, Relationship, UniqueConstraint
 
-from app.models.base import ModelBase
+from app.models.common import ModelBase
 from app.utils.utc_time import utcnow
 
 if TYPE_CHECKING:

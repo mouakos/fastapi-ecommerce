@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Generic, TypeVar
 from uuid import UUID
 
-from app.models.base import ModelBase
+from app.models.common import ModelBase
 
 T_model = TypeVar("T_model", bound=ModelBase)
 
