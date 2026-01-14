@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.schemas.base import UUIDMixin
+from app.schemas.common import UUIDMixin
 
 
 class ReviewBase(BaseModel):

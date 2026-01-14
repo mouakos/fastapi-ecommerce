@@ -10,7 +10,7 @@ from app.interfaces.product_repository import ProductRepository, allowed_sort_by
 from app.models.product import Product
 from app.models.review import Review
 from app.repositories.sql_generic_repository import SqlGenericRepository
-from app.schemas.base import PaginatedRead, PaginationLinks, PaginationMeta
+from app.schemas.common import PaginatedRead, PaginationLinks, PaginationMeta
 
 
 class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):

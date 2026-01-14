@@ -6,7 +6,7 @@ from uuid import UUID
 
 from app.interfaces.generic_repository import GenericRepository
 from app.models.product import Product
-from app.schemas.base import PaginatedRead
+from app.schemas.common import PaginatedRead
 
 allowed_sort_order = Literal["asc", "desc"]
 allowed_sort_by = Literal["id", "price", "name", "created_at", "rating", "popularity"]

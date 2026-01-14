@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, HttpUrl
 
-from app.schemas.base import UUIDMixin
+from app.schemas.common import UUIDMixin
 
 
 class CategoryBase(BaseModel):

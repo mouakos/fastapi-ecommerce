@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, HttpUrl
 
 from app.models.order import OrderStatus
-from app.schemas.base import UUIDMixin
+from app.schemas.common import UUIDMixin
 
 
 class OrderCreate(BaseModel):
