@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy import Column, UniqueConstraint
@@ -36,7 +36,7 @@ class Order(ModelBase, TimestampMixin, table=True):
     """Order model for storing order information."""
 
     __tablename__ = "orders"
-    user_id: UUID = Field(default=None, foreign_key="users.id", index=True, ondelete="CASCADE")
+    user_id: UUID = Field(foreign_key="users.id", index=True, ondelete="CASCADE")
     shipping_address_id: UUID = Field(foreign_key="addresses.id", index=True)
     billing_address_id: UUID = Field(foreign_key="addresses.id", index=True)
     status: OrderStatus = Field(
@@ -78,7 +78,7 @@ class Order(ModelBase, TimestampMixin, table=True):
     delivered_at: datetime | None = Field(default=None)
 
     # Relationships
-    user: Optional["User"] = Relationship(
+    user: "User" = Relationship(
         back_populates="orders", sa_relationship_kwargs={"lazy": "selectin"}
     )
     items: list["OrderItem"] = Relationship(

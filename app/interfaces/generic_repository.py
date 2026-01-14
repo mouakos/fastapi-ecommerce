@@ -1,7 +1,7 @@
 """Generic base repository interface."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 from uuid import UUID
 
 from app.models.common import ModelBase
@@ -9,7 +9,7 @@ from app.models.common import ModelBase
 T_model = TypeVar("T_model", bound=ModelBase)
 
 
-class GenericRepository(Generic[T_model], ABC):  # noqa: UP046
+class GenericRepository[T_model](ABC):
     """Generic base repository."""
 
     @abstractmethod

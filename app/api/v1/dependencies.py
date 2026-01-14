@@ -14,6 +14,7 @@ from app.interfaces.unit_of_work import UnitOfWork
 from app.models.user import UserRole
 from app.schemas.user_schema import UserRead
 from app.services.address_service import AddressService
+from app.services.admin_service import AdminService
 from app.services.cart_service import CartService
 from app.services.category_service import CategoryService
 from app.services.order_service import OrderService
@@ -90,6 +91,11 @@ def get_review_service(uow: UnitOfWorkDep) -> ReviewService:
     return ReviewService(uow)
 
 
+def get_admin_service(uow: UnitOfWorkDep) -> AdminService:
+    """Get Admin Service."""
+    return AdminService(uow)
+
+
 OrderServiceDep = Annotated[OrderService, Depends(get_order_service)]
 UserServiceDep = Annotated[UserService, Depends(get_user_service)]
 AddressServiceDep = Annotated[AddressService, Depends(get_address_service)]
@@ -99,6 +105,7 @@ CartServiceDep = Annotated[CartService, Depends(get_cart_service)]
 WishlistServiceDep = Annotated[WishlistService, Depends(get_wishlist_service)]
 PaymentServiceDep = Annotated[PaymentService, Depends(get_payment_service)]
 ReviewServiceDep = Annotated[ReviewService, Depends(get_review_service)]
+AdminServiceDep = Annotated[AdminService, Depends(get_admin_service)]
 
 
 async def get_current_user(

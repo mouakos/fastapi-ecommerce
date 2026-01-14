@@ -1,7 +1,7 @@
 """Interface for Product repository."""
 
 from abc import ABC, abstractmethod
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from app.interfaces.generic_repository import GenericRepository
@@ -130,5 +130,57 @@ class ProductRepository(GenericRepository[Product], ABC):
 
         Returns:
             list[Product]: List of products in the specified category.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
+        """Get total number of products.
+
+        Args:
+            **filters: Filter conditions.
+
+        Returns:
+            int: Total number of products.
+
+        Raises:
+            ValueError: Invalid filter condition.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def count_low_stock(self, threshold: int = 10) -> int:
+        """Get number of products that are low in stock.
+
+        Args:
+            threshold (int): Stock threshold.
+
+        Returns:
+            int: Number of products that are low in stock.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def get_low_stock(self, threshold: int = 10) -> list[Product]:
+        """Retrieve products that are low in stock.
+
+        Args:
+            threshold (int): Stock threshold.
+
+        Returns:
+            list[Product]: List of low stock products.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def get_top_selling(self, limit: int = 10, days: int = 30) -> list[Product]:
+        """Retrieve top selling products within a specified time frame.
+
+        Args:
+            limit (int): Number of top selling products to retrieve.
+            days (int): Number of days to consider for sales data.
+
+        Returns:
+            list[Product]: List of top selling products.
         """
         raise NotImplementedError()

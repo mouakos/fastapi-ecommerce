@@ -1,5 +1,7 @@
 """SQL Product repository implementation."""
 
+from datetime import timedelta
+from typing import Any
 from uuid import UUID
 
 from slugify import slugify
@@ -8,10 +10,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.interfaces.product_repository import ProductRepository, allowed_sort_by, allowed_sort_order
 from app.models.category import Category
+from app.models.order import Order, OrderItem, OrderStatus
 from app.models.product import Product
 from app.models.review import Review
 from app.repositories.sql_generic_repository import SqlGenericRepository
 from app.schemas.common import PaginatedRead, PaginationLinks, PaginationMeta
+from app.utils.utc_time import utcnow
 
 
 class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
@@ -312,3 +316,90 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         )
         result = await self._session.exec(stmt)
         return list(result.all())
+
+    async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
+        """Get total number of products.
+
+        Args:
+            **filters: Filter conditions.
+
+        Returns:
+            int: Total number of products.
+
+        Raise:
+            ValueError: If an unknown filter is provided.
+        """
+        stmt = select(func.count()).select_from(Product).where(Product.is_active)
+
+        for key, value in filters.items():
+            if hasattr(Product, key):
+                stmt = stmt.where(getattr(Product, key) == value)
+            else:
+                raise ValueError(f"Unknown filter: {key}")
+
+        result = await self._session.exec(stmt)
+        return result.first() or 0
+
+    async def count_low_stock(self, threshold: int = 10) -> int:
+        """Get number of products that are low in stock.
+
+        Args:
+            threshold (int): Stock threshold.
+
+        Returns:
+            int: Number of products that are low in stock.
+        """
+        stmt = select(func.count()).where(Product.stock <= threshold).where(Product.is_active)
+        result = await self._session.exec(stmt)
+        return result.first() or 0
+
+    async def get_low_stock(self, threshold: int = 10) -> list[Product]:
+        """Retrieve products that are low in stock.
+
+        Args:
+            threshold (int): Stock threshold.
+
+        Returns:
+            list[Product]: List of low stock products.
+        """
+        stmt = (
+            select(Product)
+            .where(Product.stock <= threshold)
+            .where(Product.is_active)
+            .order_by(Product.stock.asc())  # type: ignore [attr-defined]
+        )
+        result = await self._session.exec(stmt)
+        return list(result.all())
+
+    async def get_top_selling(self, limit: int = 10, days: int = 30) -> list[Product]:
+        """Retrieve top selling products within a specified time frame.
+
+        Args:
+            limit (int): Number of top selling products to retrieve.
+            days (int): Number of days to consider for sales data.
+
+        Returns:
+            list[Product]: List of top selling products.
+        """
+        cutoff_date = utcnow() - timedelta(days=days)
+
+        stmt = (
+            select(
+                Product,
+                func.sum(OrderItem.quantity).label("total_sold"),
+            )
+            .join(OrderItem, OrderItem.product_id == Product.id)  # type: ignore [arg-type]
+            .join(
+                Order,
+                OrderItem.order_id == Order.id,  # type: ignore [arg-type]
+            )
+            .where(Order.status == OrderStatus.PAID)
+            .where(Order.created_at >= cutoff_date)
+            .group_by(Product.id)  # type: ignore [arg-type]
+            .order_by(func.sum(OrderItem.quantity).desc())
+            .limit(limit)
+        )
+
+        result = await self._session.exec(stmt)
+        top_selling = result.all()
+        return [item[0] for item in top_selling]

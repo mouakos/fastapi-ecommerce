@@ -96,6 +96,10 @@ app = FastAPI(
             "name": "Payments",
             "description": "Operations related to payment processing.",
         },
+        {
+            "name": "Admin",
+            "description": "Administrative operations and analytics.",
+        },
     ],
 )
 
