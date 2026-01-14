@@ -160,24 +160,11 @@ class CartService:
         Raises:
             HTTPException: If session_id is not provided for guest cart.
         """
-        if user_id:
-            user_cart = await self.uow.carts.get_by_user_id(user_id)
-            if user_cart:
-                return user_cart
-
-            new_cart = Cart(user_id=user_id)
-            await self.uow.carts.add(new_cart)
-            return new_cart
-
-        if not session_id:
-            raise HTTPException(status_code=400, detail="session_id is required for guest cart.")
-
-        guest_cart = await self.uow.carts.get_by_session_id(session_id)
-        if guest_cart:
-            return guest_cart
-
-        new_guest_cart = Cart(session_id=session_id)
-        return await self.uow.carts.add(new_guest_cart)
+        """Get or create cart via repository."""
+        try:
+            return await self.uow.carts.get_or_create(user_id, session_id)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
 
     async def clear(self, user_id: UUID | None, session_id: str | None) -> CartRead:
         """Clear all items from the cart.
@@ -201,14 +188,11 @@ class CartService:
             session_id (str): Session ID.
         """
         guest_cart = await self.uow.carts.get_by_session_id(session_id)
-        user_cart = await self.uow.carts.get_by_user_id(user_id)
 
         if not guest_cart:
             return
 
-        if not user_cart:
-            user_cart = Cart(user_id=user_id)
-            await self.uow.carts.add(user_cart)
+        user_cart = await self._get_or_create(user_id, None)
 
         for item in guest_cart.items:
             existing_item = await self.uow.carts.get_item_by_cart_and_product(

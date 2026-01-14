@@ -48,3 +48,19 @@ class CartRepository(GenericRepository[Cart], ABC):
             Cart | None: Cart item or none.
         """
         raise NotImplementedError()
+
+    @abstractmethod
+    async def get_or_create(self, user_id: UUID | None, session_id: str | None) -> Cart:
+        """Get or create a cart for a user.
+
+        Args:
+            user_id (UUID | None): User ID.
+            session_id (str | None): Session ID.
+
+        Returns:
+            Cart: Existing or new cart.
+
+        Raises:
+            ValueError: If session_id is not provided for guest cart.
+        """
+        raise NotImplementedError()
