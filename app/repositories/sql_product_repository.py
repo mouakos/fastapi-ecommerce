@@ -100,7 +100,8 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
                 0,
             ),
             "popularity": func.coalesce(
-                select(func.count(Review.id))  # type: ignore [arg-type]
+                select(func.count())
+                .select_from(Review)
                 .where(Review.product_id == Product.id)
                 .correlate(Product)
                 .scalar_subquery(),
