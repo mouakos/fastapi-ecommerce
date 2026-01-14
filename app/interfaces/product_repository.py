@@ -108,3 +108,27 @@ class ProductRepository(GenericRepository[Product], ABC):
             list[str]: List of suggested product names.
         """
         raise NotImplementedError()
+
+    @abstractmethod
+    async def get_by_category_slug(self, category_slug: str) -> list[Product]:
+        """Get products by category slug.
+
+        Args:
+            category_slug (str): Category slug.
+
+        Returns:
+            list[Product]: List of products in the specified category.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def get_by_category_id(self, category_id: UUID) -> list[Product]:
+        """Get products by category ID.
+
+        Args:
+            category_id (UUID): Category ID.
+
+        Returns:
+            list[Product]: List of products in the specified category.
+        """
+        raise NotImplementedError()

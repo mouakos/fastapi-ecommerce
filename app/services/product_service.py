@@ -131,6 +131,48 @@ class ProductService:
             raise HTTPException(status_code=404, detail="Product not found.")
         return await self._to_detail_read_model(product)
 
+    async def get_by_category_slug(
+        self,
+        category_slug: str,
+    ) -> list[ProductRead]:
+        """Retrieve products by category slug.
+
+        Args:
+            category_slug (str): The slug of the category.
+
+        Returns:
+            list[ProductRead]: List of products in the specified category.
+
+        Raises:
+            HTTPException: If the category is not found.
+        """
+        category = await self.uow.categories.get_by_slug(category_slug)
+        if not category:
+            raise HTTPException(status_code=404, detail="Category not found.")
+
+        return await self.uow.products.get_by_category_slug(category.slug)
+
+    async def get_by_category_id(
+        self,
+        category_id: UUID,
+    ) -> list[ProductRead]:
+        """Retrieve products by category ID.
+
+        Args:
+            category_id (UUID): The ID of the category.
+
+        Returns:
+            list[ProductRead]: List of products in the specified category.
+
+        Raises:
+            HTTPException: If the category is not found.
+        """
+        category = await self.uow.categories.get_by_id(category_id)
+        if not category:
+            raise HTTPException(status_code=404, detail="Category not found.")
+
+        return await self.uow.products.get_by_category_id(category.id)
+
     async def create(
         self,
         data: ProductCreate,

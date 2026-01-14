@@ -60,7 +60,7 @@ class ProductDetailRead(ProductRead, UUIDMixin):
 class ProductUpdate(BaseModel):
     """Schema for updating a Product."""
 
-    name: str = Field(..., max_length=255, min_length=2)
+    name: str | None = Field(None, max_length=255, min_length=2)
     price: Decimal | None = Field(None, gt=0, max_digits=10, decimal_places=2)
     stock: int | None = Field(None, ge=0)
     description: str | None = None

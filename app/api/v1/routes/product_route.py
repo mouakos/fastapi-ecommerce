@@ -83,6 +83,30 @@ async def get_product_autocomplete_suggestions(
     return await product_service.get_autocomplete_suggestions(query, limit)
 
 
+@product_router.get(
+    "/category/id/{category_id}",
+    response_model=list[ProductRead],
+    summary="Retrieve products by category ID",
+)
+async def get_products_by_category_id(
+    category_id: UUID, product_service: ProductServiceDep
+) -> list[ProductRead]:
+    """Retrieve products by category ID."""
+    return await product_service.get_by_category_id(category_id)
+
+
+@product_router.get(
+    "/category/slug/{category_slug}",
+    response_model=list[ProductRead],
+    summary="Retrieve products by category slug",
+)
+async def get_products_by_category_slug(
+    category_slug: str, product_service: ProductServiceDep
+) -> list[ProductRead]:
+    """Retrieve products by category slug."""
+    return await product_service.get_by_category_slug(category_slug)
+
+
 @product_router.post(
     "/",
     response_model=ProductDetailRead,

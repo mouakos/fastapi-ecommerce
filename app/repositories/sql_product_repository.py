@@ -7,6 +7,7 @@ from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.interfaces.product_repository import ProductRepository, allowed_sort_by, allowed_sort_order
+from app.models.category import Category
 from app.models.product import Product
 from app.models.review import Review
 from app.repositories.sql_generic_repository import SqlGenericRepository
@@ -274,3 +275,40 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         contains_matches = list(result.all())
 
         return prefix_matches + contains_matches
+
+    async def get_by_category_slug(self, category_slug: str) -> list[Product]:
+        """Get products by category slug.
+
+        Args:
+            category_slug (str): Category slug.
+
+        Returns:
+            list[Product]: List of products in the specified category.
+        """
+        stmt = (
+            select(Product)
+            .join(Product.category)  # type: ignore [arg-type]
+            .where(Category.slug == category_slug)
+            .where(Product.is_active)
+            .order_by(Product.id)  # type: ignore [arg-type]
+        )
+        result = await self._session.exec(stmt)
+        return list(result.all())
+
+    async def get_by_category_id(self, category_id: UUID) -> list[Product]:
+        """Get products by category ID.
+
+        Args:
+            category_id (UUID): Category ID.
+
+        Returns:
+            list[Product]: List of products in the specified category.
+        """
+        stmt = (
+            select(Product)
+            .where(Product.category_id == category_id)
+            .where(Product.is_active)
+            .order_by(Product.id)  # type: ignore [arg-type]
+        )
+        result = await self._session.exec(stmt)
+        return list(result.all())
