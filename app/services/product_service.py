@@ -8,7 +8,9 @@ from pydantic import HttpUrl
 
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.product import Product
+from app.schemas.base import PaginatedRead
 from app.schemas.product_schema import ProductCreate, ProductDetailRead, ProductRead, ProductUpdate
+from app.schemas.search_schema import AvailabilityFilter, SortByField, SortOrder
 from app.utils.sku import generate_sku
 
 
@@ -19,16 +21,49 @@ class ProductService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def list_all(self) -> list[ProductRead]:
-        """List all products.
+    async def list_all(
+        self,
+        *,
+        page: int = 1,
+        per_page: int = 10,
+        search: str | None = None,
+        category_id: UUID | None = None,
+        min_price: float | None = None,
+        max_price: float | None = None,
+        min_rating: float | None = None,
+        availability: AvailabilityFilter = AvailabilityFilter.ALL,
+        sort_by: SortByField = SortByField.ID,
+        sort_order: SortOrder = SortOrder.ASC,
+    ) -> PaginatedRead[ProductRead]:
+        """List all products with optional filters, sorting, and pagination.
 
         Args:
-            session (AsyncSession): The database session.
+            page (int, optional): Page number for pagination.
+            per_page (int, optional): Number of items per page for pagination.
+            search (str | None): Search query to filter products by name or description.
+            category_id (int | None): Category ID to filter products.
+            min_price (float | None): Minimum price to filter products.
+            max_price (float | None): Maximum price to filter products.
+            min_rating (float | None): Minimum average rating to filter products.
+            availability (AvailabilityFilter, optional): Stock availability filter ("in_stock", "out_of_stock", "all").
+            sort_by (SortByField, optional): Field to sort by (e.g., "price", "name", "rating").
+            sort_order (SortOrder, optional): Sort order ("asc" or "desc").
 
         Returns:
-            list[ProductRead]: A list of all products.
+            PaginatedRead[ProductRead]: A paginated list of all products.
         """
-        return await self.uow.products.list_all()
+        return await self.uow.products.list_all_paginated(
+            page=page,
+            per_page=per_page,
+            search=search,
+            category_id=category_id,
+            min_price=min_price,
+            max_price=max_price,
+            min_rating=min_rating,
+            availability=availability.value,
+            sort_by=sort_by.value,
+            sort_order=sort_order.value,
+        )
 
     async def get_by_id(
         self,

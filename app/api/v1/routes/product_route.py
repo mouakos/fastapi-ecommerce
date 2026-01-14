@@ -1,25 +1,64 @@
 """Product API Routes."""
 
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Query, status
 
 from app.api.v1.dependencies import AdminRoleDep, ProductServiceDep
+from app.schemas.base import PaginatedRead
 from app.schemas.product_schema import ProductCreate, ProductDetailRead, ProductRead, ProductUpdate
+from app.schemas.search_schema import (
+    AvailabilityFilter,
+    SortByField,
+    SortOrder,
+)
 
 product_router = APIRouter(prefix="/products", tags=["Products"])
 
 
 @product_router.get(
     "/",
-    response_model=list[ProductRead],
-    summary="List all products",
+    response_model=PaginatedRead[ProductRead],
+    summary="List all products with optional filters, sorting, and pagination",
 )
 async def list_products(
     product_service: ProductServiceDep,
-) -> list[ProductRead]:
-    """List all products."""
-    return await product_service.list_all()
+    page: Annotated[int, Query(ge=1, description="Page number")] = 1,
+    per_page: Annotated[int, Query(ge=1, le=100, description="Number of items per page")] = 10,
+    search: Annotated[
+        str | None,
+        Query(
+            min_length=1,
+            max_length=255,
+            description="Search query for product name or description (case-insensitive)",
+        ),
+    ] = None,
+    category_id: Annotated[UUID | None, Query(description="Filter by category ID")] = None,
+    min_price: Annotated[float | None, Query(ge=0, description="Minimum price")] = None,
+    max_price: Annotated[float | None, Query(ge=0, description="Maximum price")] = None,
+    min_rating: Annotated[
+        int | None, Query(ge=1, le=5, description="Minimum average rating (1-5)")
+    ] = None,
+    availability: Annotated[
+        AvailabilityFilter, Query(description="Stock availability")
+    ] = AvailabilityFilter.ALL,
+    sort_by: Annotated[SortByField, Query(description="Sort by field")] = SortByField.ID,
+    sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.ASC,
+) -> PaginatedRead[ProductRead]:
+    """List all products with optional filters, sorting, and pagination."""
+    return await product_service.list_all(
+        page=page,
+        per_page=per_page,
+        search=search,
+        category_id=category_id,
+        min_price=min_price,
+        max_price=max_price,
+        min_rating=min_rating,
+        availability=availability,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
 
 
 @product_router.post(
