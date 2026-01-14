@@ -11,7 +11,7 @@ from app.api.v1.routes.review_route import review_router
 from app.api.v1.routes.user_route import user_router
 from app.api.v1.routes.wishlist_route import wishlist_route
 
-router = APIRouter(prefix="/api/v1")
+router = APIRouter()
 
 router.include_router(health_check_router)
 router.include_router(auth_router)

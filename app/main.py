@@ -4,9 +4,16 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from pydantic import BaseModel
 
 from app.api.v1.routes import router
 from app.db.database import async_engine, init_db
+
+
+class RootRead(BaseModel):
+    """Schema for root response."""
+
+    message: str
 
 
 @asynccontextmanager
@@ -22,15 +29,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: ARG001
 app = FastAPI(
     lifespan=lifespan,
     description="This is a simple RESTful  API to for managing the products catalog, user authentication, shopping cart, and order processing in an e-commerce platform.",
-    docs_url="/api/v1/docs",
-    redoc_url="/api/v1/redoc",
-    openapi_url="/api/v1/openapi.json",
+    version="1.0.0",
+    root_path="/api/v1",
+    servers=[],
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
     title="E-commerce API",
     license_info={
         "name": "MIT License",
         "url": "https://opensource.org/license/mit/",
     },
-    version="v1",
     contact={
         "name": "Stephane Mouako",
         "url": "https://github.com/mouakos",
@@ -43,6 +52,10 @@ app = FastAPI(
         "onComplete": "Ok",
     },
     openapi_tags=[
+        {
+            "name": "Root",
+            "description": "API Root endpoint.",
+        },
         {
             "name": "Healthcheck",
             "description": "Endpoints to check the health status of the database connection.",
@@ -85,6 +98,12 @@ app = FastAPI(
         },
     ],
 )
+
+
+@app.get("/", tags=["Root"], response_model=RootRead)
+def read_root() -> RootRead:
+    """Returns a welcome message for the API root."""
+    return RootRead(message="Welcome to the E-Commerce API v1. Check out /docs for the spec!")
 
 
 app.include_router(router)
