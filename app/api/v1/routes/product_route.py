@@ -67,7 +67,7 @@ async def list_products(
     response_model=ProductAutocompleteRead,
     summary="Get autocomplete suggestions for product names based on a search query",
 )
-async def get_autocomplete_suggestions(
+async def get_product_autocomplete_suggestions(
     product_service: ProductServiceDep,
     query: Annotated[
         str,
