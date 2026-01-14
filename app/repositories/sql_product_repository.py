@@ -229,3 +229,48 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         result = await self._session.exec(stmt)
         avg_rating = result.first()
         return float(avg_rating) if avg_rating is not None else None
+
+    async def get_autocomplete_suggestions(self, query: str, limit: int = 10) -> list[str]:
+        """Get autocomplete suggestions for product names based on a search query.
+
+        Args:
+            query (str): Search query.
+            limit (int, optional): Maximum number of suggestions to return. Defaults to 5.
+
+        Returns:
+            list[str]: List of suggested product names.
+        """
+        if not query or len(query) < 2:
+            return []
+
+        # Priority 1: Prefix matches (starts with query)
+        prefix_pattern = f"{query}%"
+        stmt = (
+            select(Product.name)
+            .where(Product.name.ilike(prefix_pattern))  # type: ignore[attr-defined]
+            .where(Product.is_active)
+            .distinct()
+            .limit(limit)
+        )
+        result = await self._session.exec(stmt)
+        prefix_matches = list(result.all())
+
+        if len(prefix_matches) >= limit:
+            return prefix_matches
+
+        # Priority 2: Contains matches (query appears anywhere)
+        contains_pattern = f"%{query}%"
+        remaining = limit - len(prefix_matches)
+        stmt = (
+            select(Product.name)
+            .where(Product.name.ilike(contains_pattern))  # type: ignore[attr-defined]
+            .where(~Product.name.ilike(prefix_pattern))  # type: ignore[attr-defined]
+            .where(Product.is_active)
+            .distinct()
+            .limit(remaining)
+        )
+
+        result = await self._session.exec(stmt)
+        contains_matches = list(result.all())
+
+        return prefix_matches + contains_matches

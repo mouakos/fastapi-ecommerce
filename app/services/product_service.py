@@ -10,7 +10,12 @@ from app.interfaces.unit_of_work import UnitOfWork
 from app.models.product import Product
 from app.schemas.common import PaginatedRead
 from app.schemas.product_schema import ProductCreate, ProductDetailRead, ProductRead, ProductUpdate
-from app.schemas.search_schema import AvailabilityFilter, SortByField, SortOrder
+from app.schemas.search_schema import (
+    AvailabilityFilter,
+    ProductAutocompleteRead,
+    SortByField,
+    SortOrder,
+)
 from app.utils.sku import generate_sku
 
 
@@ -64,6 +69,26 @@ class ProductService:
             sort_by=sort_by.value,
             sort_order=sort_order.value,
         )
+
+    async def get_autocomplete_suggestions(
+        self, query: str, limit: int = 10
+    ) -> ProductAutocompleteRead:
+        """Get autocomplete suggestions for product names based on a search query.
+
+        Args:
+            query (str): The search query string.
+            limit (int, optional): The maximum number of suggestions to return. Defaults to 10.
+
+        Returns:
+            ProductAutocompleteRead: Autocomplete suggestions for product names.
+
+        Raises:
+            HTTPException: If the query is less than 2 characters long.
+        """
+        if not query or len(query) < 2:
+            raise HTTPException(status_code=400, detail="Query must be at least 2 characters long.")
+        suggestions = await self.uow.products.get_autocomplete_suggestions(query, limit)
+        return ProductAutocompleteRead(suggestions=suggestions)
 
     async def get_by_id(
         self,

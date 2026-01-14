@@ -95,3 +95,16 @@ class ProductRepository(GenericRepository[Product], ABC):
             float | None: Average rating or none if no reviews.
         """
         raise NotImplementedError()
+
+    @abstractmethod
+    async def get_autocomplete_suggestions(self, query: str, limit: int = 10) -> list[str]:
+        """Get autocomplete suggestions for product names based on a search query.
+
+        Args:
+            query (str): Search query.
+            limit (int, optional): Maximum number of suggestions to return. Defaults to 5.
+
+        Returns:
+            list[str]: List of suggested product names.
+        """
+        raise NotImplementedError()

@@ -2,6 +2,8 @@
 
 from enum import StrEnum
 
+from pydantic import BaseModel, Field
+
 
 class AvailabilityFilter(StrEnum):
     """Filters for product availability."""
@@ -27,3 +29,24 @@ class SortOrder(StrEnum):
 
     ASC = "asc"
     DESC = "desc"
+
+
+class ProductAutocompleteRead(BaseModel):
+    """Schema for product name autocomplete suggestions."""
+
+    suggestions: list[str] = Field(..., description="List of product name suggestions (max 10)")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "suggestions": [
+                        "iPhone 16 Pro",
+                        "iPhone 16",
+                        "iPhone 15 Pro Max",
+                        "iPhone 14",
+                    ]
+                }
+            ]
+        }
+    }

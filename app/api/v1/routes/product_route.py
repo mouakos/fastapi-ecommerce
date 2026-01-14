@@ -10,6 +10,7 @@ from app.schemas.common import PaginatedRead
 from app.schemas.product_schema import ProductCreate, ProductDetailRead, ProductRead, ProductUpdate
 from app.schemas.search_schema import (
     AvailabilityFilter,
+    ProductAutocompleteRead,
     SortByField,
     SortOrder,
 )
@@ -59,6 +60,27 @@ async def list_products(
         sort_by=sort_by,
         sort_order=sort_order,
     )
+
+
+@product_router.get(
+    "/autocomplete/",
+    response_model=ProductAutocompleteRead,
+    summary="Get autocomplete suggestions for product names based on a search query",
+)
+async def get_autocomplete_suggestions(
+    product_service: ProductServiceDep,
+    query: Annotated[
+        str,
+        Query(
+            min_length=2,
+            max_length=255,
+            description="Search query for product name autocomplete (case-insensitive)",
+        ),
+    ],
+    limit: Annotated[int, Query(ge=1, le=10, description="Maximum number of suggestions")] = 10,
+) -> ProductAutocompleteRead:
+    """Get autocomplete suggestions for product names based on a search query."""
+    return await product_service.get_autocomplete_suggestions(query, limit)
 
 
 @product_router.post(
