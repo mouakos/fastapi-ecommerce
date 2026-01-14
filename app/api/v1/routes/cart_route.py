@@ -21,7 +21,7 @@ async def get_cart(
     cart_service: CartServiceDep,
 ) -> CartRead:
     """Get the current user's cart or session cart."""
-    return await cart_service.get_or_create_cart(
+    return await cart_service.get_or_create(
         user_id=current_user.id if current_user else None,
         session_id=session_id,
     )
@@ -36,9 +36,9 @@ async def add_item(
 ) -> CartRead:
     """Add an item to the cart."""
     return await cart_service.add_item(
-        data,
-        session_id=session_id,
         user_id=current_user.id if current_user else None,
+        session_id=session_id,
+        data=data,
     )
 
 
@@ -54,10 +54,10 @@ async def update_item(
 ) -> CartRead:
     """Update the quantity of a cart item."""
     return await cart_service.update_item(
-        product_id,
-        data,
-        session_id=session_id,
         user_id=current_user.id if current_user else None,
+        session_id=session_id,
+        product_id=product_id,
+        data=data,
     )
 
 
@@ -72,9 +72,9 @@ async def remove_item(
 ) -> CartRead:
     """Remove an item from the cart."""
     return await cart_service.remove_item(
-        product_id,
-        session_id=session_id,
         user_id=current_user.id if current_user else None,
+        session_id=session_id,
+        product_id=product_id,
     )
 
 
@@ -85,7 +85,7 @@ async def clear_cart(
     cart_service: CartServiceDep,
 ) -> CartRead:
     """Clear all items from the cart."""
-    return await cart_service.clear_cart(
-        session_id=session_id,
+    return await cart_service.clear(
         user_id=current_user.id if current_user else None,
+        session_id=session_id,
     )
