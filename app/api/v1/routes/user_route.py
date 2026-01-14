@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 
 from app.api.v1.dependencies import (
     AddressServiceDep,
@@ -93,31 +93,19 @@ async def update_address(
     current_user: CurrentUserDep,
     address_service: AddressServiceDep,
 ) -> AddressRead:
-    """Update an existing address for the currently authenticated user's account."""
-    address = await address_service.get_by_id(address_id)
-    if address.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have enough permissions to perform this action.",
-        )
-    return await address_service.update(address_id, data)
+    """Update an existing address. Only the owner can update it own address."""
+    return await address_service.update(current_user.id, address_id, data)
 
 
 @user_router.delete(
     "/me/addresses/{address_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete an existing address for the current user.",
+    summary="Delete an existing address. Only the owner or an admin can delete an address.",
 )
 async def delete_address(
     address_id: UUID,
     current_user: CurrentUserDep,
     address_service: AddressServiceDep,
 ) -> None:
-    """Delete an existing address for the currently authenticated user's account."""
-    address = await address_service.get_by_id(address_id)
-    if address.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have enough permissions to perform this action.",
-        )
-    await address_service.delete(address_id)
+    """Delete an existing address. Only the owner or an admin can delete an address."""
+    await address_service.delete(current_user.id, address_id)

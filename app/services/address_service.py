@@ -7,6 +7,7 @@ from fastapi import HTTPException, status
 
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.address import Address
+from app.models.user import UserRole
 from app.schemas.address_schema import AddressCreate, AddressRead, AddressUpdate
 
 
@@ -82,10 +83,11 @@ class AddressService:
 
         return await self.uow.addresses.add(new_address)
 
-    async def update(self, address_id: UUID, data: AddressUpdate) -> AddressRead:
+    async def update(self, user_id: UUID, address_id: UUID, data: AddressUpdate) -> AddressRead:
         """Update an address.
 
         Args:
+            user_id (UUID): User ID.
             address_id (UUID): Address ID.
             data (AddressUpdate): The address data to update.
 
@@ -102,6 +104,12 @@ class AddressService:
                 detail="Address not found.",
             )
 
+        if address.user_id != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to update this address.",
+            )
+
         if data.is_default_billing:
             await self.uow.addresses.unset_user_default_billing_address(address.user_id)
 
@@ -115,17 +123,24 @@ class AddressService:
 
         return await self.uow.addresses.update(address)
 
-    async def delete(self, address_id: UUID) -> None:
+    async def delete(self, user_id: UUID, address_id: UUID) -> None:
         """Delete a user address.
 
         Args:
+            user_id (UUID): User ID.
             address_id (UUID): Address identifier.
 
         Raises:
             HTTPException: If the address does not exists.
         """
-        if not await self.uow.addresses.delete_by_id(address_id):
+        address = await self.uow.addresses.get_by_id(address_id)
+        if not address:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Address not found.",
+            )
+        if address.user_id != user_id and address.user.role != UserRole.ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to delete this address.",
             )
