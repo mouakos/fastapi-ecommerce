@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.api.v1.routers.addresses import router as address_router
 from app.api.v1.routers.admin import router as admin_router
 from app.api.v1.routers.auth import router as auth_router
 from app.api.v1.routers.carts import router as cart_router
@@ -25,3 +26,4 @@ router.include_router(wishlist_router)
 router.include_router(payment_router)
 router.include_router(review_router)
 router.include_router(admin_router)
+router.include_router(address_router)
