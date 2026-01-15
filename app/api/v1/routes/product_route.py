@@ -18,10 +18,35 @@ from app.schemas.search_schema import (
 product_router = APIRouter(prefix="/products", tags=["Products"])
 
 
+# Static utility paths first
 @product_router.get(
-    "/",
+    "/autocomplete",
+    response_model=ProductAutocompleteRead,
+    summary="Get product name suggestions",
+    description="Retrieve autocomplete suggestions for product names based on search query. Returns up to 10 matching product names.",
+)
+async def get_product_autocomplete_suggestions(
+    product_service: ProductServiceDep,
+    query: Annotated[
+        str,
+        Query(
+            min_length=2,
+            max_length=255,
+            description="Search query for product name autocomplete (case-insensitive)",
+        ),
+    ],
+    limit: Annotated[int, Query(ge=1, le=10, description="Maximum number of suggestions")] = 10,
+) -> ProductAutocompleteRead:
+    """Get autocomplete suggestions for product names based on a search query."""
+    return await product_service.get_autocomplete_suggestions(query, limit)
+
+
+# Collection paths
+@product_router.get(
+    "",
     response_model=PaginatedRead[ProductRead],
-    summary="List all products with optional filters, sorting, and pagination",
+    summary="List products",
+    description="Retrieve paginated list of products with advanced filtering by category, price range, rating, and availability. Supports search and sorting.",
 )
 async def list_products(
     product_service: ProductServiceDep,
@@ -62,31 +87,27 @@ async def list_products(
     )
 
 
-@product_router.get(
-    "/autocomplete/",
-    response_model=ProductAutocompleteRead,
-    summary="Get autocomplete suggestions for product names based on a search query",
+@product_router.post(
+    "",
+    response_model=ProductDetailRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create product",
+    description="Create a new product. Admin access required.",
+    dependencies=[AdminRoleDep],
 )
-async def get_product_autocomplete_suggestions(
-    product_service: ProductServiceDep,
-    query: Annotated[
-        str,
-        Query(
-            min_length=2,
-            max_length=255,
-            description="Search query for product name autocomplete (case-insensitive)",
-        ),
-    ],
-    limit: Annotated[int, Query(ge=1, le=10, description="Maximum number of suggestions")] = 10,
-) -> ProductAutocompleteRead:
-    """Get autocomplete suggestions for product names based on a search query."""
-    return await product_service.get_autocomplete_suggestions(query, limit)
+async def create_product(
+    data: ProductCreate, product_service: ProductServiceDep
+) -> ProductDetailRead:
+    """Create a new product."""
+    return await product_service.create(data)
 
 
+# Category filter paths (more specific than parameterized paths)
 @product_router.get(
     "/category/id/{category_id}",
     response_model=list[ProductRead],
-    summary="Retrieve products by category ID",
+    summary="Get products by category ID",
+    description="Retrieve all products belonging to a specific category using the category's UUID.",
 )
 async def get_products_by_category_id(
     category_id: UUID, product_service: ProductServiceDep
@@ -98,7 +119,8 @@ async def get_products_by_category_id(
 @product_router.get(
     "/category/slug/{category_slug}",
     response_model=list[ProductRead],
-    summary="Retrieve products by category slug",
+    summary="Get products by category slug",
+    description="Retrieve all products belonging to a specific category using the category's URL-friendly slug.",
 )
 async def get_products_by_category_slug(
     category_slug: str, product_service: ProductServiceDep
@@ -107,24 +129,12 @@ async def get_products_by_category_slug(
     return await product_service.get_by_category_slug(category_slug)
 
 
-@product_router.post(
-    "/",
-    response_model=ProductDetailRead,
-    status_code=status.HTTP_201_CREATED,
-    summary="Create a new product",
-    dependencies=[AdminRoleDep],
-)
-async def create_product(
-    data: ProductCreate, product_service: ProductServiceDep
-) -> ProductDetailRead:
-    """Create a new product."""
-    return await product_service.create(data)
-
-
+# Single product lookup paths (by ID or slug)
 @product_router.get(
     "/id/{product_id}",
     response_model=ProductDetailRead,
-    summary="Retrieve a product by its ID",
+    summary="Get product by ID",
+    description="Retrieve detailed information about a specific product using its UUID.",
 )
 async def get_product(product_id: UUID, product_service: ProductServiceDep) -> ProductDetailRead:
     """Retrieve a product by its ID."""
@@ -134,17 +144,20 @@ async def get_product(product_id: UUID, product_service: ProductServiceDep) -> P
 @product_router.get(
     "/slug/{slug}",
     response_model=ProductDetailRead,
-    summary="Retrieve a product by its slug",
+    summary="Get product by slug",
+    description="Retrieve detailed information about a specific product using its URL-friendly slug.",
 )
 async def get_product_by_slug(slug: str, product_service: ProductServiceDep) -> ProductDetailRead:
     """Retrieve a product by its slug."""
     return await product_service.get_by_slug(slug)
 
 
+# Parameterized admin operations (last)
 @product_router.put(
     "/{product_id}",
     response_model=ProductDetailRead,
-    summary="Update a product by its ID",
+    summary="Update product",
+    description="Update an existing product's information. Admin access required.",
     dependencies=[AdminRoleDep],
 )
 async def update_product(
@@ -157,7 +170,8 @@ async def update_product(
 @product_router.delete(
     "/{product_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete a product by its ID",
+    summary="Delete product",
+    description="Permanently delete a product from the catalog. Admin access required. This action cannot be undone.",
     dependencies=[AdminRoleDep],
 )
 async def delete_product(product_id: UUID, product_service: ProductServiceDep) -> None:
