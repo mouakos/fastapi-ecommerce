@@ -11,7 +11,7 @@ from app.core.config import settings
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import OrderStatus
 from app.models.payment import Currency, Payment, PaymentMethod, PaymentStatus
-from app.schemas.payment_schema import PaymentCheckoutSessionRead
+from app.schemas.payment import PaymentCheckoutSessionRead
 from app.utils.utc_time import utcnow
 
 

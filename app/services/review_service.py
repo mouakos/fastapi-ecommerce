@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.review import Review
 from app.models.user import UserRole
-from app.schemas.review_schema import ReviewCreate, ReviewRead, ReviewUpdate
+from app.schemas.review import ReviewCreate, ReviewRead, ReviewUpdate
 
 
 class ReviewService:

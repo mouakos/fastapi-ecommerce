@@ -12,7 +12,7 @@ from app.core.security import decode_access_token
 from app.db.database import get_session
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.user import UserRole
-from app.schemas.user_schema import UserRead
+from app.schemas.user import UserRead
 from app.services.address_service import AddressService
 from app.services.admin_service import AdminService
 from app.services.cart_service import CartService

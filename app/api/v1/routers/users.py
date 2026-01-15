@@ -9,8 +9,8 @@ from app.api.v1.dependencies import (
     CurrentUserDep,
     UserServiceDep,
 )
-from app.schemas.address_schema import AddressCreate, AddressRead, AddressUpdate
-from app.schemas.user_schema import UserRead, UserUpdate
+from app.schemas.address import AddressCreate, AddressRead, AddressUpdate
+from app.schemas.user import UserRead, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["Users"])
 

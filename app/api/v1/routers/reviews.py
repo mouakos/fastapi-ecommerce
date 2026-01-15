@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Query, status
 
 from app.api.v1.dependencies import CurrentUserDep, ReviewServiceDep
-from app.schemas.review_schema import ReviewCreate, ReviewRead, ReviewUpdate
+from app.schemas.review import ReviewCreate, ReviewRead, ReviewUpdate
 
 router = APIRouter(prefix="/reviews", tags=["Reviews"])
 

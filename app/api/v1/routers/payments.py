@@ -3,7 +3,7 @@
 from fastapi import APIRouter, HTTPException, Request
 
 from app.api.v1.dependencies import CurrentUserDep, PaymentServiceDep
-from app.schemas.payment_schema import PaymentCheckoutSessionCreate, PaymentCheckoutSessionRead
+from app.schemas.payment import PaymentCheckoutSessionCreate, PaymentCheckoutSessionRead
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
 

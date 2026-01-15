@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, status
 
 from app.api.v1.dependencies import CurrentUserDep, WishlistServiceDep
-from app.schemas.wishlist_schema import (
+from app.schemas.wishlist import (
     WishlistActionRead,
     WishlistCreate,
     WishlistRead,

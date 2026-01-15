@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, status
 
 from app.api.v1.dependencies import AdminRoleDep, CategoryServiceDep
-from app.schemas.category_schema import CategoryCreate, CategoryRead, CategoryUpdate
+from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
 

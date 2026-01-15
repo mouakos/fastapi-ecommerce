@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import OrderStatus
 from app.models.user import UserRole
-from app.schemas.admin_schema import (
+from app.schemas.admin import (
     DashboardOverview,
     OrderAdminRead,
     Paged,
@@ -19,7 +19,7 @@ from app.schemas.admin_schema import (
     UserAdminRead,
     UserAnalytics,
 )
-from app.schemas.product_schema import ProductRead
+from app.schemas.product import ProductRead
 from app.utils.utc_time import utcnow
 
 

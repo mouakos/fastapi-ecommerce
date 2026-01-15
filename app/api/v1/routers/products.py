@@ -7,8 +7,8 @@ from fastapi import APIRouter, Query, status
 
 from app.api.v1.dependencies import AdminRoleDep, ProductServiceDep
 from app.schemas.common import PaginatedRead
-from app.schemas.product_schema import ProductCreate, ProductDetailRead, ProductRead, ProductUpdate
-from app.schemas.search_schema import (
+from app.schemas.product import ProductCreate, ProductDetailRead, ProductRead, ProductUpdate
+from app.schemas.search import (
     AvailabilityFilter,
     ProductAutocompleteRead,
     SortByField,

@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter
 
 from app.api.v1.dependencies import CurrentUserDep, OrderServiceDep
-from app.schemas.order_schema import OrderCreate, OrderRead
+from app.schemas.order import OrderCreate, OrderRead
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 

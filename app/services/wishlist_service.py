@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.cart import Cart, CartItem
 from app.models.wishlist_item import WishlistItem
-from app.schemas.wishlist_schema import (
+from app.schemas.wishlist import (
     WishlistActionRead,
     WishlistItemRead,
     WishlistRead,

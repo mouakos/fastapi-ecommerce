@@ -9,8 +9,8 @@ from pydantic import HttpUrl
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.product import Product
 from app.schemas.common import PaginatedRead
-from app.schemas.product_schema import ProductCreate, ProductDetailRead, ProductRead, ProductUpdate
-from app.schemas.search_schema import (
+from app.schemas.product import ProductCreate, ProductDetailRead, ProductRead, ProductUpdate
+from app.schemas.search import (
     AvailabilityFilter,
     ProductAutocompleteRead,
     SortByField,

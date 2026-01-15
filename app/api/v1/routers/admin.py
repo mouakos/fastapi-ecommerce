@@ -8,7 +8,7 @@ from fastapi import APIRouter, Query, status
 from app.api.v1.dependencies import AdminRoleDep, AdminServiceDep
 from app.models.order import OrderStatus
 from app.models.user import UserRole
-from app.schemas.admin_schema import (
+from app.schemas.admin import (
     DashboardOverview,
     OrderAdminRead,
     OrderStatusUpdate,
@@ -21,7 +21,7 @@ from app.schemas.admin_schema import (
     UserAnalytics,
     UserRoleUpdate,
 )
-from app.schemas.product_schema import ProductRead
+from app.schemas.product import ProductRead
 
 router = APIRouter(prefix="/admin", tags=["Admin"], dependencies=[AdminRoleDep])
 

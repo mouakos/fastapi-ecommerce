@@ -8,7 +8,7 @@ import jwt
 from pwdlib import PasswordHash
 
 from app.core.config import settings
-from app.schemas.user_schema import TokenData
+from app.schemas.user import TokenData
 
 password_hash = PasswordHash.recommended()
 
