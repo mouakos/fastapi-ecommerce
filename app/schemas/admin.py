@@ -23,8 +23,12 @@ class SalesAnalytics(BaseModel):
     shipped_orders: int = Field(..., description="Orders with shipped status")
     delivered_orders: int = Field(..., description="Orders with delivered status")
     cancelled_orders: int = Field(..., description="Orders with cancelled status")
-    average_order_value: Decimal = Field(..., description="Average order value")
-    revenue_last_30_days: Decimal = Field(..., description="Revenue from last 30 days")
+    average_order_value: Decimal = Field(
+        ..., description="Average order value", ge=0, decimal_places=2, max_digits=10
+    )
+    revenue_last_30_days: Decimal = Field(
+        ..., description="Revenue from last 30 days", ge=0, decimal_places=2, max_digits=10
+    )
 
 
 class UserAnalytics(BaseModel):
@@ -89,7 +93,9 @@ class UserAdminRead(UUIDMixin):
     updated_at: datetime
     is_superuser: bool
     total_orders: int = Field(..., description="Total orders by this user")
-    total_spent: Decimal = Field(..., description="Total amount spent by this user")
+    total_spent: Decimal = Field(
+        ..., description="Total amount spent by this user", ge=0, decimal_places=2, max_digits=10
+    )
 
     model_config = ConfigDict(frozen=True)
 

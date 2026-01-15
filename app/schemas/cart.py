@@ -50,7 +50,7 @@ class CartRead(UUIDMixin):
     @computed_field(return_type=Decimal)
     def subtotal(self) -> Decimal:
         """Calculate total price for the cart."""
-        return sum((item.quantity * item.unit_price for item in self.items), start=Decimal(0))
+        return sum((item.quantity * item.unit_price for item in self.items), start=Decimal("0.00"))
 
     @computed_field(return_type=int)
     def total_items(self) -> int:

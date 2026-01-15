@@ -46,9 +46,9 @@ class CartItem(ModelBase, table=True):
     added_at: datetime = Field(default_factory=utcnow)
 
     # snapshot fields to preserve product details at the time of addition
-    unit_price: Decimal = Field(..., max_digits=10, decimal_places=2)
-    product_name: str = Field(..., max_length=50)
-    product_image_url: str | None = Field(default=None, max_length=255)
+    unit_price: Decimal = Field(Decimal("0.00"), max_digits=10, decimal_places=2)
+    product_name: str = Field(..., max_length=255)
+    product_image_url: str | None = Field(default=None, max_length=500)
 
     # Relationships
     cart: "Cart" = Relationship(back_populates="items", sa_relationship_kwargs={"lazy": "selectin"})

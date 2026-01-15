@@ -70,8 +70,8 @@ class Order(ModelBase, TimestampMixin, table=True):
             index=True,
         ),
     )
-    total_amount: Decimal = Field(..., max_digits=10, decimal_places=2)
-    order_number: str = Field(index=True, unique=True, max_length=100)
+    total_amount: Decimal = Field(Decimal("0.00"), max_digits=10, decimal_places=2)
+    order_number: str = Field(index=True, unique=True, max_length=50)
     shipped_at: datetime | None = Field(default=None)
     paid_at: datetime | None = Field(default=None)
     canceled_at: datetime | None = Field(default=None)
@@ -103,12 +103,12 @@ class OrderItem(ModelBase, table=True):
 
     order_id: UUID = Field(foreign_key="orders.id", index=True, ondelete="CASCADE")
     product_id: UUID = Field(foreign_key="products.id", index=True, ondelete="CASCADE")
-    quantity: int
+    quantity: int = Field(1, ge=1)
 
     # Snapshot of product details at the time of order
-    unit_price: Decimal = Field(..., max_digits=10, decimal_places=2)
-    product_name: str = Field(max_length=50)
-    image_url: str | None = Field(default=None, max_length=255)
+    unit_price: Decimal = Field(Decimal("0.00"), max_digits=10, decimal_places=2)
+    product_name: str = Field(max_length=255)
+    image_url: str | None = Field(default=None, max_length=500)
 
     # Relationships
     order: "Order" = Relationship(back_populates="items")

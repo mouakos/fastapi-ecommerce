@@ -27,10 +27,10 @@ class User(ModelBase, TimestampMixin, table=True):
     """User model for storing user information."""
 
     __tablename__ = "users"
-    email: str = Field(index=True, unique=True, max_length=100)
-    hashed_password: str = Field(exclude=True)
-    first_name: str | None = Field(default=None, max_length=100)
-    last_name: str | None = Field(default=None, max_length=100)
+    email: str = Field(index=True, unique=True, max_length=255)
+    hashed_password: str = Field(exclude=True, max_length=255)
+    first_name: str | None = Field(default=None, max_length=50)
+    last_name: str | None = Field(default=None, max_length=50)
     phone_number: str | None = Field(default=None, max_length=20)
     role: UserRole = Field(
         default=UserRole.USER,

@@ -12,12 +12,12 @@ from app.schemas.common import UUIDMixin
 class ProductBase(BaseModel):
     """Base schema for Product."""
 
-    name: str = Field(..., max_length=50, min_length=2)
-    price: Decimal = Field(..., gt=0, max_digits=10, decimal_places=2)
+    name: str = Field(..., max_length=255, min_length=2)
+    price: Decimal = Field(Decimal("0.00"), ge=0, max_digits=10, decimal_places=2)
     stock: int = Field(0, ge=0)
     category_id: UUID | None = None
-    description: str | None = Field(None, max_length=1000)
-    image_url: HttpUrl | None = Field(None, max_length=255)
+    description: str | None = Field(None, max_length=2000)
+    image_url: HttpUrl | None = Field(None, max_length=500)
     is_active: bool = True
 
 
@@ -56,7 +56,7 @@ class ProductDetailRead(ProductRead, UUIDMixin):
     average_rating: float | None = Field(
         None, ge=1, le=5, description="Average rating from reviews (1-5)"
     )
-    review_count: int = Field(default=1, ge=0, description="Total number of reviews")
+    review_count: int = Field(0, ge=0, description="Total number of reviews")
     in_stock: bool
 
     model_config = ConfigDict(frozen=True)
@@ -65,11 +65,11 @@ class ProductDetailRead(ProductRead, UUIDMixin):
 class ProductUpdate(BaseModel):
     """Schema for updating a Product."""
 
-    name: str | None = Field(None, max_length=50, min_length=2)
-    price: Decimal | None = Field(None, gt=0, max_digits=10, decimal_places=2)
+    name: str | None = Field(None, max_length=255, min_length=2)
+    price: Decimal | None = Field(None, ge=0, max_digits=10, decimal_places=2)
     stock: int | None = Field(None, ge=0)
-    description: str | None = Field(None, max_length=1000)
-    image_url: HttpUrl | None = Field(None, max_length=255)
+    description: str | None = Field(None, max_length=2000)
+    image_url: HttpUrl | None = Field(None, max_length=500)
     category_id: UUID | None = None
     is_active: bool | None = None
 

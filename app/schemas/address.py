@@ -12,8 +12,8 @@ class AddressBase(BaseModel):
 
     full_name: str = Field(..., max_length=100, min_length=2)
     company: str | None = Field(None, max_length=100, min_length=2)
-    line1: str = Field(..., max_length=100, min_length=2)
-    line2: str | None = Field(None, max_length=100, min_length=2)
+    line1: str = Field(..., max_length=255, min_length=2)
+    line2: str | None = Field(None, max_length=255, min_length=2)
     city: str = Field(..., max_length=100, min_length=2)
     state: str | None = Field(None, max_length=100, min_length=2)
     postal_code: str = Field(..., max_length=20, min_length=2)
