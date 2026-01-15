@@ -26,7 +26,10 @@ class HealthCheckRead(BaseModel):
 
 
 @health_check_router.get(
-    "/", summary="Health check of the database connection", response_model=HealthCheckRead
+    "",
+    summary="Check database health",
+    description="Verify database connectivity and return the current health status. Used for monitoring and readiness checks.",
+    response_model=HealthCheckRead,
 )
 async def health_check(session: SessionDep) -> HealthCheckRead:
     """Health check endpoint to verify database connectivity."""
