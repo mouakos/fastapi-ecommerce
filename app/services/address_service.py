@@ -9,6 +9,8 @@ from app.interfaces.unit_of_work import UnitOfWork
 from app.models.address import Address
 from app.schemas.address import AddressCreate, AddressRead, AddressUpdate
 
+MAX_ADDRESSES_PER_USER = 10
+
 
 class AddressService:
     """Service class for address-related operations."""
@@ -80,6 +82,13 @@ class AddressService:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found.",
+            )
+
+        count = await self.uow.addresses.count_all(user_id=user_id)
+        if count >= MAX_ADDRESSES_PER_USER:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"User cannot have more than {MAX_ADDRESSES_PER_USER} addresses.",
             )
 
         new_address = Address(**data.model_dump(), user_id=user_id)

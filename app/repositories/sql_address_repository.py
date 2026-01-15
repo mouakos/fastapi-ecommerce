@@ -1,8 +1,9 @@
 """SQL Address repository implementation."""
 
+from typing import Any
 from uuid import UUID
 
-from sqlmodel import select
+from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.interfaces.address_repository import AddressRepository
@@ -16,6 +17,28 @@ class SqlAddressRepository(SqlGenericRepository[Address], AddressRepository):
     def __init__(self, session: AsyncSession) -> None:
         """Initialize the repository with a database session."""
         super().__init__(session, Address)
+
+    async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
+        """Count all addresses matching the given filters.
+
+        Args:
+            **filters (dict): Filter conditions.
+
+        Returns:
+            int: The count of addresses matching the filters.
+
+        Raises:
+            ValueError: Invalid filter condition.
+        """
+        stmt = select(func.count()).select_from(Address)
+
+        for attr, value in filters.items():
+            if not hasattr(Address, attr):
+                raise ValueError(f"Invalid filter condition: {attr}")
+            stmt = stmt.where(getattr(Address, attr) == value)
+
+        result = await self._session.exec(stmt)
+        return result.first() or 0
 
     async def get_for_user(self, address_id: UUID, user_id: UUID) -> Address | None:
         """Get a single address for a user.

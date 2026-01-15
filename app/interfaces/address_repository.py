@@ -1,6 +1,7 @@
 """Interface for Address repository."""
 
 from abc import ABC, abstractmethod
+from typing import Any
 from uuid import UUID
 
 from app.interfaces.generic_repository import GenericRepository
@@ -38,5 +39,20 @@ class AddressRepository(GenericRepository[Address], ABC):
 
         Returns:
             Address | None: The address if found, otherwise None.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
+        """Count all addresses matching the given filters.
+
+        Args:
+            **filters: Filter conditions.
+
+        Returns:
+            int: The count of addresses matching the filters.
+
+        Raises:
+            ValueError: Invalid filter condition.
         """
         raise NotImplementedError()
