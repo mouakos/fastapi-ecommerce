@@ -1,4 +1,4 @@
-"""Authentication API Routes."""
+"""User authentication API routes for registration and login."""
 
 from fastapi import APIRouter, status
 

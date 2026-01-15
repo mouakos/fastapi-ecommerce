@@ -54,55 +54,55 @@ app = FastAPI(
     openapi_tags=[
         {
             "name": "Root",
-            "description": "API Root endpoint.",
+            "description": "API root endpoint with welcome message and documentation links.",
         },
         {
             "name": "Healthcheck",
-            "description": "Endpoints to check the health status of the database connection.",
+            "description": "Database connectivity monitoring for health checks and readiness probes.",
         },
         {
             "name": "Authentication",
-            "description": "Operations related to user authentication and registration.",
+            "description": "User registration and login with JWT token authentication and cart merging.",
         },
         {
             "name": "Users",
-            "description": "Operations related to user management.",
+            "description": "User profile management including personal information updates.",
         },
         {
             "name": "Addresses",
-            "description": "Operations related to user delivery and billing addresses.",
+            "description": "Delivery and billing address management for authenticated users.",
         },
         {
             "name": "Categories",
-            "description": "Operations related to category management.",
+            "description": "Product category management with hierarchical organization and CRUD operations.",
         },
         {
             "name": "Products",
-            "description": "Operations related to product management.",
+            "description": "Product catalog with advanced filtering, search, autocomplete, and admin CRUD operations.",
         },
         {
             "name": "Reviews",
-            "description": "Operations related to product reviews.",
+            "description": "Customer product reviews with rating, comments, and moderation support.",
         },
         {
             "name": "Wishlist",
-            "description": "Operations related to wishlist management.",
+            "description": "Save and organize favorite products with options to move items to cart.",
         },
         {
             "name": "Cart",
-            "description": "Operations related to shopping cart management.",
+            "description": "Shopping cart management for authenticated users and guest sessions.",
         },
         {
             "name": "Orders",
-            "description": "Operations related to order processing and management.",
+            "description": "Order checkout, processing, and history management.",
         },
         {
             "name": "Payments",
-            "description": "Operations related to payment processing.",
+            "description": "Stripe payment integration with checkout sessions and webhook processing.",
         },
         {
             "name": "Admin",
-            "description": "Administrative operations and analytics.",
+            "description": "Administrative dashboard with analytics, user management, order processing, review moderation, and inventory tracking.",
         },
     ],
 )

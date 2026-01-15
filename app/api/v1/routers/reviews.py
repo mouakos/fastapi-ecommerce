@@ -1,4 +1,4 @@
-"""Review API routes."""
+"""Product review API routes for creating, updating, and moderating customer reviews."""
 
 from uuid import UUID
 

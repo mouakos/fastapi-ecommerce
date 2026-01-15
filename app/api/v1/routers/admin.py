@@ -1,4 +1,4 @@
-"""Admin routes for analytics, user management, order management, review moderation, and inventory management."""
+"""Admin dashboard and management API routes for analytics, users, orders, reviews, and inventory."""
 
 from typing import Annotated
 from uuid import UUID

@@ -1,4 +1,4 @@
-"""API routes for payment operations."""
+"""Payment processing API routes for Stripe checkout sessions and webhooks."""
 
 from fastapi import APIRouter, HTTPException, Request
 

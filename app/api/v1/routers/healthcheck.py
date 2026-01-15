@@ -1,4 +1,4 @@
-"""Health check route."""
+"""Health check API route for monitoring database connectivity."""
 
 from enum import StrEnum
 

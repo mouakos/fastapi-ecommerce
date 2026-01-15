@@ -1,4 +1,4 @@
-"""Routes for managing wishlist items."""
+"""Wishlist management API routes for saving and organizing favorite products."""
 
 from uuid import UUID
 

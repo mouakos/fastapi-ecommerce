@@ -1,4 +1,4 @@
-"""API routes for cart operations."""
+"""Shopping cart management API routes for authenticated and guest users."""
 
 from uuid import UUID
 

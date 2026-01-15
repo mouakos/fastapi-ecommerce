@@ -1,4 +1,4 @@
-"""Product API Routes."""
+"""Product catalog API routes with advanced filtering, search, and CRUD operations."""
 
 from typing import Annotated
 from uuid import UUID

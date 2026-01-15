@@ -1,4 +1,4 @@
-"""Category API routes."""
+"""Product category management API routes with hierarchical support."""
 
 from uuid import UUID
 

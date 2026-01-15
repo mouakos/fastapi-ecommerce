@@ -1,4 +1,4 @@
-"""Order API routes."""
+"""Order management API routes for checkout and order history."""
 
 from uuid import UUID
 
