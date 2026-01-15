@@ -15,10 +15,12 @@ from app.schemas.user_schema import UserRead, UserUpdate
 user_router = APIRouter(prefix="/users", tags=["Users"])
 
 
+# Current user profile operations
 @user_router.get(
     "/me",
     response_model=UserRead,
-    summary="Get the currently authenticated user's profile.",
+    summary="Get current user profile",
+    description="Retrieve the profile information of the currently authenticated user.",
 )
 async def get_user(
     current_user: CurrentUserDep,
@@ -30,7 +32,8 @@ async def get_user(
 @user_router.put(
     "/me",
     response_model=UserRead,
-    summary="Update the current user's profile.",
+    summary="Update current user profile",
+    description="Update profile information such as name, email, or other personal details.",
 )
 async def update_user(
     data: UserUpdate,
@@ -44,7 +47,8 @@ async def update_user(
 @user_router.delete(
     "/me",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete the currently authenticated user's account.",
+    summary="Delete user account",
+    description="Permanently delete the current user's account. This action cannot be undone.",
 )
 async def delete_user(
     current_user: CurrentUserDep,
@@ -54,16 +58,18 @@ async def delete_user(
     await user_service.delete(current_user.id)
 
 
+# Current user addresses operations
 @user_router.get(
     "/me/addresses",
     response_model=list[AddressRead],
-    summary="List all addresses for the current user.",
+    summary="List user addresses",
+    description="Retrieve all delivery and billing addresses associated with the current user.",
 )
 async def list_addresses(
     current_user: CurrentUserDep,
     address_service: AddressServiceDep,
 ) -> list[AddressRead]:
-    """List all addresses for the current user.."""
+    """List all addresses for the current user."""
     return await address_service.list_all(current_user)
 
 
@@ -71,7 +77,8 @@ async def list_addresses(
     "/me/addresses",
     response_model=AddressRead,
     status_code=status.HTTP_201_CREATED,
-    summary="Add a new address to the current user.",
+    summary="Add new address",
+    description="Create a new delivery or billing address for the current user.",
 )
 async def add_address(
     data: AddressCreate,
@@ -85,7 +92,8 @@ async def add_address(
 @user_router.put(
     "/me/addresses/{address_id}",
     response_model=AddressRead,
-    summary="Update an existing address for the current user.",
+    summary="Update address",
+    description="Update an existing address. Only the address owner can modify it.",
 )
 async def update_address(
     address_id: UUID,
@@ -93,14 +101,15 @@ async def update_address(
     current_user: CurrentUserDep,
     address_service: AddressServiceDep,
 ) -> AddressRead:
-    """Update an existing address. Only the owner can update it own address."""
+    """Update an existing address. Only the owner can update their own address."""
     return await address_service.update(current_user, address_id, data)
 
 
 @user_router.delete(
     "/me/addresses/{address_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete an existing address. Only the owner or an admin can delete an address.",
+    summary="Delete address",
+    description="Remove an address from the user's account. Only the owner or admin can delete addresses.",
 )
 async def delete_address(
     address_id: UUID,
