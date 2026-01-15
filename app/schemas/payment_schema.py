@@ -4,7 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 from app.models.payment import Currency
 
@@ -22,7 +22,7 @@ class PaymentCheckoutSessionRead(BaseModel):
 
     checkout_url: str
     session_id: str
-    amount: Decimal = Field(..., max_digits=10, decimal_places=2)
+    amount: Decimal
     currency: Currency
     expires_at: datetime
     order_id: UUID

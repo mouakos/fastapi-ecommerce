@@ -22,7 +22,7 @@ class Review(ModelBase, TimestampMixin, table=True):
         default=None, foreign_key="products.id", index=True, ondelete="CASCADE"
     )
     rating: int = Field(ge=1, le=5)
-    comment: str | None = None
+    comment: str | None = Field(default=None, max_length=1000)
     is_approved: bool = Field(default=False)
     approved_at: datetime | None = Field(default=None)
     approved_by: UUID | None = Field(default=None, foreign_key="users.id", index=True)

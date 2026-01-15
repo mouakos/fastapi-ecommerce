@@ -25,7 +25,7 @@ class OrderItemRead(BaseModel):
     quantity: int
     unit_price: Decimal
     product_name: str
-    image_url: HttpUrl | None = None
+    image_url: HttpUrl | None
 
     model_config = ConfigDict(frozen=True)
 

@@ -11,7 +11,7 @@ from app.schemas.common import UUIDMixin
 class UserCreate(BaseModel):
     """Schema for creating user."""
 
-    email: EmailStr
+    email: EmailStr = Field(..., max_length=255)
     password: str = Field(..., min_length=6)
     first_name: str | None = Field(default=None, min_length=2, max_length=50)
     last_name: str | None = Field(default=None, min_length=2, max_length=50)
@@ -35,9 +35,9 @@ class UserRead(UUIDMixin):
     email: EmailStr
     is_superuser: bool
     role: UserRole
-    first_name: str | None = None
-    last_name: str | None = None
-    phone_number: str | None = None
+    first_name: str | None
+    last_name: str | None
+    phone_number: str | None
 
     model_config = ConfigDict(frozen=True)
 
@@ -47,7 +47,7 @@ class UserUpdate(BaseModel):
 
     first_name: str | None = Field(None, min_length=2, max_length=50)
     last_name: str | None = Field(None, min_length=2, max_length=50)
-    phone_number: str | None = None
+    phone_number: str | None = Field(None, max_length=20)
 
     model_config = ConfigDict(frozen=True)
 
@@ -56,7 +56,7 @@ class Login(BaseModel):
     """Schema for user login."""
 
     email: EmailStr
-    password: str = Field(..., min_length=6)
+    password: str
 
     model_config = ConfigDict(frozen=True)
 

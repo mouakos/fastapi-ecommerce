@@ -10,10 +10,10 @@ from app.schemas.common import UUIDMixin
 class CategoryBase(BaseModel):
     """Schema for creating a new category."""
 
-    name: str = Field(..., min_length=1, max_length=255)
+    name: str = Field(..., min_length=2, max_length=50)
     parent_id: UUID | None = None
-    description: str | None = None
-    image_url: HttpUrl | None = None
+    description: str | None = Field(None, max_length=1000)
+    image_url: HttpUrl | None = Field(None, max_length=255)
 
     model_config = ConfigDict(frozen=True)
 
@@ -45,9 +45,9 @@ class CategoryRead(CategoryBase, UUIDMixin):
 class CategoryUpdate(BaseModel):
     """Schema for updating an existing category."""
 
-    name: str | None = Field(None, min_length=1, max_length=255)
+    name: str | None = Field(None, min_length=1, max_length=50)
     parent_id: UUID | None = None
     description: str | None = None
-    image_url: HttpUrl | None = None
+    image_url: HttpUrl | None = Field(None, max_length=255)
 
     model_config = ConfigDict(frozen=True)

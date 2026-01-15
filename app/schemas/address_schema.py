@@ -12,12 +12,12 @@ class AddressBase(BaseModel):
 
     full_name: str = Field(..., max_length=100, min_length=2)
     company: str | None = Field(None, max_length=100, min_length=2)
-    line1: str = Field(..., max_length=200, min_length=2)
-    line2: str | None = Field(None, max_length=200, min_length=2)
+    line1: str = Field(..., max_length=100, min_length=2)
+    line2: str | None = Field(None, max_length=100, min_length=2)
     city: str = Field(..., max_length=100, min_length=2)
     state: str | None = Field(None, max_length=100, min_length=2)
     postal_code: str = Field(..., max_length=20, min_length=2)
-    country: str = Field(..., max_length=20, min_length=2)
+    country: str = Field(..., max_length=100, min_length=2)
     phone_number: str | None = Field(None, max_length=20)
     is_default_shipping: bool = False
     is_default_billing: bool = False
@@ -58,14 +58,13 @@ class AddressUpdate(BaseModel):
     """Partial update payload for an address."""
 
     full_name: str | None = Field(None, max_length=100, min_length=2)
-    last_name: str | None = Field(None, max_length=100, min_length=2)
     company: str | None = Field(None, max_length=100, min_length=2)
-    line1: str | None = Field(None, max_length=200, min_length=2)
-    line2: str | None = Field(None, max_length=200, min_length=2)
+    line1: str | None = Field(None, max_length=100, min_length=2)
+    line2: str | None = Field(None, max_length=100, min_length=2)
     city: str | None = Field(None, max_length=100, min_length=2)
     state: str | None = Field(None, max_length=100, min_length=2)
     postal_code: str | None = Field(None, max_length=20, min_length=2)
-    country: str | None = Field(None, max_length=20, min_length=2)
+    country: str | None = Field(None, max_length=100, min_length=2)
     phone_number: str | None = Field(None, max_length=20)
     is_default_shipping: bool | None = None
     is_default_billing: bool | None = None

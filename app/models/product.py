@@ -22,13 +22,13 @@ class Product(ModelBase, TimestampMixin, table=True):
 
     __tablename__ = "products"
 
-    name: str = Field(index=True)
-    slug: str = Field(unique=True, index=True)
-    description: str | None = None
+    name: str = Field(index=True, max_length=2050)
+    slug: str = Field(unique=True, index=True, max_length=50)
+    description: str | None = Field(default=None, max_length=1000)
     price: Decimal
     stock: int
-    sku: str = Field(unique=True, index=True)
-    image_url: str | None = None
+    sku: str = Field(unique=True, index=True, max_length=100)
+    image_url: str | None = Field(default=None, max_length=255)
     is_active: bool = Field(default=True)
     category_id: UUID | None = Field(
         default=None, foreign_key="categories.id", ondelete="CASCADE", index=True

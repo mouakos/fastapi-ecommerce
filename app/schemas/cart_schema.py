@@ -31,7 +31,7 @@ class CartItemRead(BaseModel):
     quantity: int
     unit_price: Decimal
     product_name: str
-    image_url: HttpUrl | None = None
+    image_url: HttpUrl | None
 
     @computed_field(return_type=Decimal)
     def subtotal(self) -> Decimal:

@@ -21,7 +21,7 @@ class Cart(ModelBase, TimestampMixin, table=True):
 
     __tablename__ = "carts"
     user_id: UUID | None = Field(default=None, foreign_key="users.id", index=True, unique=True)
-    session_id: str | None = Field(default=None, index=True, unique=True)
+    session_id: str | None = Field(default=None, index=True, unique=True, max_length=100)
     updated_at: datetime = Field(
         default_factory=utcnow,
         sa_column=Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False),
@@ -42,13 +42,13 @@ class CartItem(ModelBase, table=True):
 
     cart_id: UUID = Field(foreign_key="carts.id", index=True, ondelete="CASCADE")
     product_id: UUID = Field(foreign_key="products.id", index=True, ondelete="CASCADE")
-    quantity: int
+    quantity: int = Field(default=1, ge=1)
     added_at: datetime = Field(default_factory=utcnow)
 
     # snapshot fields to preserve product details at the time of addition
-    unit_price: Decimal = Field(default=0, max_digits=10, decimal_places=2)
-    product_name: str
-    product_image_url: str | None = None
+    unit_price: Decimal = Field(..., max_digits=10, decimal_places=2)
+    product_name: str = Field(..., max_length=50)
+    product_image_url: str | None = Field(default=None, max_length=255)
 
     # Relationships
     cart: "Cart" = Relationship(back_populates="items", sa_relationship_kwargs={"lazy": "selectin"})

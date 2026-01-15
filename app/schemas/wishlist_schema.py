@@ -24,7 +24,7 @@ class WishlistItemRead(UUIDMixin):
     product_name: str
     product_slug: str
     product_price: Decimal
-    product_image_url: str | None = None
+    product_image_url: str | None
     product_stock_quantity: int
     product_is_active: bool
     added_at: datetime
@@ -53,6 +53,6 @@ class WishlistActionRead(BaseModel):
     """Schema for reading wishlist action result."""
 
     message: str
-    product_id: UUID | None = None
+    product_id: UUID | None
 
     model_config = ConfigDict(frozen=True)

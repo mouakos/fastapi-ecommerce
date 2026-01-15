@@ -16,15 +16,15 @@ class Address(ModelBase, TimestampMixin, table=True):
 
     __tablename__ = "addresses"
     user_id: UUID = Field(index=True, foreign_key="users.id", ondelete="CASCADE")
-    full_name: str
-    company: str | None = None
-    line1: str
-    line2: str | None = None
-    city: str
-    state: str | None = None
-    postal_code: str
-    country: str
-    phone_number: str | None = None
+    full_name: str = Field(max_length=100)
+    company: str | None = Field(None, max_length=100)
+    line1: str = Field(max_length=100)
+    line2: str | None = Field(None, max_length=100)
+    city: str = Field(max_length=100)
+    state: str | None = Field(None, max_length=100)
+    postal_code: str = Field(max_length=20)
+    country: str = Field(max_length=100)
+    phone_number: str | None = Field(None, max_length=20)
     is_default_shipping: bool = False
     is_default_billing: bool = False
 
