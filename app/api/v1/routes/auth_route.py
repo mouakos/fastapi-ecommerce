@@ -12,7 +12,8 @@ auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
     "/register",
     response_model=UserRead,
     status_code=status.HTTP_201_CREATED,
-    summary="Create a new user account.",
+    summary="Register user",
+    description="Create a new user account with email and password. Email must be unique and password must meet security requirements.",
 )
 async def create_user(data: UserCreate, user_service: UserServiceDep) -> UserRead:
     """Register a new user."""
@@ -22,7 +23,8 @@ async def create_user(data: UserCreate, user_service: UserServiceDep) -> UserRea
 @auth_router.post(
     "/login",
     response_model=Token,
-    summary="Authenticate a user and return a JWT token.",
+    summary="Login user",
+    description="Authenticate with email and password to receive a JWT access token. If a guest cart session exists, it will be merged with the user's cart.",
 )
 async def login(
     data: Login,
