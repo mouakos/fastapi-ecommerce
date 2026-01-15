@@ -19,8 +19,6 @@ class AddressBase(BaseModel):
     postal_code: str = Field(..., max_length=20, min_length=2)
     country: str = Field(..., max_length=100, min_length=2)
     phone_number: str | None = Field(None, max_length=20)
-    is_default_shipping: bool = False
-    is_default_billing: bool = False
 
 
 class AddressCreate(AddressBase):
@@ -39,8 +37,6 @@ class AddressCreate(AddressBase):
                 "postal_code": "10001",
                 "country": "US",
                 "phone_number": "+1234567890",
-                "is_default_shipping": True,
-                "is_default_billing": False,
             }
         },
     )
@@ -66,7 +62,5 @@ class AddressUpdate(BaseModel):
     postal_code: str | None = Field(None, max_length=20, min_length=2)
     country: str | None = Field(None, max_length=100, min_length=2)
     phone_number: str | None = Field(None, max_length=20)
-    is_default_shipping: bool | None = None
-    is_default_billing: bool | None = None
 
     model_config = ConfigDict(frozen=True)
