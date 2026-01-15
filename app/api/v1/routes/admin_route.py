@@ -26,12 +26,12 @@ from app.schemas.product_schema import ProductRead
 admin_router = APIRouter(prefix="/admin", tags=["Admin"], dependencies=[AdminRoleDep])
 
 
-# Analytics Endpoints
+# Dashboard overview
 @admin_router.get(
     "/dashboard",
     response_model=DashboardOverview,
-    summary="Get complete dashboard overview",
-    description="Get comprehensive analytics including sales, users, products, and reviews",
+    summary="Get dashboard overview",
+    description="Retrieve comprehensive admin dashboard with sales, user, product, and review analytics in one request.",
 )
 async def get_dashboard(
     admin_service: AdminServiceDep,
@@ -40,11 +40,12 @@ async def get_dashboard(
     return await admin_service.get_dashboard_data()
 
 
+# Analytics endpoints
 @admin_router.get(
     "/analytics/sales",
     response_model=SalesAnalytics,
     summary="Get sales analytics",
-    description="Get detailed sales analytics including revenue and order statistics",
+    description="Retrieve detailed sales metrics including total revenue, order counts, and trends over time.",
 )
 async def get_sales_analytics(
     admin_service: AdminServiceDep,
@@ -57,7 +58,7 @@ async def get_sales_analytics(
     "/analytics/users",
     response_model=UserAnalytics,
     summary="Get user analytics",
-    description="Get user analytics including total users and growth metrics",
+    description="Retrieve user metrics including total registrations, growth rates, and active user statistics.",
 )
 async def get_user_analytics(
     admin_service: AdminServiceDep,
@@ -70,7 +71,7 @@ async def get_user_analytics(
     "/analytics/products",
     response_model=ProductAnalytics,
     summary="Get product analytics",
-    description="Get product analytics including inventory status",
+    description="Retrieve product metrics including inventory levels, stock status, and catalog statistics.",
 )
 async def get_product_analytics(
     admin_service: AdminServiceDep,
@@ -83,7 +84,7 @@ async def get_product_analytics(
     "/analytics/reviews",
     response_model=ReviewAnalytics,
     summary="Get review analytics",
-    description="Get review analytics including approval status and average rating",
+    description="Retrieve review metrics including approval rates, average ratings, and pending review counts.",
 )
 async def get_review_analytics(
     admin_service: AdminServiceDep,
@@ -92,12 +93,12 @@ async def get_review_analytics(
     return await admin_service.get_review_analytics()
 
 
-# User Management Endpoints
+# User management
 @admin_router.get(
     "/users",
     response_model=Paged[UserAdminRead],
-    summary="List all users",
-    description="Get paginated list of all users with optional search and role filters",
+    summary="List users",
+    description="Retrieve paginated list of all users with optional filtering by name, email, or role.",
 )
 async def list_all_users(
     admin_service: AdminServiceDep,
@@ -116,9 +117,9 @@ async def list_all_users(
 
 @admin_router.patch(
     "/users/{user_id}/role",
-    response_model=UserAdminRead,
+    status_code=status.HTTP_204_NO_CONTENT,
     summary="Update user role",
-    description="Change a user's role between 'customer' and 'admin'",
+    description="Change a user's role between 'customer' and 'admin'. Use with caution as this affects user permissions.",
 )
 async def update_user_role(
     user_id: UUID,
@@ -129,12 +130,12 @@ async def update_user_role(
     await admin_service.update_user_role(user_id=user_id, new_role=role_update.role)
 
 
-# Order Management Endpoints
+# Order management
 @admin_router.get(
     "/orders",
     response_model=Paged[OrderAdminRead],
-    summary="List all orders",
-    description="Get paginated list of all orders with optional filters",
+    summary="List orders",
+    description="Retrieve paginated list of all orders with optional filtering by status or user.",
 )
 async def list_all_orders(
     admin_service: AdminServiceDep,
@@ -152,7 +153,7 @@ async def list_all_orders(
 @admin_router.patch(
     "/orders/{order_id}/status",
     summary="Update order status",
-    description="Update an order's status",
+    description="Update the status of an order (e.g., from 'pending' to 'processing', 'shipped', or 'delivered').",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def update_order_status(
@@ -164,12 +165,12 @@ async def update_order_status(
     await admin_service.update_order_status(order_id=order_id, new_status=status_update.status)
 
 
-# Review Moderation Endpoints
+# Review moderation
 @admin_router.get(
     "/reviews",
     response_model=Paged[ReviewAdminRead],
-    summary="Get all reviews",
-    description="Get paginated list of all reviews",
+    summary="List reviews",
+    description="Retrieve paginated list of all reviews with optional filtering by approval status.",
 )
 async def get_all_reviews(
     admin_service: AdminServiceDep,
@@ -186,7 +187,7 @@ async def get_all_reviews(
 @admin_router.post(
     "/reviews/{review_id}/approve",
     summary="Approve review",
-    description="Approve a pending review",
+    description="Approve a pending review to make it publicly visible on the product page.",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def approve_review(
@@ -200,8 +201,8 @@ async def approve_review(
 @admin_router.delete(
     "/reviews/{review_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Reject/delete review",
-    description="Reject and delete a review",
+    summary="Reject and delete review",
+    description="Permanently reject and delete a review. This action cannot be undone.",
 )
 async def reject_review(
     review_id: UUID,
@@ -211,12 +212,12 @@ async def reject_review(
     await admin_service.reject_review(review_id=review_id)
 
 
-# Inventory Management Endpoints
+# Inventory management
 @admin_router.get(
     "/inventory/low-stock",
     response_model=list[ProductRead],
-    summary="Get low stock alerts",
-    description="Get products with stock below threshold",
+    summary="Get low stock products",
+    description="Retrieve products with stock levels below the specified threshold for inventory monitoring and restocking alerts.",
 )
 async def get_low_stock_products(
     admin_service: AdminServiceDep,
@@ -230,7 +231,7 @@ async def get_low_stock_products(
     "/inventory/top-moving",
     response_model=list[ProductRead],
     summary="Get top-moving products",
-    description="Get products that are selling quickly based on sales data",
+    description="Retrieve the best-selling products ranked by order volume. Useful for identifying popular items and inventory planning.",
 )
 async def get_top_moving_products(
     admin_service: AdminServiceDep,
