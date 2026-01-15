@@ -23,20 +23,12 @@ class AddressService:
         """List all Addresses for a user.
 
         Args:
-            user_id (UUID): User ID to filter addresses.
+            user_id (UUID): ID of the user owning the addresses.
 
         Returns:
             list[AddressRead]: List of addresses associated with the user.
 
-        Raises:
-            HTTPException: If the user does not exist.
         """
-        user = await self.uow.users.get_by_id(user_id)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found.",
-            )
         return await self.uow.addresses.list_all(user_id=user_id)
 
     async def get_user_address(self, address_id: UUID, user_id: UUID) -> AddressRead:
@@ -44,7 +36,7 @@ class AddressService:
 
         Args:
             address_id (UUID): Address ID.
-            user_id (UUID): User ID.
+            user_id (UUID): ID of the user owning the address.
 
         Returns:
             AddressRead: The address with the specified ID.
@@ -68,22 +60,13 @@ class AddressService:
         """Create a new address for a user.
 
         Args:
-            user_id (UUID): User ID.
+            user_id (UUID): ID of the user to whom the address belongs.
             data (AddressCreate): The address data to create.
 
         Returns:
             AddressRead: The created address.
 
-        Raises:
-            HTTPException: If the user does not exist.
         """
-        user = await self.uow.users.get_by_id(user_id)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found.",
-            )
-
         count = await self.uow.addresses.count_all(user_id=user_id)
         if count >= MAX_ADDRESSES_PER_USER:
             raise HTTPException(
@@ -102,7 +85,7 @@ class AddressService:
 
         Args:
             address_id (UUID): Address ID.
-            user_id (UUID): User ID.
+            user_id (UUID): ID of the user owning the address.
             data (AddressUpdate): The address data to update.
 
         Returns:
@@ -130,7 +113,7 @@ class AddressService:
 
         Args:
             address_id (UUID): Address identifier.
-            user_id (UUID): User ID.
+            user_id (UUID): ID of the user owning the address.
 
         Raises:
             HTTPException: If the address does not exists.
@@ -150,7 +133,7 @@ class AddressService:
 
         Args:
             address_id (UUID): Address ID.
-            user_id (UUID): User ID.
+            user_id (UUID): ID of the user owning the address.
 
         Returns:
             AddressRead: The updated address.
@@ -178,7 +161,7 @@ class AddressService:
 
         Args:
             address_id (UUID): Address ID.
-            user_id (UUID): User ID.
+            user_id (UUID): ID of the user owning the address.
 
         Returns:
             AddressRead: The updated address.

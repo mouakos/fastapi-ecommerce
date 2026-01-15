@@ -16,7 +16,7 @@ class AddressRepository(GenericRepository[Address], ABC):
         """Unset the default billing address for a user.
 
         Args:
-            user_id (UUID): User ID.
+            user_id (UUID): ID of the user owning the address.
         """
         raise NotImplementedError()
 
@@ -25,7 +25,7 @@ class AddressRepository(GenericRepository[Address], ABC):
         """Unset the default shipping address for a user.
 
         Args:
-            user_id (UUID): User ID.
+            user_id (UUID): ID of the user owning the address.
         """
         raise NotImplementedError()
 
@@ -35,7 +35,7 @@ class AddressRepository(GenericRepository[Address], ABC):
 
         Args:
             address_id (UUID): Address ID.
-            user_id (UUID): User ID.
+            user_id (UUID): ID of the user owning the address.
 
         Returns:
             Address | None: The address if found, otherwise None.

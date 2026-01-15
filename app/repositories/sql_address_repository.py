@@ -45,7 +45,7 @@ class SqlAddressRepository(SqlGenericRepository[Address], AddressRepository):
 
         Args:
             address_id (UUID): Address ID.
-            user_id (UUID): User ID.
+            user_id (UUID): ID of the user owning the address.
 
         Returns:
             Address | None: The address if found, otherwise None.
@@ -58,7 +58,7 @@ class SqlAddressRepository(SqlGenericRepository[Address], AddressRepository):
         """Unset the default billing address for a user.
 
         Args:
-            user_id (UUID): User ID.
+            user_id (UUID): ID of the user owning the address.
         """
         stmt = select(Address).where((Address.user_id == user_id) & (Address.is_default_billing))
         result = await self._session.exec(stmt)
@@ -72,7 +72,7 @@ class SqlAddressRepository(SqlGenericRepository[Address], AddressRepository):
         """Unset the default shipping address for a user.
 
         Args:
-            user_id (UUID): User ID.
+            user_id (UUID): ID of the user owning the address.
         """
         stmt = select(Address).where((Address.user_id == user_id) & (Address.is_default_shipping))
         result = await self._session.exec(stmt)
