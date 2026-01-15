@@ -8,9 +8,11 @@ from app.schemas.payment_schema import PaymentCheckoutSessionCreate, PaymentChec
 payment_route = APIRouter(prefix="/payments", tags=["Payments"])
 
 
+# Checkout session creation
 @payment_route.post(
-    "/checkout-session/",
-    summary="Create a checkout session for an order.",
+    "/checkout-session",
+    summary="Create checkout session",
+    description="Create a Stripe checkout session for a specific order. Returns the session URL for redirecting the user to complete payment.",
     response_model=PaymentCheckoutSessionRead,
 )
 async def create_checkout_session(
@@ -22,9 +24,11 @@ async def create_checkout_session(
     return await payment_service.create_checkout_session(current_user.id, data.order_id)
 
 
+# Webhook endpoints
 @payment_route.post(
     "/webhooks/stripe",
-    summary="Handle Stripe webhook events.",
+    summary="Handle Stripe webhooks",
+    description="Process Stripe webhook events for payment confirmations and status updates. This endpoint is called by Stripe, not by clients.",
 )
 async def webhook(
     request: Request,
