@@ -10,9 +10,12 @@ from app.schemas.category_schema import CategoryCreate, CategoryRead, CategoryUp
 category_router = APIRouter(prefix="/categories", tags=["Categories"])
 
 
+# Collection paths
 @category_router.get(
-    "/",
+    "",
     response_model=list[CategoryRead],
+    summary="List categories",
+    description="Retrieve all product categories with their hierarchy information.",
 )
 async def list_categories(
     category_service: CategoryServiceDep,
@@ -22,10 +25,11 @@ async def list_categories(
 
 
 @category_router.post(
-    "/",
+    "",
     response_model=CategoryRead,
     status_code=status.HTTP_201_CREATED,
-    summary="Create a new category",
+    summary="Create category",
+    description="Create a new product category. Admin access required.",
     dependencies=[AdminRoleDep],
 )
 async def create_category(
@@ -35,10 +39,12 @@ async def create_category(
     return await category_service.create(data)
 
 
+# Specific lookup paths (before parameterized paths)
 @category_router.get(
     "/id/{category_id}",
     response_model=CategoryRead,
-    summary="Retrieve a category by its ID",
+    summary="Get category by ID",
+    description="Retrieve a specific category using its UUID.",
 )
 async def get_category(category_id: UUID, category_service: CategoryServiceDep) -> CategoryRead:
     """Retrieve a category by its ID."""
@@ -48,17 +54,20 @@ async def get_category(category_id: UUID, category_service: CategoryServiceDep) 
 @category_router.get(
     "/slug/{slug}",
     response_model=CategoryRead,
-    summary="Retrieve a category by its slug",
+    summary="Get category by slug",
+    description="Retrieve a specific category using its URL-friendly slug.",
 )
 async def get_category_by_slug(slug: str, category_service: CategoryServiceDep) -> CategoryRead:
     """Retrieve a category by its slug."""
     return await category_service.get_by_slug(slug)
 
 
+# Parameterized admin operations
 @category_router.put(
     "/{category_id}",
     response_model=CategoryRead,
-    summary="Update a category by its ID",
+    summary="Update category",
+    description="Update an existing category's information. Admin access required.",
     dependencies=[AdminRoleDep],
 )
 async def update_category(
@@ -73,7 +82,8 @@ async def update_category(
 @category_router.delete(
     "/{category_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete a category by its ID",
+    summary="Delete category",
+    description="Permanently delete a category. Admin access required. This action cannot be undone.",
     dependencies=[AdminRoleDep],
 )
 async def delete_category(category_id: UUID, category_service: CategoryServiceDep) -> None:
