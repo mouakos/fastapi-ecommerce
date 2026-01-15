@@ -27,8 +27,7 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
         """
         stmt = select(func.sum(Order.total_amount)).where(Order.status == OrderStatus.PAID)
         result = await self._session.exec(stmt)
-        total = result.first()
-        return total or Decimal("0.00")
+        return result.first() or Decimal("0.00")
 
     async def get_total_sales_by_last_days(self, days: int) -> Decimal:
         """Get total sales amount over the last specified number of days.
@@ -44,8 +43,7 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
             func.now() - Order.created_at <= func.make_interval(0, 0, 0, days, 0, 0, 0),
         )
         result = await self._session.exec(stmt)
-        total = result.first()
-        return total or Decimal("0.00")
+        return result.first() or Decimal("0.00")
 
     async def get_total_sales_by_user(self, user_id: UUID) -> Decimal:
         """Get total sales amount for a specific user.
@@ -60,8 +58,7 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
             Order.user_id == user_id, Order.status == OrderStatus.PAID
         )
         result = await self._session.exec(stmt)
-        total = result.first()
-        return total or Decimal("0.00")
+        return result.first() or Decimal("0.00")
 
     async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
         """Get total number of orders.

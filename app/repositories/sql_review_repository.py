@@ -56,7 +56,7 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
             stmt = stmt.where(getattr(Review, attr) == value)
 
         result = await self._session.exec(stmt)
-        return result.one()
+        return result.first() or 0
 
     async def get_average_rating(self) -> float:
         """Get the average rating for all reviews.

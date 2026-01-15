@@ -65,7 +65,7 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
             int: Number of users registered in the last N days.
         """
         cutoff_date = utcnow() - timedelta(days=days)
-        stmt = select(func.count(User.id)).where(User.created_at >= cutoff_date)  # type: ignore [arg-type]
+        stmt = select(func.count()).select_from(User).where(User.created_at >= cutoff_date)
         result = await self._session.exec(stmt)
         return result.first() or 0
 
@@ -110,6 +110,6 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
 
         # Execute query
         result = await self._session.exec(stmt)
-        users = result.all()
+        users = list(result.all())
 
-        return total, list(users)
+        return total, users

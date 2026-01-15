@@ -8,7 +8,7 @@ from pydantic import HttpUrl
 
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.product import Product
-from app.schemas.common import PaginatedRead
+from app.schemas.common import PaginatedRead, PaginationLinks, PaginationMeta
 from app.schemas.product import ProductCreate, ProductDetailRead, ProductRead, ProductUpdate
 from app.schemas.search import (
     AvailabilityFilter,
@@ -57,7 +57,7 @@ class ProductService:
         Returns:
             PaginatedRead[ProductRead]: A paginated list of all products.
         """
-        return await self.uow.products.list_all_paginated(
+        total_items, products = await self.uow.products.list_all_paginated(
             page=page,
             per_page=per_page,
             search=search,
@@ -69,6 +69,52 @@ class ProductService:
             sort_by=sort_by.value,
             sort_order=sort_order.value,
         )
+
+        total_pages = (total_items + per_page - 1) // per_page
+        from_item = (page - 1) * per_page + 1 if total_items > 0 else 0
+        to_item = min(page * per_page, total_items)
+
+        meta = PaginationMeta(
+            current_page=page,
+            per_page=per_page,
+            total_pages=total_pages,
+            total_items=total_items,
+            from_item=from_item,
+            to_item=to_item,
+        )
+
+        # Build query string for HATEOAS links
+        base = "/products?"
+        query_params = []
+        if search:
+            query_params.append(f"search={search}")
+        if category_id is not None:
+            query_params.append(f"category_id={category_id}")
+        if min_price is not None:
+            query_params.append(f"min_price={min_price}")
+        if max_price is not None:
+            query_params.append(f"max_price={max_price}")
+        if min_rating is not None:
+            query_params.append(f"min_rating={min_rating}")
+        if availability != AvailabilityFilter.ALL:
+            query_params.append(f"availability={availability.value}")
+        if sort_by != SortByField.ID:
+            query_params.append(f"sort_by={sort_by.value}")
+        if sort_order != SortOrder.ASC:
+            query_params.append(f"sort_order={sort_order.value}")
+
+        query_string = "&".join(query_params)
+        base += query_string + "&" if query_string else ""
+
+        links = PaginationLinks(
+            self=f"{base}page={page}&per_page={per_page}",
+            first=f"{base}page=1&per_page={per_page}",
+            prev=f"{base}page={page - 1}&per_page={per_page}" if page > 1 else None,
+            next=f"{base}page={page + 1}&per_page={per_page}" if page < total_pages else None,
+            last=f"{base}page={total_pages}&per_page={per_page}",
+        )
+
+        return PaginatedRead[Product](data=products, meta=meta, links=links)
 
     async def get_autocomplete_suggestions(
         self, query: str, limit: int = 10

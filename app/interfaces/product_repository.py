@@ -6,7 +6,6 @@ from uuid import UUID
 
 from app.interfaces.generic_repository import GenericRepository
 from app.models.product import Product
-from app.schemas.common import PaginatedRead
 
 allowed_sort_order = Literal["asc", "desc"]
 allowed_sort_by = Literal["id", "price", "name", "created_at", "rating", "popularity"]
@@ -29,7 +28,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         availability: str = "all",
         sort_by: allowed_sort_by = "id",
         sort_order: allowed_sort_order = "asc",
-    ) -> PaginatedRead[Product]:
+    ) -> tuple[int, list[Product]]:
         """Gets a list of products with optional filters, sorting, and pagination.
 
         Args:
@@ -45,8 +44,9 @@ class ProductRepository(GenericRepository[Product], ABC):
             sort_order (allowed_sort_order, optional): Sort order ("asc" or "desc").
 
         Returns:
-            PaginatedRead[Product]: A paginated list of products.
+            tuple[int, list[Product]]: A tuple containing the total number of products and a list of products.
         """
+        raise NotImplementedError()
 
     @abstractmethod
     async def get_by_slug(self, slug: str) -> Product | None:

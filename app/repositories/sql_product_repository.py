@@ -14,7 +14,6 @@ from app.models.order import Order, OrderItem, OrderStatus
 from app.models.product import Product
 from app.models.review import Review
 from app.repositories.sql_generic_repository import SqlGenericRepository
-from app.schemas.common import PaginatedRead, PaginationLinks, PaginationMeta
 from app.utils.utc_time import utcnow
 
 
@@ -38,7 +37,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         availability: str = "all",
         sort_by: allowed_sort_by = "id",
         sort_order: allowed_sort_order = "asc",
-    ) -> PaginatedRead[Product]:
+    ) -> tuple[int, list[Product]]:
         """Gets a list of products with optional filters, sorting, and pagination.
 
         Args:
@@ -54,7 +53,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
             sort_order (allowed_sort_order, optional): Sort order ("asc" or "desc").
 
         Returns:
-            PaginatedRead[Product]: A paginated list of products.
+            tuple[int, list[Product]]: A tuple containing the total number of items and a list of products.
         """
         page = max(page, 1)
         per_page = max(min(per_page, 100), 1)
@@ -118,58 +117,14 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
 
         # total items matching filters
         count_stmt = select(func.count()).select_from(stmt.subquery())
-        total_items = (await self._session.exec(count_stmt)).first() or 0
+        total = (await self._session.exec(count_stmt)).first() or 0
 
         # Apply pagination
         stmt = stmt.offset((page - 1) * per_page).limit(per_page)
         result = await self._session.exec(stmt)
-        items = list(result.all())
+        products = list(result.all())
 
-        total_pages = (total_items + per_page - 1) // per_page
-        from_item = (page - 1) * per_page + 1 if total_items > 0 else 0
-        to_item = min(page * per_page, total_items)
-
-        meta = PaginationMeta(
-            current_page=page,
-            per_page=per_page,
-            total_pages=total_pages,
-            total_items=total_items,
-            from_item=from_item,
-            to_item=to_item,
-        )
-
-        # Build query string for HATEOAS links
-        base = "/products?"
-        query_params = []
-        if search:
-            query_params.append(f"search={search}")
-        if category_id is not None:
-            query_params.append(f"category_id={category_id}")
-        if min_price is not None:
-            query_params.append(f"min_price={min_price}")
-        if max_price is not None:
-            query_params.append(f"max_price={max_price}")
-        if min_rating is not None:
-            query_params.append(f"min_rating={min_rating}")
-        if availability != "all":
-            query_params.append(f"availability={availability}")
-        if sort_by != "id":
-            query_params.append(f"sort_by={sort_by}")
-        if sort_order != "asc":
-            query_params.append(f"sort_order={sort_order}")
-
-        query_string = "&".join(query_params)
-        base += query_string + "&" if query_string else ""
-
-        links = PaginationLinks(
-            self=f"{base}page={page}&per_page={per_page}",
-            first=f"{base}page=1&per_page={per_page}",
-            prev=f"{base}page={page - 1}&per_page={per_page}" if page > 1 else None,
-            next=f"{base}page={page + 1}&per_page={per_page}" if page < total_pages else None,
-            last=f"{base}page={total_pages}&per_page={per_page}",
-        )
-
-        return PaginatedRead[Product](data=items, meta=meta, links=links)
+        return total, products
 
     async def get_by_slug(self, slug: str) -> Product | None:
         """Get a single product by slug.
@@ -349,7 +304,12 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         Returns:
             int: Number of products that are low in stock.
         """
-        stmt = select(func.count()).where(Product.stock <= threshold).where(Product.is_active)
+        stmt = (
+            select(func.count())
+            .select_from(Product)
+            .where(Product.stock <= threshold)
+            .where(Product.is_active)
+        )
         result = await self._session.exec(stmt)
         return result.first() or 0
 
