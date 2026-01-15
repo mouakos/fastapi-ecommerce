@@ -29,7 +29,7 @@ async def get_user(
     return current_user
 
 
-@user_router.put(
+@user_router.patch(
     "/me",
     response_model=UserRead,
     summary="Update current user profile",
@@ -89,7 +89,7 @@ async def add_address(
     return await address_service.create(current_user, data)
 
 
-@user_router.put(
+@user_router.patch(
     "/me/addresses/{address_id}",
     response_model=AddressRead,
     summary="Update address",

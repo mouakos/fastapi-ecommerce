@@ -63,7 +63,7 @@ async def get_category_by_slug(slug: str, category_service: CategoryServiceDep) 
 
 
 # Parameterized admin operations
-@category_router.put(
+@category_router.patch(
     "/{category_id}",
     response_model=CategoryRead,
     summary="Update category",

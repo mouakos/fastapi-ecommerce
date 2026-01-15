@@ -53,7 +53,7 @@ async def get_review_by_id(
     return await review_service.get_by_id(review_id)
 
 
-@review_router.put(
+@review_router.patch(
     "/{review_id}",
     response_model=ReviewRead,
     summary="Update a review by its ID",

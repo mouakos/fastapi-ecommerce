@@ -153,7 +153,7 @@ async def get_product_by_slug(slug: str, product_service: ProductServiceDep) -> 
 
 
 # Parameterized admin operations (last)
-@product_router.put(
+@product_router.patch(
     "/{product_id}",
     response_model=ProductDetailRead,
     summary="Update product",

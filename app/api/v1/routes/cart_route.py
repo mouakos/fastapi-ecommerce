@@ -72,7 +72,7 @@ async def add_item(
     )
 
 
-@cart_router.put(
+@cart_router.patch(
     "/items/{product_id}",
     response_model=CartRead,
     summary="Update cart item quantity",
