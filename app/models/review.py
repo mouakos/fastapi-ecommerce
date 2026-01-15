@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlmodel import Field, Relationship
+from sqlmodel import Field, Relationship, UniqueConstraint
 
 from app.models.common import ModelBase, TimestampMixin
 
@@ -17,6 +17,8 @@ class Review(ModelBase, TimestampMixin, table=True):
     """Review model for storing product reviews."""
 
     __tablename__ = "reviews"
+    __table_args__ = (UniqueConstraint("user_id", "product_id", name="uix_user_product_review"),)
+
     user_id: UUID = Field(default=None, foreign_key="users.id", index=True, ondelete="CASCADE")
     product_id: UUID = Field(
         default=None, foreign_key="products.id", index=True, ondelete="CASCADE"
