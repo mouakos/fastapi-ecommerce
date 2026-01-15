@@ -137,8 +137,10 @@ async def seed_data() -> None:
 
 async def main() -> None:
     """Main entry point that properly closes the engine."""
-    await seed_data()
-    await async_engine.dispose()
+    try:
+        await seed_data()
+    finally:
+        await async_engine.dispose()
 
 
 if __name__ == "__main__":
