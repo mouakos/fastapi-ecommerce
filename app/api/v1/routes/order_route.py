@@ -10,8 +10,25 @@ from app.schemas.order_schema import OrderCreate, OrderRead
 order_route = APIRouter(prefix="/orders", tags=["Orders"])
 
 
+# Collection paths
+@order_route.get(
+    "",
+    response_model=list[OrderRead],
+    summary="List orders",
+    description="Retrieve all orders for the authenticated user, sorted by creation date (newest first).",
+)
+async def list_orders(
+    current_user: CurrentUserDep, order_service: OrderServiceDep
+) -> list[OrderRead]:
+    """List all orders for the current user."""
+    return await order_service.list_all(current_user.id)
+
+
 @order_route.post(
-    "/checkout/", response_model=OrderRead, summary="Checkout and create a new order."
+    "/checkout",
+    response_model=OrderRead,
+    summary="Checkout and create order",
+    description="Create a new order from the user's cart and specified shipping/billing addresses. The cart will be emptied after successful order creation.",
 )
 async def checkout_order(
     data: OrderCreate,
@@ -22,22 +39,12 @@ async def checkout_order(
     return await order_service.checkout(current_user.id, data)
 
 
+# Single order paths
 @order_route.get(
-    "/",
-    response_model=list[OrderRead],
-    summary="List all orders for the current user.",
-)
-async def list_orders(
-    current_user: CurrentUserDep, order_service: OrderServiceDep
-) -> list[OrderRead]:
-    """List all orders for the current user."""
-    return await order_service.list_all(current_user.id)
-
-
-@order_route.get(
-    "/{order_id}/",
+    "/{order_id}",
     response_model=OrderRead,
-    summary="Retrieve an order by its ID for the current user.",
+    summary="Get order by ID",
+    description="Retrieve detailed information about a specific order. Only the order owner can access this endpoint.",
 )
 async def get_order(
     order_id: UUID,
