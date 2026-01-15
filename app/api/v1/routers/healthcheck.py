@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from app.api.v1.dependencies import SessionDep
 from app.db.database import check_db_health
 
-health_check_router = APIRouter(prefix="/healthcheck", tags=["Healthcheck"])
+router = APIRouter(prefix="/healthcheck", tags=["Healthcheck"])
 
 
 class DatabaseStatus(StrEnum):
@@ -25,7 +25,7 @@ class HealthCheckRead(BaseModel):
     message: str
 
 
-@health_check_router.get(
+@router.get(
     "",
     summary="Check database health",
     description="Verify database connectivity and return the current health status. Used for monitoring and readiness checks.",

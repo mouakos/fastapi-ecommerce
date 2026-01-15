@@ -12,11 +12,11 @@ from app.api.v1.dependencies import (
 from app.schemas.address_schema import AddressCreate, AddressRead, AddressUpdate
 from app.schemas.user_schema import UserRead, UserUpdate
 
-user_router = APIRouter(prefix="/users", tags=["Users"])
+router = APIRouter(prefix="/users", tags=["Users"])
 
 
 # Current user profile operations
-@user_router.get(
+@router.get(
     "/me",
     response_model=UserRead,
     summary="Get current user profile",
@@ -29,7 +29,7 @@ async def get_user(
     return current_user
 
 
-@user_router.patch(
+@router.patch(
     "/me",
     response_model=UserRead,
     summary="Update current user profile",
@@ -44,7 +44,7 @@ async def update_user(
     return await user_service.update(current_user.id, data)
 
 
-@user_router.delete(
+@router.delete(
     "/me",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete user account",
@@ -59,7 +59,7 @@ async def delete_user(
 
 
 # Current user addresses operations
-@user_router.get(
+@router.get(
     "/me/addresses",
     response_model=list[AddressRead],
     summary="List user addresses",
@@ -73,7 +73,7 @@ async def list_addresses(
     return await address_service.list_all(current_user)
 
 
-@user_router.post(
+@router.post(
     "/me/addresses",
     response_model=AddressRead,
     status_code=status.HTTP_201_CREATED,
@@ -89,7 +89,7 @@ async def add_address(
     return await address_service.create(current_user, data)
 
 
-@user_router.patch(
+@router.patch(
     "/me/addresses/{address_id}",
     response_model=AddressRead,
     summary="Update address",
@@ -105,7 +105,7 @@ async def update_address(
     return await address_service.update(current_user, address_id, data)
 
 
-@user_router.delete(
+@router.delete(
     "/me/addresses/{address_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete address",

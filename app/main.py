@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from app.api.v1.routes import router
+from app.api.v1.routers import router
 from app.db.database import async_engine, init_db
 
 

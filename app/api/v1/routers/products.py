@@ -15,11 +15,11 @@ from app.schemas.search_schema import (
     SortOrder,
 )
 
-product_router = APIRouter(prefix="/products", tags=["Products"])
+router = APIRouter(prefix="/products", tags=["Products"])
 
 
 # Static utility paths first
-@product_router.get(
+@router.get(
     "/autocomplete",
     response_model=ProductAutocompleteRead,
     summary="Get product name suggestions",
@@ -42,7 +42,7 @@ async def get_product_autocomplete_suggestions(
 
 
 # Collection paths
-@product_router.get(
+@router.get(
     "",
     response_model=PaginatedRead[ProductRead],
     summary="List products",
@@ -87,7 +87,7 @@ async def list_products(
     )
 
 
-@product_router.post(
+@router.post(
     "",
     response_model=ProductDetailRead,
     status_code=status.HTTP_201_CREATED,
@@ -103,7 +103,7 @@ async def create_product(
 
 
 # Category filter paths (more specific than parameterized paths)
-@product_router.get(
+@router.get(
     "/category/id/{category_id}",
     response_model=list[ProductRead],
     summary="Get products by category ID",
@@ -116,7 +116,7 @@ async def get_products_by_category_id(
     return await product_service.get_by_category_id(category_id)
 
 
-@product_router.get(
+@router.get(
     "/category/slug/{category_slug}",
     response_model=list[ProductRead],
     summary="Get products by category slug",
@@ -130,7 +130,7 @@ async def get_products_by_category_slug(
 
 
 # Single product lookup paths (by ID or slug)
-@product_router.get(
+@router.get(
     "/id/{product_id}",
     response_model=ProductDetailRead,
     summary="Get product by ID",
@@ -141,7 +141,7 @@ async def get_product(product_id: UUID, product_service: ProductServiceDep) -> P
     return await product_service.get_by_id(product_id)
 
 
-@product_router.get(
+@router.get(
     "/slug/{slug}",
     response_model=ProductDetailRead,
     summary="Get product by slug",
@@ -153,7 +153,7 @@ async def get_product_by_slug(slug: str, product_service: ProductServiceDep) -> 
 
 
 # Parameterized admin operations (last)
-@product_router.patch(
+@router.patch(
     "/{product_id}",
     response_model=ProductDetailRead,
     summary="Update product",
@@ -167,7 +167,7 @@ async def update_product(
     return await product_service.update(product_id, data)
 
 
-@product_router.delete(
+@router.delete(
     "/{product_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete product",

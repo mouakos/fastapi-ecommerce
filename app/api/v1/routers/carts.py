@@ -11,11 +11,11 @@ from app.api.v1.dependencies import (
 )
 from app.schemas.cart_schema import CartItemCreate, CartItemUpdate, CartRead
 
-cart_router = APIRouter(prefix="/cart", tags=["Cart"])
+router = APIRouter(prefix="/cart", tags=["Cart"])
 
 
 # Cart operations
-@cart_router.get(
+@router.get(
     "",
     response_model=CartRead,
     summary="Get cart",
@@ -33,7 +33,7 @@ async def get_cart(
     )
 
 
-@cart_router.delete(
+@router.delete(
     "",
     response_model=CartRead,
     summary="Clear cart",
@@ -52,7 +52,7 @@ async def clear_cart(
 
 
 # Cart item operations
-@cart_router.post(
+@router.post(
     "/items",
     response_model=CartRead,
     summary="Add item to cart",
@@ -72,7 +72,7 @@ async def add_item(
     )
 
 
-@cart_router.patch(
+@router.patch(
     "/items/{product_id}",
     response_model=CartRead,
     summary="Update cart item quantity",
@@ -94,7 +94,7 @@ async def update_item(
     )
 
 
-@cart_router.delete(
+@router.delete(
     "/items/{product_id}",
     response_model=CartRead,
     summary="Remove item from cart",

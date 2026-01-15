@@ -23,11 +23,11 @@ from app.schemas.admin_schema import (
 )
 from app.schemas.product_schema import ProductRead
 
-admin_router = APIRouter(prefix="/admin", tags=["Admin"], dependencies=[AdminRoleDep])
+router = APIRouter(prefix="/admin", tags=["Admin"], dependencies=[AdminRoleDep])
 
 
 # Dashboard overview
-@admin_router.get(
+@router.get(
     "/dashboard",
     response_model=DashboardOverview,
     summary="Get dashboard overview",
@@ -41,7 +41,7 @@ async def get_dashboard(
 
 
 # Analytics endpoints
-@admin_router.get(
+@router.get(
     "/analytics/sales",
     response_model=SalesAnalytics,
     summary="Get sales analytics",
@@ -54,7 +54,7 @@ async def get_sales_analytics(
     return await admin_service.get_sales_analytics()
 
 
-@admin_router.get(
+@router.get(
     "/analytics/users",
     response_model=UserAnalytics,
     summary="Get user analytics",
@@ -67,7 +67,7 @@ async def get_user_analytics(
     return await admin_service.get_user_analytics()
 
 
-@admin_router.get(
+@router.get(
     "/analytics/products",
     response_model=ProductAnalytics,
     summary="Get product analytics",
@@ -80,7 +80,7 @@ async def get_product_analytics(
     return await admin_service.get_product_analytics()
 
 
-@admin_router.get(
+@router.get(
     "/analytics/reviews",
     response_model=ReviewAnalytics,
     summary="Get review analytics",
@@ -94,7 +94,7 @@ async def get_review_analytics(
 
 
 # User management
-@admin_router.get(
+@router.get(
     "/users",
     response_model=Paged[UserAdminRead],
     summary="List users",
@@ -115,7 +115,7 @@ async def list_all_users(
     )
 
 
-@admin_router.patch(
+@router.patch(
     "/users/{user_id}/role",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Update user role",
@@ -131,7 +131,7 @@ async def update_user_role(
 
 
 # Order management
-@admin_router.get(
+@router.get(
     "/orders",
     response_model=Paged[OrderAdminRead],
     summary="List orders",
@@ -150,7 +150,7 @@ async def list_all_orders(
     )
 
 
-@admin_router.patch(
+@router.patch(
     "/orders/{order_id}/status",
     summary="Update order status",
     description="Update the status of an order (e.g., from 'pending' to 'processing', 'shipped', or 'delivered').",
@@ -166,7 +166,7 @@ async def update_order_status(
 
 
 # Review moderation
-@admin_router.get(
+@router.get(
     "/reviews",
     response_model=Paged[ReviewAdminRead],
     summary="List reviews",
@@ -184,7 +184,7 @@ async def get_all_reviews(
     )
 
 
-@admin_router.post(
+@router.post(
     "/reviews/{review_id}/approve",
     summary="Approve review",
     description="Approve a pending review to make it publicly visible on the product page.",
@@ -198,7 +198,7 @@ async def approve_review(
     await admin_service.approve_review(review_id=review_id)
 
 
-@admin_router.delete(
+@router.delete(
     "/reviews/{review_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Reject and delete review",
@@ -213,7 +213,7 @@ async def reject_review(
 
 
 # Inventory management
-@admin_router.get(
+@router.get(
     "/inventory/low-stock",
     response_model=list[ProductRead],
     summary="Get low stock products",
@@ -227,7 +227,7 @@ async def get_low_stock_products(
     return await admin_service.get_low_stock_products(threshold=threshold)
 
 
-@admin_router.get(
+@router.get(
     "/inventory/top-moving",
     response_model=list[ProductRead],
     summary="Get top-moving products",

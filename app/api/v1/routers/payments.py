@@ -5,11 +5,11 @@ from fastapi import APIRouter, HTTPException, Request
 from app.api.v1.dependencies import CurrentUserDep, PaymentServiceDep
 from app.schemas.payment_schema import PaymentCheckoutSessionCreate, PaymentCheckoutSessionRead
 
-payment_route = APIRouter(prefix="/payments", tags=["Payments"])
+router = APIRouter(prefix="/payments", tags=["Payments"])
 
 
 # Checkout session creation
-@payment_route.post(
+@router.post(
     "/checkout-session",
     summary="Create checkout session",
     description="Create a Stripe checkout session for a specific order. Returns the session URL for redirecting the user to complete payment.",
@@ -25,7 +25,7 @@ async def create_checkout_session(
 
 
 # Webhook endpoints
-@payment_route.post(
+@router.post(
     "/webhooks/stripe",
     summary="Handle Stripe webhooks",
     description="Process Stripe webhook events for payment confirmations and status updates. This endpoint is called by Stripe, not by clients.",

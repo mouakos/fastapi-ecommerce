@@ -12,11 +12,11 @@ from app.schemas.wishlist_schema import (
     WishlistStatsRead,
 )
 
-wishlist_route = APIRouter(prefix="/wishlist", tags=["Wishlist"])
+router = APIRouter(prefix="/wishlist", tags=["Wishlist"])
 
 
 # Static paths first
-@wishlist_route.get(
+@router.get(
     "/count",
     summary="Get wishlist item count",
     description="Retrieve the total number of items currently in wishlist.",
@@ -31,7 +31,7 @@ async def get_wishlist_count(
 
 
 # Root paths (collection operations)
-@wishlist_route.get(
+@router.get(
     "",
     summary="Get user's wishlist",
     description="Retrieve all items in the current user's wishlist.",
@@ -44,7 +44,7 @@ async def get_wishlist(
     return await wishlist_service.get_items(user_id=current_user.id)
 
 
-@wishlist_route.post(
+@router.post(
     "",
     summary="Add product to wishlist",
     description="Add a product to wishlist. If the product is already in the wishlist, this operation has no effect.",
@@ -58,7 +58,7 @@ async def add_product_to_wishlist(
     return await wishlist_service.add_item(user_id=current_user.id, product_id=data.product_id)
 
 
-@wishlist_route.delete(
+@router.delete(
     "",
     summary="Clear wishlist",
     description="Remove all items from wishlist. This action cannot be undone.",
@@ -73,7 +73,7 @@ async def clear_wishlist(
 
 
 # Parameterized paths last
-@wishlist_route.delete(
+@router.delete(
     "/{product_id}",
     summary="Remove product from wishlist",
     description="Remove a specific product from wishlist by its ID.",
@@ -88,7 +88,7 @@ async def remove_product_from_wishlist(
     return await wishlist_service.remove_item(user_id=current_user.id, product_id=product_id)
 
 
-@wishlist_route.post(
+@router.post(
     "/{product_id}/move-to-cart",
     summary="Move product to cart",
     description="Remove product from wishlist and add it to shopping cart with default quantity of 1.",

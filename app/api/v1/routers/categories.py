@@ -7,11 +7,11 @@ from fastapi import APIRouter, status
 from app.api.v1.dependencies import AdminRoleDep, CategoryServiceDep
 from app.schemas.category_schema import CategoryCreate, CategoryRead, CategoryUpdate
 
-category_router = APIRouter(prefix="/categories", tags=["Categories"])
+router = APIRouter(prefix="/categories", tags=["Categories"])
 
 
 # Collection paths
-@category_router.get(
+@router.get(
     "",
     response_model=list[CategoryRead],
     summary="List categories",
@@ -24,7 +24,7 @@ async def list_categories(
     return await category_service.list_all()
 
 
-@category_router.post(
+@router.post(
     "",
     response_model=CategoryRead,
     status_code=status.HTTP_201_CREATED,
@@ -40,7 +40,7 @@ async def create_category(
 
 
 # Specific lookup paths (before parameterized paths)
-@category_router.get(
+@router.get(
     "/id/{category_id}",
     response_model=CategoryRead,
     summary="Get category by ID",
@@ -51,7 +51,7 @@ async def get_category(category_id: UUID, category_service: CategoryServiceDep) 
     return await category_service.get_by_id(category_id)
 
 
-@category_router.get(
+@router.get(
     "/slug/{slug}",
     response_model=CategoryRead,
     summary="Get category by slug",
@@ -63,7 +63,7 @@ async def get_category_by_slug(slug: str, category_service: CategoryServiceDep) 
 
 
 # Parameterized admin operations
-@category_router.patch(
+@router.patch(
     "/{category_id}",
     response_model=CategoryRead,
     summary="Update category",
@@ -79,7 +79,7 @@ async def update_category(
     return await category_service.update(category_id, data)
 
 
-@category_router.delete(
+@router.delete(
     "/{category_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete category",

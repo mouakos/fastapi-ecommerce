@@ -7,11 +7,11 @@ from fastapi import APIRouter
 from app.api.v1.dependencies import CurrentUserDep, OrderServiceDep
 from app.schemas.order_schema import OrderCreate, OrderRead
 
-order_route = APIRouter(prefix="/orders", tags=["Orders"])
+router = APIRouter(prefix="/orders", tags=["Orders"])
 
 
 # Collection paths
-@order_route.get(
+@router.get(
     "",
     response_model=list[OrderRead],
     summary="List orders",
@@ -24,7 +24,7 @@ async def list_orders(
     return await order_service.list_all(current_user.id)
 
 
-@order_route.post(
+@router.post(
     "/checkout",
     response_model=OrderRead,
     summary="Checkout and create order",
@@ -40,7 +40,7 @@ async def checkout_order(
 
 
 # Single order paths
-@order_route.get(
+@router.get(
     "/{order_id}",
     response_model=OrderRead,
     summary="Get order by ID",

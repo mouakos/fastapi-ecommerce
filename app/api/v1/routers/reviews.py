@@ -7,10 +7,10 @@ from fastapi import APIRouter, Query, status
 from app.api.v1.dependencies import CurrentUserDep, ReviewServiceDep
 from app.schemas.review_schema import ReviewCreate, ReviewRead, ReviewUpdate
 
-review_router = APIRouter(prefix="/reviews", tags=["Reviews"])
+router = APIRouter(prefix="/reviews", tags=["Reviews"])
 
 
-@review_router.post(
+@router.post(
     "/",
     response_model=ReviewRead,
     status_code=status.HTTP_201_CREATED,
@@ -25,7 +25,7 @@ async def create_review(
     return await review_service.create(current_user.id, data)
 
 
-@review_router.get(
+@router.get(
     "/product/{product_id}",
     response_model=list[ReviewRead],
     summary="Get all reviews for a specific product",
@@ -40,7 +40,7 @@ async def get_reviews_by_product(
     return await review_service.get_by_product(product_id, skip=skip, limit=limit)
 
 
-@review_router.get(
+@router.get(
     "/{review_id}",
     response_model=ReviewRead,
     summary="Get a review by its ID",
@@ -53,7 +53,7 @@ async def get_review_by_id(
     return await review_service.get_by_id(review_id)
 
 
-@review_router.patch(
+@router.patch(
     "/{review_id}",
     response_model=ReviewRead,
     summary="Update a review by its ID",
@@ -68,7 +68,7 @@ async def update_review(
     return await review_service.update(current_user.id, review_id, data)
 
 
-@review_router.delete(
+@router.delete(
     "/{review_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a review by its ID",
