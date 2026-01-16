@@ -83,3 +83,14 @@ class PageResponse[T](BaseModel):
     links: PageLinks = Field(..., description="HATEOAS links for navigation")
 
     model_config = ConfigDict(frozen=True)
+
+
+class Paged[T](BaseModel):
+    """Pagination information."""
+
+    items: list[T]
+    total: int
+    page: int
+    page_size: int
+
+    model_config = ConfigDict(frozen=True)

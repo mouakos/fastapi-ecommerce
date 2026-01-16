@@ -9,18 +9,18 @@ from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import OrderStatus
 from app.models.review import ReviewStatus
 from app.models.user import UserRole
-from app.schemas.admin import (
-    DashboardOverview,
-    OrderAdminRead,
-    Paged,
-    ProductAnalytics,
-    ReviewAdminRead,
-    ReviewAnalytics,
-    SalesAnalytics,
-    UserAdminRead,
-    UserAnalytics,
-)
+from app.schemas.common import Paged
+from app.schemas.order import OrderAdminRead
 from app.schemas.product import ProductRead
+from app.schemas.review import ReviewAdminRead
+from app.schemas.statistics import (
+    AdminDashboard,
+    ProductStatistics,
+    ReviewStatistics,
+    SalesStatistics,
+    UserStatistics,
+)
+from app.schemas.user import UserAdminRead
 from app.utils.utc_time import utcnow
 
 
@@ -39,11 +39,11 @@ class AdminService:
         OrderStatus.CANCELED: set(),
     }
 
-    async def get_sales_analytics(self) -> SalesAnalytics:
-        """Retrieve sales analytics data.
+    async def get_sales_statistics(self) -> SalesStatistics:
+        """Retrieve sales statistics data.
 
         Returns:
-            SalesAnalytics: Sales analytics data.
+            SalesStatistics: Sales statistics data.
         """
         # Total orders and revenue
         total_orders = await self.uow.orders.count_all()
@@ -62,7 +62,7 @@ class AdminService:
         # Revenue in the last 30 days
         revenue_last_30_days = await self.uow.orders.get_total_sales_by_last_days(days=30)
 
-        return SalesAnalytics(
+        return SalesStatistics(
             total_revenue=total_revenue,
             total_orders=total_orders,
             pending_orders=pending_orders,
@@ -74,11 +74,11 @@ class AdminService:
             revenue_last_30_days=revenue_last_30_days,
         )
 
-    async def get_user_analytics(self) -> UserAnalytics:
-        """Retrieve user analytics data.
+    async def get_user_statistics(self) -> UserStatistics:
+        """Retrieve user statistics data.
 
         Returns:
-            UserAnalytics: User analytics data.
+            UserStatistics: User statistics data.
         """
         total_users = await self.uow.users.count_all()
         total_customers = await self.uow.users.count_all(role=UserRole.USER)
@@ -87,18 +87,18 @@ class AdminService:
         # New users in the last 30 days
         new_users_last_30_days = await self.uow.users.count_recent_users(days=30)
 
-        return UserAnalytics(
+        return UserStatistics(
             total_users=total_users,
             total_customers=total_customers,
             total_admins=total_admins,
             new_users_last_30_days=new_users_last_30_days,
         )
 
-    async def get_product_analytics(self) -> ProductAnalytics:
-        """Retrieve product analytics data.
+    async def get_product_statistics(self) -> ProductStatistics:
+        """Retrieve product statistics data.
 
         Returns:
-            ProductAnalytics: Product analytics data.
+            ProductStatistics: Product statistics data.
         """
         total_products = await self.uow.products.count_all()
         active_products = await self.uow.products.count_all(is_active=True)
@@ -106,7 +106,7 @@ class AdminService:
         out_of_stock_count = await self.uow.products.count_all(stock=0)
         low_stock_count = await self.uow.products.count_low_stock(threshold=10)
 
-        return ProductAnalytics(
+        return ProductStatistics(
             total_products=total_products,
             active_products=active_products,
             inactive_products=inactive_products,
@@ -114,36 +114,36 @@ class AdminService:
             low_stock_count=low_stock_count,
         )
 
-    async def get_review_analytics(self) -> ReviewAnalytics:
-        """Retrieve review analytics data.
+    async def get_review_statistics(self) -> ReviewStatistics:
+        """Retrieve review statistics data.
 
         Returns:
-            ReviewAnalytics: Review analytics data.
+            ReviewStatistics: Review statistics data.
         """
         total_reviews = await self.uow.reviews.count_all()
         pending_reviews = await self.uow.reviews.count_all(is_approved=False)
         approved_reviews = await self.uow.reviews.count_all(is_approved=True)
         average_rating = await self.uow.reviews.get_average_rating()
 
-        return ReviewAnalytics(
+        return ReviewStatistics(
             total_reviews=total_reviews,
             pending_reviews=pending_reviews,
             approved_reviews=approved_reviews,
             average_rating=average_rating,
         )
 
-    async def get_dashboard_data(self) -> DashboardOverview:
+    async def get_dashboard_data(self) -> AdminDashboard:
         """Retrieve comprehensive dashboard data.
 
         Returns:
-            DashboardOverview: Comprehensive dashboard data, including sales, users, products, and reviews.
+            AdminDashboard: Comprehensive dashboard data, including sales, users, products, and reviews.
         """
-        sales = await self.get_sales_analytics()
-        users = await self.get_user_analytics()
-        products = await self.get_product_analytics()
-        reviews = await self.get_review_analytics()
+        sales = await self.get_sales_statistics()
+        users = await self.get_user_statistics()
+        products = await self.get_product_statistics()
+        reviews = await self.get_review_statistics()
 
-        return DashboardOverview(
+        return AdminDashboard(
             sales=sales,
             users=users,
             products=products,
@@ -182,7 +182,7 @@ class AdminService:
                     user_id=order.user_id,
                     user_email=order.user.email,
                     total_amount=order.total_amount,
-                    status=order.status.value,
+                    status=order.status,
                     payment_status=order.payment_status,
                     updated_at=order.updated_at,
                     created_at=order.created_at,

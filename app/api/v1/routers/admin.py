@@ -1,4 +1,4 @@
-"""Admin dashboard and management API routes for analytics, users, orders, reviews, and inventory."""
+"""Admin dashboard and management API routes for statistics, users, orders, reviews, and inventory."""
 
 from typing import Annotated
 from uuid import UUID
@@ -9,20 +9,18 @@ from app.api.v1.dependencies import AdminRoleDep, AdminServiceDep, CurrentUserDe
 from app.models.order import OrderStatus
 from app.models.review import ReviewStatus
 from app.models.user import UserRole
-from app.schemas.admin import (
-    DashboardOverview,
-    OrderAdminRead,
-    OrderStatusUpdate,
-    Paged,
-    ProductAnalytics,
-    ReviewAdminRead,
-    ReviewAnalytics,
-    SalesAnalytics,
-    UserAdminRead,
-    UserAnalytics,
-    UserRoleUpdate,
-)
+from app.schemas.common import Paged
+from app.schemas.order import OrderAdminRead, OrderAdminStatusUpdate
 from app.schemas.product import ProductRead
+from app.schemas.review import ReviewAdminRead
+from app.schemas.statistics import (
+    AdminDashboard,
+    ProductStatistics,
+    ReviewStatistics,
+    SalesStatistics,
+    UserStatistics,
+)
+from app.schemas.user import UserAdminRead, UserAdminRoleUpdate
 
 router = APIRouter(prefix="/admin", tags=["Admin"], dependencies=[AdminRoleDep])
 
@@ -30,68 +28,68 @@ router = APIRouter(prefix="/admin", tags=["Admin"], dependencies=[AdminRoleDep])
 # Dashboard overview
 @router.get(
     "/dashboard",
-    response_model=DashboardOverview,
+    response_model=AdminDashboard,
     summary="Get dashboard overview",
-    description="Retrieve comprehensive admin dashboard with sales, user, product, and review analytics in one request.",
+    description="Retrieve comprehensive admin dashboard with sales, user, product, and review statistics in one request.",
 )
 async def get_dashboard(
     admin_service: AdminServiceDep,
-) -> DashboardOverview:
-    """Get complete admin dashboard overview with all analytics."""
+) -> AdminDashboard:
+    """Get complete admin dashboard overview with all statistics."""
     return await admin_service.get_dashboard_data()
 
 
 # Analytics endpoints
 @router.get(
-    "/analytics/sales",
-    response_model=SalesAnalytics,
-    summary="Get sales analytics",
+    "/statistics/sales",
+    response_model=SalesStatistics,
+    summary="Get sales statistics",
     description="Retrieve detailed sales metrics including total revenue, order counts, and trends over time.",
 )
-async def get_sales_analytics(
+async def get_sales_statistics(
     admin_service: AdminServiceDep,
-) -> SalesAnalytics:
-    """Get sales analytics."""
-    return await admin_service.get_sales_analytics()
+) -> SalesStatistics:
+    """Get sales statistics."""
+    return await admin_service.get_sales_statistics()
 
 
 @router.get(
-    "/analytics/users",
-    response_model=UserAnalytics,
-    summary="Get user analytics",
+    "/statistics/users",
+    response_model=UserStatistics,
+    summary="Get user statistics",
     description="Retrieve user metrics including total registrations, growth rates, and active user statistics.",
 )
-async def get_user_analytics(
+async def get_user_statistics(
     admin_service: AdminServiceDep,
-) -> UserAnalytics:
-    """Get user analytics."""
-    return await admin_service.get_user_analytics()
+) -> UserStatistics:
+    """Get user statistics."""
+    return await admin_service.get_user_statistics()
 
 
 @router.get(
-    "/analytics/products",
-    response_model=ProductAnalytics,
-    summary="Get product analytics",
+    "/statistics/products",
+    response_model=ProductStatistics,
+    summary="Get product statistics",
     description="Retrieve product metrics including inventory levels, stock status, and catalog statistics.",
 )
-async def get_product_analytics(
+async def get_product_statistics(
     admin_service: AdminServiceDep,
-) -> ProductAnalytics:
-    """Get product analytics."""
-    return await admin_service.get_product_analytics()
+) -> ProductStatistics:
+    """Get product statistics."""
+    return await admin_service.get_product_statistics()
 
 
 @router.get(
-    "/analytics/reviews",
-    response_model=ReviewAnalytics,
-    summary="Get review analytics",
+    "/statistics/reviews",
+    response_model=ReviewStatistics,
+    summary="Get review statistics",
     description="Retrieve review metrics including approval rates, average ratings, and pending review counts.",
 )
-async def get_review_analytics(
+async def get_review_statistics(
     admin_service: AdminServiceDep,
-) -> ReviewAnalytics:
-    """Get review analytics."""
-    return await admin_service.get_review_analytics()
+) -> ReviewStatistics:
+    """Get review statistics."""
+    return await admin_service.get_review_statistics()
 
 
 # User management
@@ -124,7 +122,7 @@ async def list_all_users(
 )
 async def update_user_role(
     user_id: UUID,
-    role_update: UserRoleUpdate,
+    role_update: UserAdminRoleUpdate,
     admin_service: AdminServiceDep,
 ) -> None:
     """Update a user's role."""
@@ -159,7 +157,7 @@ async def list_all_orders(
 )
 async def update_order_status(
     order_id: UUID,
-    status_update: OrderStatusUpdate,
+    status_update: OrderAdminStatusUpdate,
     admin_service: AdminServiceDep,
 ) -> None:
     """Update an order's status."""
