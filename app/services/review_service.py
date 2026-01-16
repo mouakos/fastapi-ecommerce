@@ -10,6 +10,7 @@ from app.models.review import Review
 from app.schemas.review import ReviewCreate, ReviewRead, ReviewUpdate
 
 
+# TODO: return only approved reviews in get_product_review and get_review methods
 class ReviewService:
     """Service for handling review-related operations."""
 
@@ -39,6 +40,7 @@ class ReviewService:
         if existing:
             raise HTTPException(status_code=400, detail="You have already reviewed this product.")
 
+        # TODO: Verify if the user has purchased the product before allowing review
         purchased = await self.uow.orders.user_has_purchased_product(user_id, data.product_id)
         if not purchased:
             raise HTTPException(
@@ -104,11 +106,15 @@ class ReviewService:
             ReviewRead: The updated review.
 
         Raises:
-            HTTPException: If the review is not found
+            HTTPException: If the review is not found or if the review is approved and cannot be modified.
         """
         review = await self.uow.reviews.get_by_id_and_user_id(review_id, user_id)
         if not review:
             raise HTTPException(status_code=404, detail="Review not found.")
+
+        # TODO: Prevent updates to approved reviews
+        if review.is_approved:
+            raise HTTPException(status_code=400, detail="Approved reviews cannot be modified.")
 
         review_data = data.model_dump(exclude_unset=True)
         for key, value in review_data.items():
