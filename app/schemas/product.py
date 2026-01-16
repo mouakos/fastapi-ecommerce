@@ -43,14 +43,14 @@ class ProductCreate(ProductBase):
 class ProductRead(ProductBase, UUIDMixin):
     """Schema for reading a Product."""
 
-    slug: str
-    sku: str
+    slug: str = Field(..., max_length=100)
+    sku: str = Field(..., max_length=100)
     created_at: datetime
 
     model_config = ConfigDict(frozen=True)
 
 
-class ProductDetailRead(ProductRead, UUIDMixin):
+class ProductDetailRead(ProductRead):
     """Schema for reading a Product."""
 
     average_rating: float | None = Field(

@@ -1,5 +1,6 @@
 """Schemas for category operations."""
 
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
@@ -37,7 +38,8 @@ class CategoryCreate(CategoryBase):
 class CategoryRead(CategoryBase, UUIDMixin):
     """Schema for reading category information."""
 
-    slug: str
+    slug: str = Field(..., max_length=100)
+    created_at: datetime
 
     model_config = ConfigDict(frozen=True)
 
@@ -45,7 +47,7 @@ class CategoryRead(CategoryBase, UUIDMixin):
 class CategoryUpdate(BaseModel):
     """Schema for updating an existing category."""
 
-    name: str | None = Field(None, min_length=1, max_length=100)
+    name: str | None = Field(None, min_length=2, max_length=100)
     parent_id: UUID | None = None
     description: str | None = Field(None, max_length=500)
     image_url: HttpUrl | None = Field(None, max_length=500)

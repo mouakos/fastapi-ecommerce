@@ -53,17 +53,11 @@ class ReviewRead(ReviewBase, UUIDMixin):
     model_config = ConfigDict(frozen=True)
 
 
-class ReviewAdminRead(UUIDMixin):
+class ReviewAdminRead(ReviewRead):
     """Schema for reading review information in admin context."""
 
-    user_id: UUID
-    user_email: str
-    product_id: UUID
-    product_name: str
-    rating: int = Field(ge=1, le=5)
-    comment: str | None
-    created_at: datetime
+    user_email: str = Field(..., max_length=255)
+    product_name: str = Field(..., max_length=255)
     updated_at: datetime
-    status: ReviewStatus
 
     model_config = ConfigDict(frozen=True)

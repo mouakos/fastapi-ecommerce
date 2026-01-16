@@ -31,25 +31,46 @@ class UserCreate(BaseModel):
     )
 
 
-class UserRead(UUIDMixin):
-    """Schema for reading user information."""
-
-    email: EmailStr
-    is_superuser: bool
-    role: UserRole
-    first_name: str | None
-    last_name: str | None
-    phone_number: str | None
-
-    model_config = ConfigDict(frozen=True)
-
-
 class UserUpdate(BaseModel):
     """Schema for updating user information."""
 
     first_name: str | None = Field(None, min_length=2, max_length=50)
     last_name: str | None = Field(None, min_length=2, max_length=50)
     phone_number: str | None = Field(None, max_length=20)
+
+    model_config = ConfigDict(frozen=True)
+
+
+class UserRead(UUIDMixin):
+    """Schema for reading user information."""
+
+    email: EmailStr = Field(..., max_length=255)
+    is_superuser: bool
+    role: UserRole
+    first_name: str | None = Field(..., max_length=50)
+    last_name: str | None = Field(..., max_length=50)
+    phone_number: str | None = Field(..., max_length=20)
+
+    model_config = ConfigDict(frozen=True)
+
+
+class UserAdminRead(UserRead):
+    """Schema for reading user information in admin context."""
+
+    created_at: datetime
+    updated_at: datetime
+    total_orders: int = Field(..., description="Total orders by this user")
+    total_spent: Decimal = Field(
+        ..., description="Total amount spent by this user", ge=0, decimal_places=2, max_digits=10
+    )
+
+    model_config = ConfigDict(frozen=True)
+
+
+class UserAdminRoleUpdate(BaseModel):
+    """Schema for updating a user's role."""
+
+    role: UserRole = Field(..., description="New role: 'user' or 'admin'")
 
     model_config = ConfigDict(frozen=True)
 
@@ -76,31 +97,5 @@ class TokenData(BaseModel):
     """Schema for token data."""
 
     user_id: UUID
-
-    model_config = ConfigDict(frozen=True)
-
-
-class UserAdminRead(UUIDMixin):
-    """Schema for reading user information in admin context."""
-
-    email: str
-    first_name: str | None
-    last_name: str | None
-    role: UserRole
-    created_at: datetime
-    updated_at: datetime
-    is_superuser: bool
-    total_orders: int = Field(..., description="Total orders by this user")
-    total_spent: Decimal = Field(
-        ..., description="Total amount spent by this user", ge=0, decimal_places=2, max_digits=10
-    )
-
-    model_config = ConfigDict(frozen=True)
-
-
-class UserAdminRoleUpdate(BaseModel):
-    """Schema for updating a user's role."""
-
-    role: UserRole = Field(..., description="New role: 'user' or 'admin'")
 
     model_config = ConfigDict(frozen=True)

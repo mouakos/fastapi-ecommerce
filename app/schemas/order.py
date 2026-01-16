@@ -24,10 +24,10 @@ class OrderItemRead(BaseModel):
     """Schema for reading order items."""
 
     product_id: UUID
-    quantity: int
-    unit_price: Decimal
-    product_name: str
-    image_url: HttpUrl | None
+    quantity: int = Field(..., ge=1)
+    unit_price: Decimal = Field(..., max_digits=10, decimal_places=2)
+    product_name: str = Field(..., max_length=255)
+    image_url: HttpUrl | None = Field(..., max_length=500)
 
     model_config = ConfigDict(frozen=True)
 
@@ -35,10 +35,11 @@ class OrderItemRead(BaseModel):
 class OrderRead(UUIDMixin):
     """Schema for reading orders."""
 
-    order_number: str
+    order_number: str = Field(..., description="Unique order number", max_length=100)
     total_amount: Decimal = Field(..., max_digits=10, decimal_places=2)
     status: OrderStatus
     items: list[OrderItemRead]
+    created_at: datetime
 
     model_config = ConfigDict(frozen=True)
 
@@ -46,13 +47,15 @@ class OrderRead(UUIDMixin):
 class OrderAdminRead(UUIDMixin):
     """Schema for reading order information in admin context."""
 
-    order_number: str
     user_id: UUID
-    user_email: str = Field(..., description="Email of the user who placed the order")
-    total_amount: Decimal
+    user_email: str = Field(
+        ..., description="Email of the user who placed the order", max_length=255
+    )
+    order_number: str = Field(..., description="Unique order number", max_length=100)
+    total_amount: Decimal = Field(..., max_digits=10, decimal_places=2)
     status: OrderStatus
-    payment_status: PaymentStatus
     created_at: datetime
+    payment_status: PaymentStatus
     updated_at: datetime
     shipped_at: datetime | None
     paid_at: datetime | None

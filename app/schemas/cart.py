@@ -29,8 +29,10 @@ class CartItemRead(BaseModel):
 
     product_id: UUID
     quantity: int
-    unit_price: Decimal
-    product_name: str
+    unit_price: Decimal = Field(
+        ..., description="Price per unit of the product", decimal_places=2, max_digits=10
+    )
+    product_name: str = Field(..., max_length=255)
     image_url: HttpUrl | None
 
     @computed_field(return_type=Decimal)
