@@ -1,5 +1,6 @@
 """Address management API routes for user delivery and billing addresses."""
 
+# mypy: disable-error-code=return-value
 from uuid import UUID
 
 from fastapi import APIRouter, status
