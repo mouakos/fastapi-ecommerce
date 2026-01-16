@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.order import OrderStatus
 from app.models.payment import PaymentStatus
+from app.models.review import ReviewStatus
 from app.models.user import UserRole
 from app.schemas.common import UUIDMixin
 
@@ -149,6 +150,6 @@ class ReviewAdminRead(UUIDMixin):
     comment: str | None
     created_at: datetime
     updated_at: datetime
-    is_approved: bool
+    status: ReviewStatus
 
     model_config = ConfigDict(frozen=True)

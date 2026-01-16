@@ -8,7 +8,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.interfaces.review_repository import ReviewRepository
-from app.models.review import Review
+from app.models.review import Review, ReviewStatus
 from app.repositories.sql_generic_repository import SqlGenericRepository
 
 
@@ -85,7 +85,7 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         page: int = 1,
         page_size: int = 10,
         product_id: UUID | None = None,
-        is_approved: bool | None = None,
+        status: ReviewStatus | None = None,
         user_id: UUID | None = None,
         rating: int | None = None,
     ) -> tuple[int, list[Review]]:
@@ -95,7 +95,7 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
             page (int, optional): Page number. Defaults to 1.
             page_size (int, optional): Number of records per page. Defaults to 100.
             product_id (UUID | None, optional): Filter by product ID. Defaults to None.
-            is_approved (bool | None, optional): Filter by approval status. Defaults to None.
+            status (ReviewStatus | None, optional): Filter by review status. Defaults to None.
             user_id (UUID | None, optional): Filter by user ID. Defaults to None.
             rating (int | None, optional): Filter by rating. Defaults to None.
 
@@ -108,8 +108,8 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         # Apply filters
         if product_id is not None:
             stmt = stmt.where(Review.product_id == product_id)
-        if is_approved is not None:
-            stmt = stmt.where(Review.is_approved == is_approved)
+        if status is not None:
+            stmt = stmt.where(Review.status == status)
         if user_id is not None:
             stmt = stmt.where(Review.user_id == user_id)
         if rating is not None:

@@ -5,8 +5,9 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query, status
 
-from app.api.v1.dependencies import AdminRoleDep, AdminServiceDep
+from app.api.v1.dependencies import AdminRoleDep, AdminServiceDep, CurrentUserDep
 from app.models.order import OrderStatus
+from app.models.review import ReviewStatus
 from app.models.user import UserRole
 from app.schemas.admin import (
     DashboardOverview,
@@ -170,21 +171,23 @@ async def update_order_status(
     "/reviews",
     response_model=Paged[ReviewAdminRead],
     summary="List reviews",
-    description="Retrieve paginated list of all reviews with optional filtering by approval status.",
+    description="Retrieve paginated list of all reviews with optional filtering by status, user, product, or rating.",
 )
 async def get_all_reviews(
     admin_service: AdminServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
-    is_approved: Annotated[bool | None, Query(description="Filter by approval status")] = None,
+    status: Annotated[ReviewStatus | None, Query(description="Filter by review status")] = None,
     user_id: Annotated[UUID | None, Query(description="Filter by user ID")] = None,
+    product_id: Annotated[UUID | None, Query(description="Filter by product ID")] = None,
     rating: int | None = Query(None, ge=1, le=5, description="Filter by rating"),
 ) -> Paged[ReviewAdminRead]:
     """Get all reviews."""
     return await admin_service.get_all_reviews(
         page=page,
         page_size=page_size,
-        is_approved=is_approved,
+        status=status,
+        product_id=product_id,
         user_id=user_id,
         rating=rating,
     )
@@ -199,9 +202,10 @@ async def get_all_reviews(
 async def approve_review(
     review_id: UUID,
     admin_service: AdminServiceDep,
+    current_user: CurrentUserDep,
 ) -> None:
     """Approve a review."""
-    await admin_service.approve_review(review_id=review_id)
+    await admin_service.approve_review(review_id=review_id, moderator_id=current_user.id)
 
 
 @router.delete(
@@ -213,9 +217,10 @@ async def approve_review(
 async def reject_review(
     review_id: UUID,
     admin_service: AdminServiceDep,
+    current_user: CurrentUserDep,
 ) -> None:
     """Reject/delete a review."""
-    await admin_service.reject_review(review_id=review_id)
+    await admin_service.reject_review(review_id=review_id, moderator_id=current_user.id)
 
 
 # Inventory management

@@ -6,7 +6,7 @@ from uuid import UUID
 from fastapi import HTTPException
 
 from app.interfaces.unit_of_work import UnitOfWork
-from app.models.review import Review
+from app.models.review import Review, ReviewStatus
 from app.schemas.review import ReviewCreate, ReviewRead, ReviewUpdate
 
 
@@ -43,6 +43,7 @@ class ReviewService:
         new_review = Review(
             user_id=user_id,
             **review_data,
+            status=ReviewStatus.PENDING,
         )
         return await self.uow.reviews.add(new_review)
 
@@ -67,7 +68,7 @@ class ReviewService:
             raise HTTPException(status_code=404, detail="Product not found.")
 
         _, reviews = await self.uow.reviews.get_all_paginated(
-            page=page, page_size=page_size, is_approved=True
+            page=page, page_size=page_size, status=ReviewStatus.APPROVED, product_id=product_id
         )
         return reviews
 
@@ -84,7 +85,7 @@ class ReviewService:
             HTTPException: If the review is not found or not approved.
         """
         review = await self.uow.reviews.get_by_id(review_id)
-        if not review or not review.is_approved:
+        if not review or review.status != ReviewStatus.APPROVED:
             raise HTTPException(status_code=404, detail="Review not found.")
 
         return review
@@ -112,7 +113,7 @@ class ReviewService:
             setattr(review, key, value)
 
         # Mark review as unapproved after update
-        review.is_approved = False
+        review.status = ReviewStatus.PENDING
         review.approved_by = None
 
         return await self.uow.reviews.update(review)

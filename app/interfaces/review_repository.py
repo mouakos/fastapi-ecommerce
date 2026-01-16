@@ -5,7 +5,7 @@ from typing import Any
 from uuid import UUID
 
 from app.interfaces.generic_repository import GenericRepository
-from app.models.review import Review
+from app.models.review import Review, ReviewStatus
 
 
 class ReviewRepository(GenericRepository[Review], ABC):
@@ -67,7 +67,7 @@ class ReviewRepository(GenericRepository[Review], ABC):
         page: int = 1,
         page_size: int = 10,
         product_id: UUID | None = None,
-        is_approved: bool | None = None,
+        status: ReviewStatus | None = None,
         user_id: UUID | None = None,
         rating: int | None = None,
     ) -> tuple[int, list[Review]]:
@@ -77,7 +77,7 @@ class ReviewRepository(GenericRepository[Review], ABC):
             page (int, optional): Page number. Defaults to 1.
             page_size (int, optional): Number of records per page. Defaults to 100.
             product_id (UUID | None, optional): Filter by product ID. Defaults to None.
-            is_approved (bool | None, optional): Filter by approval status. Defaults to None.
+            status (ReviewStatus | None, optional): Filter by review status. Defaults to None.
             user_id (UUID | None, optional): Filter by user ID. Defaults to None.
             rating (int | None, optional): Filter by rating. Defaults to None.
 

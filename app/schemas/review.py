@@ -5,6 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.models.review import ReviewStatus
 from app.schemas.common import UUIDMixin
 
 
@@ -44,7 +45,7 @@ class ReviewUpdate(BaseModel):
 class ReviewRead(ReviewBase, UUIDMixin):
     """Schema for reading a review."""
 
-    is_approved: bool
+    status: ReviewStatus
     user_id: UUID
     product_id: UUID
     created_at: datetime

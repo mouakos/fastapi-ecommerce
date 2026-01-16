@@ -7,6 +7,7 @@ from fastapi import HTTPException
 
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import OrderStatus
+from app.models.review import ReviewStatus
 from app.models.user import UserRole
 from app.schemas.admin import (
     DashboardOverview,
@@ -297,7 +298,7 @@ class AdminService:
         page: int = 1,
         page_size: int = 10,
         product_id: UUID | None = None,
-        is_approved: bool | None = None,
+        status: ReviewStatus | None = None,
         user_id: UUID | None = None,
         rating: int | None = None,
     ) -> Paged[ReviewAdminRead]:
@@ -310,7 +311,7 @@ class AdminService:
             page=page,
             page_size=page_size,
             product_id=product_id,
-            is_approved=is_approved,
+            status=status,
             user_id=user_id,
             rating=rating,
         )
@@ -325,7 +326,7 @@ class AdminService:
                     user_id=review.user_id,
                     rating=review.rating,
                     comment=review.comment,
-                    is_approved=review.is_approved,
+                    status=review.status,
                     created_at=review.created_at,
                     updated_at=review.updated_at,
                 )
@@ -338,30 +339,38 @@ class AdminService:
             page_size=page_size,
         )
 
-    async def approve_review(self, review_id: UUID) -> None:
+    async def approve_review(self, review_id: UUID, moderator_id: UUID) -> None:
         """Approve a product review.
 
         Args:
             review_id (UUID): ID of the review to approve.
+            moderator_id (UUID): ID of the admin approving the review.
         """
         review = await self.uow.reviews.get_by_id(review_id)
         if not review:
             raise HTTPException(status_code=404, detail="Review not found.")
 
-        review.is_approved = True
+        review.status = ReviewStatus.APPROVED
+        review.moderated_at = utcnow()
+        review.moderated_by = moderator_id
         await self.uow.reviews.update(review)
 
-    async def reject_review(self, review_id: UUID) -> None:
+    async def reject_review(self, review_id: UUID, moderator_id: UUID) -> None:
         """Reject (delete) a product review.
 
         Args:
             review_id (UUID): ID of the review to reject.
+            moderator_id (UUID): ID of the admin rejecting the review.
         """
         review = await self.uow.reviews.get_by_id(review_id)
         if not review:
             raise HTTPException(status_code=404, detail="Review not found.")
 
-        await self.uow.reviews.delete_by_id(review.id)
+        review.status = ReviewStatus.REJECTED
+        review.moderated_at = utcnow()
+        review.moderated_by = moderator_id
+
+        await self.uow.reviews.update(review)
 
     async def get_top_selling_products(self, limit: int = 10, days: int = 30) -> list[ProductRead]:
         """Retrieve top selling products.
