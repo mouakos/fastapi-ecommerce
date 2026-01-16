@@ -55,14 +55,14 @@ class ReviewService:
         return await self.uow.reviews.add(new_review)
 
     async def get_product_reviews(
-        self, product_id: UUID, skip: int = 0, limit: int = 100
+        self, product_id: UUID, page: int = 1, page_size: int = 10
     ) -> list[ReviewRead]:
         """Get reviews for a specific product.
 
         Args:
             product_id (UUID): The ID of the product.
-            skip (int, optional): Number of reviews to skip. Defaults to 0.
-            limit (int, optional): Maximum number of reviews to return. Defaults to 100.
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of reviews per page. Defaults to 10.
 
         Returns:
             list[ReviewRead]: List of reviews for the product.
@@ -74,7 +74,10 @@ class ReviewService:
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
 
-        return await self.uow.reviews.get_by_product_id(product_id, skip=skip, limit=limit)
+        _, reviews = await self.uow.reviews.get_all_paginated(
+            page=page, page_size=page_size, is_approved=True
+        )
+        return reviews
 
     async def get_review(self, review_id: UUID) -> ReviewRead:
         """Get a review by its ID.
@@ -86,10 +89,10 @@ class ReviewService:
             ReviewRead: The review with the specified ID.
 
         Raises:
-            HTTPException: If the review is not found
+            HTTPException: If the review is not found or not approved.
         """
         review = await self.uow.reviews.get_by_id(review_id)
-        if not review:
+        if not review or not review.is_approved:
             raise HTTPException(status_code=404, detail="Review not found.")
 
         return review

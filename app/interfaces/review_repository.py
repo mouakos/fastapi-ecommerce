@@ -12,22 +12,6 @@ class ReviewRepository(GenericRepository[Review], ABC):
     """Interface for Review repository."""
 
     @abstractmethod
-    async def get_by_product_id(
-        self, product_id: UUID, skip: int = 0, limit: int = 10
-    ) -> list[Review]:
-        """Get reviews by product ID with pagination.
-
-        Args:
-            product_id (UUID): Product ID.
-            skip (int, optional): Number of reviews to skip. Defaults to 0.
-            limit (int, optional): Maximum number of reviews to return. Defaults to 10.
-
-        Returns:
-            list[Review]: List of reviews.
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
     async def get_by_id_and_user_id(self, review_id: UUID, user_id: UUID) -> Review | None:
         """Get a review by its ID and user ID.
 
@@ -84,6 +68,8 @@ class ReviewRepository(GenericRepository[Review], ABC):
         page_size: int = 10,
         product_id: UUID | None = None,
         is_approved: bool | None = None,
+        user_id: UUID | None = None,
+        rating: int | None = None,
     ) -> tuple[int, list[Review]]:
         """Get all reviews with pagination and optional filters.
 
@@ -92,6 +78,8 @@ class ReviewRepository(GenericRepository[Review], ABC):
             page_size (int, optional): Number of records per page. Defaults to 100.
             product_id (UUID | None, optional): Filter by product ID. Defaults to None.
             is_approved (bool | None, optional): Filter by approval status. Defaults to None.
+            user_id (UUID | None, optional): Filter by user ID. Defaults to None.
+            rating (int | None, optional): Filter by rating. Defaults to None.
 
         Returns:
             tuple[int, list[Review]]: Total count and list of reviews.

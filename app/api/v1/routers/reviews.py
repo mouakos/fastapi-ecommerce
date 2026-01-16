@@ -35,11 +35,11 @@ async def add_product_review(
 async def get_product_reviews(
     product_id: UUID,
     review_service: ReviewServiceDep,
-    skip: int = Query(0, description="Number of reviews to skip"),
-    limit: int = Query(100, description="Maximum number of reviews to return"),
+    page: int = Query(1, description="Page number"),
+    page_size: int = Query(10, description="Number of reviews per page"),
 ) -> list[ReviewRead]:
     """Get all reviews for a specific product."""
-    return await review_service.get_product_reviews(product_id, skip=skip, limit=limit)
+    return await review_service.get_product_reviews(product_id, page=page, page_size=page_size)
 
 
 @router.get(

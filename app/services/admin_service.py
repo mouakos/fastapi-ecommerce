@@ -298,6 +298,8 @@ class AdminService:
         page_size: int = 10,
         product_id: UUID | None = None,
         is_approved: bool | None = None,
+        user_id: UUID | None = None,
+        rating: int | None = None,
     ) -> Paged[ReviewAdminRead]:
         """Retrieve all product reviews with pagination and optional product filter.
 
@@ -309,6 +311,8 @@ class AdminService:
             page_size=page_size,
             product_id=product_id,
             is_approved=is_approved,
+            user_id=user_id,
+            rating=rating,
         )
         review_items = []
         for review in reviews:

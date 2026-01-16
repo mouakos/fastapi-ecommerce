@@ -19,23 +19,6 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         """Initialize the repository with a database session."""
         super().__init__(session, Review)
 
-    async def get_by_product_id(
-        self, product_id: UUID, skip: int = 0, limit: int = 100
-    ) -> list[Review]:
-        """Get reviews by product ID with pagination.
-
-        Args:
-            product_id (UUID): Product ID.
-            skip (int, optional): Number of reviews to skip. Defaults to 0.
-            limit (int, optional): Maximum number of reviews to return. Defaults to 100.
-
-        Returns:
-            list[Review]: List of reviews.
-        """
-        stmt = select(Review).where(Review.product_id == product_id).offset(skip).limit(limit)
-        result = await self._session.exec(stmt)
-        return list(result.all())
-
     async def get_by_id_and_user_id(self, review_id: UUID, user_id: UUID) -> Review | None:
         """Get a review by its ID and user ID.
 
@@ -103,6 +86,8 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         page_size: int = 10,
         product_id: UUID | None = None,
         is_approved: bool | None = None,
+        user_id: UUID | None = None,
+        rating: int | None = None,
     ) -> tuple[int, list[Review]]:
         """Get all reviews with pagination and optional filters.
 
@@ -111,6 +96,8 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
             page_size (int, optional): Number of records per page. Defaults to 100.
             product_id (UUID | None, optional): Filter by product ID. Defaults to None.
             is_approved (bool | None, optional): Filter by approval status. Defaults to None.
+            user_id (UUID | None, optional): Filter by user ID. Defaults to None.
+            rating (int | None, optional): Filter by rating. Defaults to None.
 
         Returns:
             tuple[int, list[Review]]: Total count and list of reviews.
@@ -123,6 +110,10 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
             stmt = stmt.where(Review.product_id == product_id)
         if is_approved is not None:
             stmt = stmt.where(Review.is_approved == is_approved)
+        if user_id is not None:
+            stmt = stmt.where(Review.user_id == user_id)
+        if rating is not None:
+            stmt = stmt.where(Review.rating == rating)
 
         # Get total count
         count_stmt = select(func.count()).select_from(stmt.subquery())

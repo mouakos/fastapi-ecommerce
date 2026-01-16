@@ -177,10 +177,16 @@ async def get_all_reviews(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
     is_approved: Annotated[bool | None, Query(description="Filter by approval status")] = None,
+    user_id: Annotated[UUID | None, Query(description="Filter by user ID")] = None,
+    rating: int | None = Query(None, ge=1, le=5, description="Filter by rating"),
 ) -> Paged[ReviewAdminRead]:
     """Get all reviews."""
     return await admin_service.get_all_reviews(
-        page=page, page_size=page_size, is_approved=is_approved
+        page=page,
+        page_size=page_size,
+        is_approved=is_approved,
+        user_id=user_id,
+        rating=rating,
     )
 
 
