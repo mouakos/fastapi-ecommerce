@@ -50,7 +50,7 @@ class Review(ModelBase, TimestampMixin, table=True):
             index=True,
         ),
     )
-    moderated_at: datetime | None = Field(default=None)
+    moderated_at: datetime | None = None
     moderated_by: UUID | None = Field(default=None, foreign_key="users.id", index=True)
 
     # Relationships

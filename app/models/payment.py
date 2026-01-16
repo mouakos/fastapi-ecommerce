@@ -44,7 +44,7 @@ class Payment(ModelBase, TimestampMixin, table=True):
 
     __tablename__ = "payments"
     order_id: UUID = Field(default=None, foreign_key="orders.id", index=True, ondelete="CASCADE")
-    amount: Decimal = Field(..., max_digits=10, decimal_places=2)
+    amount: Decimal = Field(max_digits=10, decimal_places=2)
     session_id: str = Field(index=True, unique=True, max_length=100)
     currency: Currency = Field(
         default=Currency.USD,
