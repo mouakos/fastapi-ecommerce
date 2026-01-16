@@ -19,4 +19,4 @@ class PaymentRepository(GenericRepository[Payment], ABC):
         Returns:
             Payment | None: Payment or none.
         """
-        raise NotImplementedError()
+        ...

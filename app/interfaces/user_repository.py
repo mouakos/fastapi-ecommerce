@@ -20,7 +20,7 @@ class UserRepository(GenericRepository[User], ABC):
         Returns:
             User | None: User or none.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
@@ -35,7 +35,7 @@ class UserRepository(GenericRepository[User], ABC):
         Raises:
             ValueError: If invalid filters are provided.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def count_recent_users(self, days: int) -> int:
@@ -47,7 +47,7 @@ class UserRepository(GenericRepository[User], ABC):
         Returns:
             int: Number of users registered in the last N days.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_all_paginated(
@@ -68,4 +68,4 @@ class UserRepository(GenericRepository[User], ABC):
         Returns:
             tuple[int, list[User]]: Total count and list of users.
         """
-        raise NotImplementedError()
+        ...

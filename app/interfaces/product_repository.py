@@ -46,7 +46,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         Returns:
             tuple[int, list[Product]]: A tuple containing the total number of products and a list of products.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_by_slug(self, slug: str) -> Product | None:
@@ -58,7 +58,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         Returns:
             Product | None: Product or none.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def generate_slug(self, name: str) -> str:
@@ -70,7 +70,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         Returns:
             str: Generated unique slug.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def review_count(self, product_id: UUID) -> int:
@@ -82,7 +82,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         Returns:
             int: Total number of reviews.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def average_rating(self, product_id: UUID) -> float | None:
@@ -94,7 +94,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         Returns:
             float | None: Average rating or none if no reviews.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_autocomplete_suggestions(self, query: str, limit: int = 10) -> list[str]:
@@ -107,7 +107,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         Returns:
             list[str]: List of suggested product names.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_by_category_slug(self, category_slug: str) -> list[Product]:
@@ -119,7 +119,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         Returns:
             list[Product]: List of products in the specified category.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_by_category_id(self, category_id: UUID) -> list[Product]:
@@ -131,7 +131,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         Returns:
             list[Product]: List of products in the specified category.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
@@ -146,7 +146,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         Raises:
             ValueError: Invalid filter condition.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def count_low_stock(self, threshold: int = 10) -> int:
@@ -158,7 +158,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         Returns:
             int: Number of products that are low in stock.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_low_stock(self, threshold: int = 10) -> list[Product]:
@@ -170,7 +170,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         Returns:
             list[Product]: List of low stock products.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_top_selling(self, limit: int = 10, days: int = 30) -> list[Product]:
@@ -183,4 +183,4 @@ class ProductRepository(GenericRepository[Product], ABC):
         Returns:
             list[Product]: List of top selling products.
         """
-        raise NotImplementedError()
+        ...

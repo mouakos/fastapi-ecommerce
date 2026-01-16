@@ -22,7 +22,7 @@ class GenericRepository[T_model](ABC):
         Returns:
             T_model | None: Record or none.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def list_all(self, **filters: Any) -> list[T_model]:  # noqa: ANN401
@@ -37,7 +37,7 @@ class GenericRepository[T_model](ABC):
         Returns:
             list[T_model]: List of records.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def add(self, record: T_model) -> T_model:
@@ -49,7 +49,7 @@ class GenericRepository[T_model](ABC):
         Returns:
             T_model: The created record.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def update(self, record: T_model) -> T_model:
@@ -61,7 +61,7 @@ class GenericRepository[T_model](ABC):
         Returns:
             T_model: The updated record.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def update_by_id(self, id: UUID, fields: dict[str, Any]) -> T_model | None:
@@ -74,7 +74,7 @@ class GenericRepository[T_model](ABC):
         Returns:
             T_model | None: Updated record or none if not found.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def delete_by_id(self, id: UUID) -> bool:
@@ -86,4 +86,4 @@ class GenericRepository[T_model](ABC):
         Returns:
             bool: True if deleted, False otherwise.
         """
-        raise NotImplementedError()
+        ...

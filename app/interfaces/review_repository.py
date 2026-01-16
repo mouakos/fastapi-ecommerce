@@ -22,7 +22,7 @@ class ReviewRepository(GenericRepository[Review], ABC):
         Returns:
             Review | None: Review or none.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_by_user_id_and_product_id(self, user_id: UUID, product_id: UUID) -> Review | None:
@@ -35,7 +35,7 @@ class ReviewRepository(GenericRepository[Review], ABC):
         Returns:
             Review | None: Review or none.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
@@ -50,7 +50,7 @@ class ReviewRepository(GenericRepository[Review], ABC):
         Raises:
             ValueError: If invalid filters are provided.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_average_rating(self) -> float | None:
@@ -59,7 +59,7 @@ class ReviewRepository(GenericRepository[Review], ABC):
         Returns:
             float | None: Average rating or none if no reviews.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_all_paginated(
@@ -84,4 +84,4 @@ class ReviewRepository(GenericRepository[Review], ABC):
         Returns:
             tuple[int, list[Review]]: Total count and list of reviews.
         """
-        raise NotImplementedError()
+        ...

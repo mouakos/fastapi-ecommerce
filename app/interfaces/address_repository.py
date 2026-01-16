@@ -18,7 +18,7 @@ class AddressRepository(GenericRepository[Address], ABC):
         Args:
             user_id (UUID): ID of the user owning the address.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def unset_default_shipping_by_user_id(self, user_id: UUID) -> None:
@@ -27,7 +27,7 @@ class AddressRepository(GenericRepository[Address], ABC):
         Args:
             user_id (UUID): ID of the user owning the address.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_by_id_and_user_id(self, address_id: UUID, user_id: UUID) -> Address | None:
@@ -40,7 +40,7 @@ class AddressRepository(GenericRepository[Address], ABC):
         Returns:
             Address | None: The address if found, otherwise None.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
@@ -55,4 +55,4 @@ class AddressRepository(GenericRepository[Address], ABC):
         Raises:
             ValueError: Invalid filter condition.
         """
-        raise NotImplementedError()
+        ...

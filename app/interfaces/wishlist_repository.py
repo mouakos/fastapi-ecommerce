@@ -20,7 +20,7 @@ class WishlistRepository(GenericRepository[WishlistItem], ABC):
         Returns:
             list[Wishlist]: List of wishlist items.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_by_user_and_product(self, user_id: UUID, product_id: UUID) -> WishlistItem | None:
@@ -34,7 +34,7 @@ class WishlistRepository(GenericRepository[WishlistItem], ABC):
             Wishlist | None: Wishlist item or none.
 
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def delete_by_user_id(self, user_id: UUID) -> None:
@@ -43,7 +43,7 @@ class WishlistRepository(GenericRepository[WishlistItem], ABC):
         Args:
             user_id (UUID): User ID.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def count_by_user_id(self, user_id: UUID) -> int:
@@ -55,4 +55,4 @@ class WishlistRepository(GenericRepository[WishlistItem], ABC):
         Returns:
             int: Count of wishlist items.
         """
-        raise NotImplementedError()
+        ...

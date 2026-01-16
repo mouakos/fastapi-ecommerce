@@ -20,7 +20,7 @@ class CartRepository(GenericRepository[Cart], ABC):
         Returns:
             Cart | None: Cart or none.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_by_session_id(self, session_id: str) -> Cart | None:
@@ -32,7 +32,7 @@ class CartRepository(GenericRepository[Cart], ABC):
         Returns:
             Cart | None: Cart or none.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_item_by_cart_and_product(
@@ -47,7 +47,7 @@ class CartRepository(GenericRepository[Cart], ABC):
         Returns:
             Cart | None: Cart item or none.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_or_create(self, user_id: UUID | None, session_id: str | None) -> Cart:
@@ -63,4 +63,4 @@ class CartRepository(GenericRepository[Cart], ABC):
         Raises:
             ValueError: If session_id is not provided for guest cart.
         """
-        raise NotImplementedError()
+        ...

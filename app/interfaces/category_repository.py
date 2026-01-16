@@ -19,7 +19,7 @@ class CategoryRepository(GenericRepository[Category], ABC):
         Returns:
             Category | None: Category or none.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def generate_slug(self, name: str) -> str:
@@ -31,4 +31,4 @@ class CategoryRepository(GenericRepository[Category], ABC):
         Returns:
             str: Generated unique slug.
         """
-        raise NotImplementedError()
+        ...

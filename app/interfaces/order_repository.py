@@ -19,7 +19,7 @@ class OrderRepository(GenericRepository[Order], ABC):
         Returns:
             Decimal: Total sales amount.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_total_sales_by_last_days(self, days: int) -> Decimal:
@@ -31,7 +31,7 @@ class OrderRepository(GenericRepository[Order], ABC):
         Returns:
             Decimal: Total sales amount over the last specified number of days.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_total_sales_by_user(self, user_id: UUID) -> Decimal:
@@ -43,7 +43,7 @@ class OrderRepository(GenericRepository[Order], ABC):
         Returns:
             Decimal: Total sales amount for the specified user.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
@@ -58,7 +58,7 @@ class OrderRepository(GenericRepository[Order], ABC):
         Raises:
             ValueError: If invalid filters are provided.
         """
-        raise NotImplementedError()
+        ...
 
     @abstractmethod
     async def get_all_paginated(
@@ -79,4 +79,4 @@ class OrderRepository(GenericRepository[Order], ABC):
         Returns:
             tuple[int, list[Order]]: Total count and list of orders.
         """
-        raise NotImplementedError()
+        ...
