@@ -13,19 +13,6 @@ class OrderRepository(GenericRepository[Order], ABC):
     """Interface for Order repository."""
 
     @abstractmethod
-    async def user_has_purchased_product(self, user_id: UUID, product_id: UUID) -> bool:
-        """Check if a user has ordered a specific product.
-
-        Args:
-            user_id (UUID): User ID.
-            product_id (UUID): Product ID.
-
-        Returns:
-            bool: True if the user has ordered the product, False otherwise.
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
     async def get_total_sales(self) -> Decimal:
         """Get total sales amount.
 
