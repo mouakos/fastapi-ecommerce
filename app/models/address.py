@@ -23,7 +23,7 @@ class Address(ModelBase, TimestampMixin, table=True):
     city: str = Field(max_length=100)
     state: str | None = Field(None, max_length=100)
     postal_code: str = Field(max_length=20)
-    country: str = Field(max_length=100)
+    country: str = Field(max_length=2)
     phone_number: str | None = Field(None, max_length=20)
     is_default_shipping: bool = False
     is_default_billing: bool = False

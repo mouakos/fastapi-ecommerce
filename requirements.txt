@@ -11,3 +11,5 @@ pydantic[email]
 pyjwt
 pwdlib[argon2]
 stripe
+pycountry
+phonenumbers
