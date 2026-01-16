@@ -40,7 +40,7 @@ class SqlAddressRepository(SqlGenericRepository[Address], AddressRepository):
         result = await self._session.exec(stmt)
         return result.first() or 0
 
-    async def get_for_user(self, address_id: UUID, user_id: UUID) -> Address | None:
+    async def get_by_id_and_user_id(self, address_id: UUID, user_id: UUID) -> Address | None:
         """Get a single address for a user.
 
         Args:
@@ -54,7 +54,7 @@ class SqlAddressRepository(SqlGenericRepository[Address], AddressRepository):
         result = await self._session.exec(stmt)
         return result.first()
 
-    async def unset_default_billing_for_user(self, user_id: UUID) -> None:
+    async def unset_default_billing_by_user_id(self, user_id: UUID) -> None:
         """Unset the default billing address for a user.
 
         Args:
@@ -68,7 +68,7 @@ class SqlAddressRepository(SqlGenericRepository[Address], AddressRepository):
             self._session.add(address)
             await self._session.flush()
 
-    async def unset_default_shipping_for_user(self, user_id: UUID) -> None:
+    async def unset_default_shipping_by_user_id(self, user_id: UUID) -> None:
         """Unset the default shipping address for a user.
 
         Args:

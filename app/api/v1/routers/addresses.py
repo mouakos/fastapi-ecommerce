@@ -37,7 +37,7 @@ async def add_user_address(
     address_service: AddressServiceDep,
 ) -> AddressRead:
     """Add a new address to the currently authenticated user's account."""
-    return await address_service.create_user_address(current_user.id, data)
+    return await address_service.add_user_address(current_user.id, data)
 
 
 @router.patch(

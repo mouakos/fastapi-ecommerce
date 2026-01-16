@@ -12,7 +12,7 @@ class AddressRepository(GenericRepository[Address], ABC):
     """Interface for Address repository."""
 
     @abstractmethod
-    async def unset_default_billing_for_user(self, user_id: UUID) -> None:
+    async def unset_default_billing_by_user_id(self, user_id: UUID) -> None:
         """Unset the default billing address for a user.
 
         Args:
@@ -21,7 +21,7 @@ class AddressRepository(GenericRepository[Address], ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def unset_default_shipping_for_user(self, user_id: UUID) -> None:
+    async def unset_default_shipping_by_user_id(self, user_id: UUID) -> None:
         """Unset the default shipping address for a user.
 
         Args:
@@ -30,7 +30,7 @@ class AddressRepository(GenericRepository[Address], ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def get_for_user(self, address_id: UUID, user_id: UUID) -> Address | None:
+    async def get_by_id_and_user_id(self, address_id: UUID, user_id: UUID) -> Address | None:
         """Get a single address for a user.
 
         Args:
