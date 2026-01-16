@@ -8,7 +8,7 @@ from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.interfaces.order_repository import OrderRepository
-from app.models.order import Order, OrderStatus
+from app.models.order import Order, OrderItem, OrderStatus
 from app.repositories.sql_generic_repository import SqlGenericRepository
 
 
@@ -18,6 +18,30 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
     def __init__(self, session: AsyncSession) -> None:
         """Initialize the repository with a database session."""
         super().__init__(session, Order)
+
+    async def user_has_purchased_product(self, user_id: UUID, product_id: UUID) -> bool:
+        """Check if a user has ordered a specific product.
+
+        Args:
+            user_id (UUID): User ID.
+            product_id (UUID): Product ID.
+
+        Returns:
+            bool: True if the user has ordered the product, False otherwise.
+        """
+        stmt = (
+            select(func.count())
+            .select_from(Order)
+            .join(Order.items)  # type: ignore [arg-type]
+            .where(
+                (Order.user_id == user_id)
+                & (Order.status == OrderStatus.PAID)
+                & (OrderItem.product_id == product_id)
+            )
+        )
+        result = await self._session.exec(stmt)
+        count = result.first() or 0
+        return count > 0
 
     async def get_total_sales(self) -> Decimal:
         """Get total sales amount.

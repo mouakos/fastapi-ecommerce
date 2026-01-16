@@ -7,7 +7,6 @@ from fastapi import HTTPException
 
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.review import Review
-from app.models.user import UserRole
 from app.schemas.review import ReviewCreate, ReviewRead, ReviewUpdate
 
 
@@ -18,27 +17,45 @@ class ReviewService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def create(self, current_user_id: UUID, data: ReviewCreate) -> ReviewRead:
-        """Create a new review.
+    async def add_product_review(self, user_id: UUID, data: ReviewCreate) -> ReviewRead:
+        """Create a new review for a product.
 
         Args:
-            current_user_id (UUID): The ID of the user creating the review.
+            user_id (UUID): The ID of the user creating the review.
             data (ReviewCreate): Data for the new review.
 
         Returns:
             ReviewRead: The created review.
+
+        Raises:
+            HTTPException: Product does not exist or user has already reviewed the product or
+                has not purchased the product.
         """
+        product = await self.uow.products.get_by_id(data.product_id)
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found.")
+
+        existing = await self.uow.reviews.get_by_user_id_and_product_id(user_id, data.product_id)
+        if existing:
+            raise HTTPException(status_code=400, detail="You have already reviewed this product.")
+
+        purchased = await self.uow.orders.user_has_purchased_product(user_id, data.product_id)
+        if not purchased:
+            raise HTTPException(
+                status_code=400, detail="You can only review products you have purchased."
+            )
+
         review_data = data.model_dump()
         new_review = Review(
-            user_id=current_user_id,
+            user_id=user_id,
             **review_data,
         )
         return await self.uow.reviews.add(new_review)
 
-    async def get_by_product(
+    async def get_product_reviews(
         self, product_id: UUID, skip: int = 0, limit: int = 100
     ) -> list[ReviewRead]:
-        """Get reviews by product ID.
+        """Get reviews for a specific product.
 
         Args:
             product_id (UUID): The ID of the product.
@@ -47,10 +64,17 @@ class ReviewService:
 
         Returns:
             list[ReviewRead]: List of reviews for the product.
-        """
-        return await self.uow.reviews.get_by_product(product_id, skip=skip, limit=limit)
 
-    async def get_by_id(self, review_id: UUID) -> ReviewRead:
+        Raises:
+            HTTPException: If the product does not exist.
+        """
+        product = await self.uow.products.get_by_id(product_id)
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found.")
+
+        return await self.uow.reviews.get_by_product_id(product_id, skip=skip, limit=limit)
+
+    async def get_review(self, review_id: UUID) -> ReviewRead:
         """Get a review by its ID.
 
         Args:
@@ -58,6 +82,9 @@ class ReviewService:
 
         Returns:
             ReviewRead: The review with the specified ID.
+
+        Raises:
+            HTTPException: If the review is not found
         """
         review = await self.uow.reviews.get_by_id(review_id)
         if not review:
@@ -65,23 +92,23 @@ class ReviewService:
 
         return review
 
-    async def update(self, user_id: UUID, review_id: UUID, data: ReviewUpdate) -> ReviewRead:
+    async def update_review(self, review_id: UUID, user_id: UUID, data: ReviewUpdate) -> ReviewRead:
         """Update a review by its ID.
 
         Args:
-            user_id (UUID): The ID of the current user.
             review_id (UUID): The ID of the review to update.
+            user_id (UUID): The ID of the current user.
             data (ReviewUpdate): Updated data for the review.
 
         Returns:
             ReviewRead: The updated review.
+
+        Raises:
+            HTTPException: If the review is not found
         """
-        review = await self.uow.reviews.get_by_id(review_id)
+        review = await self.uow.reviews.get_by_id_and_user_id(review_id, user_id)
         if not review:
             raise HTTPException(status_code=404, detail="Review not found.")
-
-        if review.user_id != user_id:
-            raise HTTPException(status_code=403, detail="Not authorized to update this review.")
 
         review_data = data.model_dump(exclude_unset=True)
         for key, value in review_data.items():
@@ -89,19 +116,16 @@ class ReviewService:
 
         return await self.uow.reviews.update(review)
 
-    async def delete(self, user_id: UUID, review_id: UUID) -> None:
+    async def delete_review(self, review_id: UUID, user_id: UUID) -> None:
         """Delete a review by its ID.
 
         Args:
-            user_id (UUID): The ID of the current user.
             review_id (UUID): The ID of the review to delete.
+            user_id (UUID): The ID of the current user.
         """
-        review = await self.uow.reviews.get_by_id(review_id)
+        review = await self.uow.reviews.get_by_id_and_user_id(review_id, user_id)
 
         if not review:
             raise HTTPException(status_code=404, detail="Review not found.")
-
-        if review.user_id != user_id and review.user.role != UserRole.ADMIN:
-            raise HTTPException(status_code=403, detail="Not authorized to delete this review.")
 
         await self.uow.reviews.delete_by_id(review_id)

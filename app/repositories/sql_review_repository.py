@@ -19,10 +19,10 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         """Initialize the repository with a database session."""
         super().__init__(session, Review)
 
-    async def get_by_product(
+    async def get_by_product_id(
         self, product_id: UUID, skip: int = 0, limit: int = 100
     ) -> list[Review]:
-        """Get all reviews for a specific product.
+        """Get reviews by product ID with pagination.
 
         Args:
             product_id (UUID): Product ID.
@@ -35,6 +35,34 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         stmt = select(Review).where(Review.product_id == product_id).offset(skip).limit(limit)
         result = await self._session.exec(stmt)
         return list(result.all())
+
+    async def get_by_id_and_user_id(self, review_id: UUID, user_id: UUID) -> Review | None:
+        """Get a review by its ID and user ID.
+
+        Args:
+            review_id (UUID): Review ID.
+            user_id (UUID): User ID.
+
+        Returns:
+            Review | None: Review or none.
+        """
+        stmt = select(Review).where((Review.id == review_id) & (Review.user_id == user_id))
+        result = await self._session.exec(stmt)
+        return result.first()
+
+    async def get_by_user_id_and_product_id(self, user_id: UUID, product_id: UUID) -> Review | None:
+        """Get a review by user ID and product ID.
+
+        Args:
+            user_id (UUID): User ID.
+            product_id (UUID): Product ID.
+
+        Returns:
+            Review | None: Review or none.
+        """
+        stmt = select(Review).where((Review.user_id == user_id) & (Review.product_id == product_id))
+        result = await self._session.exec(stmt)
+        return result.first()
 
     async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
         """Get total number of reviews.

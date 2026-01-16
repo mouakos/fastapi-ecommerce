@@ -12,10 +12,10 @@ class ReviewRepository(GenericRepository[Review], ABC):
     """Interface for Review repository."""
 
     @abstractmethod
-    async def get_by_product(
+    async def get_by_product_id(
         self, product_id: UUID, skip: int = 0, limit: int = 10
     ) -> list[Review]:
-        """Get all reviews for a specific product.
+        """Get reviews by product ID with pagination.
 
         Args:
             product_id (UUID): Product ID.
@@ -24,6 +24,32 @@ class ReviewRepository(GenericRepository[Review], ABC):
 
         Returns:
             list[Review]: List of reviews.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def get_by_id_and_user_id(self, review_id: UUID, user_id: UUID) -> Review | None:
+        """Get a review by its ID and user ID.
+
+        Args:
+            review_id (UUID): Review ID.
+            user_id (UUID): User ID.
+
+        Returns:
+            Review | None: Review or none.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def get_by_user_id_and_product_id(self, user_id: UUID, product_id: UUID) -> Review | None:
+        """Get a review by user ID and product ID.
+
+        Args:
+            user_id (UUID): User ID.
+            product_id (UUID): Product ID.
+
+        Returns:
+            Review | None: Review or none.
         """
         raise NotImplementedError()
 
