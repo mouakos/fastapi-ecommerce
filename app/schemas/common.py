@@ -48,3 +48,38 @@ class PaginatedRead[T](BaseModel):
     links: PaginationLinks | None = Field(None, description="HATEOAS links for navigation")
 
     model_config = ConfigDict(frozen=True)
+
+
+class PageLinks(BaseModel):
+    """HATEOAS links for paginated responses."""
+
+    self: str = Field(..., description="Link to the current page")
+    first: str = Field(..., description="Link to the first page")
+    last: str = Field(..., description="Link to the last page")
+    prev: str | None = Field(None, description="Link to the previous page, or null if none")
+    next: str | None = Field(None, description="Link to the next page, or null if none")
+
+    model_config = ConfigDict(frozen=True)
+
+
+class PageMeta(BaseModel):
+    """Pagination metadata."""
+
+    page: int = Field(..., description="Current page number (1-based)")
+    page_size: int = Field(..., description="Number of items per page")
+    total_items: int = Field(..., description="Total number of items across all pages")
+    total_pages: int = Field(..., description="Total number of pages")
+    from_item: int | None = Field(None, description="Starting item index (1-based)")
+    to_item: int | None = Field(None, description="Ending item index (1-based)")
+
+    model_config = ConfigDict(frozen=True)
+
+
+class PageResponse[T](BaseModel):
+    """Generic paginated response with HATEOAS links."""
+
+    items: list[T] = Field(..., description="List of items for the current page")
+    meta: PageMeta = Field(..., description="Pagination metadata")
+    links: PageLinks = Field(..., description="HATEOAS links for navigation")
+
+    model_config = ConfigDict(frozen=True)
