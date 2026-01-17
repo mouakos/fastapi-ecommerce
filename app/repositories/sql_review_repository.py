@@ -32,7 +32,7 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         result = await self._session.exec(stmt)
         return result.first()
 
-    async def find_approved_review_by_id(self, review_id: UUID) -> Review | None:
+    async def find_approved_review(self, review_id: UUID) -> Review | None:
         """Find an approved review by its ID.
 
         Args:

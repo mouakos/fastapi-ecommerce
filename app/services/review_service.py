@@ -16,7 +16,7 @@ class ReviewService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def add_product_review(self, user_id: UUID, data: ReviewCreate) -> Review:
+    async def add_review(self, user_id: UUID, data: ReviewCreate) -> Review:
         """Create a new review for a product.
 
         Args:
@@ -46,7 +46,7 @@ class ReviewService:
         )
         return await self.uow.reviews.add(new_review)
 
-    async def get_product_reviews(
+    async def list_reviews(
         self, product_id: UUID, page: int = 1, page_size: int = 10
     ) -> tuple[int, list[Review]]:
         """Get reviews for a specific product.
@@ -83,7 +83,7 @@ class ReviewService:
         Raises:
             HTTPException: If the review is not found or not approved.
         """
-        review = await self.uow.reviews.find_approved_review_by_id(review_id)
+        review = await self.uow.reviews.find_approved_review(review_id)
         if not review:
             raise HTTPException(status_code=404, detail="Review not found.")
 

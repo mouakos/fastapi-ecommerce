@@ -18,15 +18,15 @@ router = APIRouter(prefix="/reviews", tags=["Reviews"])
     response_model=ReviewRead,
     status_code=status.HTTP_201_CREATED,
     summary="Add product review",
-    description="Submit a new review for a product with rating and optional comment. Requires authentication.",
+    description="Submit a new review for a product.",
 )
-async def add_product_review(
+async def add_review(
     data: ReviewCreate,
     review_service: ReviewServiceDep,
     current_user: CurrentUserDep,
 ) -> ReviewRead:
     """Create a new review for a product."""
-    return await review_service.add_product_review(current_user.id, data)
+    return await review_service.add_review(current_user.id, data)
 
 
 @router.get(
@@ -35,16 +35,14 @@ async def add_product_review(
     summary="Get product reviews",
     description="Retrieve all approved reviews for a specific product with pagination support.",
 )
-async def get_product_reviews(
+async def list_reviews(
     product_id: UUID,
     review_service: ReviewServiceDep,
     page: int = Query(1, description="Page number"),
     page_size: int = Query(10, description="Number of reviews per page"),
 ) -> Page[ReviewRead]:
     """Get all reviews for a specific product."""
-    total, items = await review_service.get_product_reviews(
-        product_id, page=page, page_size=page_size
-    )
+    total, items = await review_service.list_reviews(product_id, page=page, page_size=page_size)
     return build_page(items=items, page=page, size=page_size, total=total)  # type: ignore [arg-type]
 
 
@@ -66,7 +64,7 @@ async def get_review(
     "/{review_id}",
     response_model=ReviewRead,
     summary="Update review",
-    description="Update an existing review's rating or comment. Only the review author can modify their review.",
+    description="Update an existing review's rating or comment.",
 )
 async def update_review(
     review_id: UUID,
@@ -82,7 +80,7 @@ async def update_review(
     "/{review_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete review",
-    description="Permanently delete a review. Only the review author can delete their review. This action cannot be undone.",
+    description="Permanently delete a review.",
 )
 async def delete_review(
     review_id: UUID,
