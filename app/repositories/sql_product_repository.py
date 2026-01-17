@@ -1,7 +1,6 @@
 """SQL Product repository implementation."""
 
 from datetime import timedelta
-from typing import Any
 from uuid import UUID
 
 from slugify import slugify
@@ -126,8 +125,8 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
 
         return products, total
 
-    async def get_by_slug(self, slug: str) -> Product | None:
-        """Get a single product by slug.
+    async def find_by_slug(self, slug: str) -> Product | None:
+        """Find a single product by slug.
 
         Args:
             slug (str): Product slug.
@@ -163,8 +162,8 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
             slug = f"{base_slug}-{index}"
             index += 1
 
-    async def get_review_count(self, product_id: UUID) -> int:
-        """Get the total number of reviews for a product.
+    async def count_reviews(self, product_id: UUID) -> int:
+        """Count the total number of reviews for a product.
 
         Args:
             product_id (UUID): Product ID.
@@ -176,8 +175,8 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         result = await self._session.exec(stmt)
         return result.first() or 0
 
-    async def get_average_rating(self, product_id: UUID) -> float | None:
-        """Get the average rating for a product.
+    async def calculate_average_rating(self, product_id: UUID) -> float | None:
+        """Calculate the average rating for a product.
 
         Args:
             product_id (UUID): Product ID.
@@ -271,29 +270,6 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         )
         result = await self._session.exec(stmt)
         return list(result.all())
-
-    async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
-        """Get total number of products.
-
-        Args:
-            **filters: Filter conditions.
-
-        Returns:
-            int: Total number of products.
-
-        Raise:
-            ValueError: If an unknown filter is provided.
-        """
-        stmt = select(func.count()).select_from(Product).where(Product.is_active)
-
-        for key, value in filters.items():
-            if hasattr(Product, key):
-                stmt = stmt.where(getattr(Product, key) == value)
-            else:
-                raise ValueError(f"Unknown filter: {key}")
-
-        result = await self._session.exec(stmt)
-        return result.first() or 0
 
     async def count_low_stock(self, threshold: int = 10) -> int:
         """Get number of products that are low in stock.

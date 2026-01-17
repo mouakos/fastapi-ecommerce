@@ -49,7 +49,7 @@ async def create_category(
 )
 async def get_category(category_id: UUID, category_service: CategoryServiceDep) -> CategoryRead:
     """Retrieve a category by its ID."""
-    return await category_service.get_by_id(category_id)
+    return await category_service.find_by_id(category_id)
 
 
 @router.get(

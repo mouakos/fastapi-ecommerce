@@ -40,15 +40,3 @@ class AddressRepository(GenericRepository[Address], ABC):
             Address | None: The address if found, otherwise None.
         """
         ...
-
-    @abstractmethod
-    async def count(self, user_id: UUID) -> int:  # noqa: ANN401
-        """Count all addresses for a given user.
-
-        Args:
-            user_id (UUID): ID of the user owning the addresses.
-
-        Returns:
-            int: The count of addresses for the given user.
-        """
-        ...

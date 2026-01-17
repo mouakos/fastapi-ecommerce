@@ -30,7 +30,7 @@ class ReviewService:
             HTTPException: Product does not exist or user has already reviewed the product or
                 has not purchased the product.
         """
-        product = await self.uow.products.get_by_id(data.product_id)
+        product = await self.uow.products.find_by_id(data.product_id)
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
 
@@ -62,7 +62,7 @@ class ReviewService:
         Raises:
             HTTPException: If the product does not exist.
         """
-        product = await self.uow.products.get_by_id(product_id)
+        product = await self.uow.products.find_by_id(product_id)
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
 
@@ -130,4 +130,4 @@ class ReviewService:
         if not review:
             raise HTTPException(status_code=404, detail="Review not found.")
 
-        await self.uow.reviews.delete_by_id(review_id)
+        await self.uow.reviews.delete(review)

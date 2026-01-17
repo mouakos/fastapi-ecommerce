@@ -1,4 +1,4 @@
-"""Interface for Order repository."""
+"""Interface for Payment repository."""
 
 from abc import ABC, abstractmethod
 
@@ -10,8 +10,8 @@ class PaymentRepository(GenericRepository[Payment], ABC):
     """Interface for Payment repository."""
 
     @abstractmethod
-    async def get_by_session_id(self, session_id: str) -> Payment | None:
-        """Get a single payment by session ID.
+    async def find_by_session_id(self, session_id: str) -> Payment | None:
+        """Find a payment by session ID.
 
         Args:
             session_id (str): Session ID.

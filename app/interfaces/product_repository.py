@@ -1,7 +1,7 @@
 """Interface for Product repository."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Literal
+from typing import Literal
 from uuid import UUID
 
 from app.interfaces.generic_repository import GenericRepository
@@ -49,8 +49,8 @@ class ProductRepository(GenericRepository[Product], ABC):
         ...
 
     @abstractmethod
-    async def get_by_slug(self, slug: str) -> Product | None:
-        """Get a single product by slug.
+    async def find_by_slug(self, slug: str) -> Product | None:
+        """Find a single product by slug.
 
         Args:
             slug (str): Product slug.
@@ -73,8 +73,8 @@ class ProductRepository(GenericRepository[Product], ABC):
         ...
 
     @abstractmethod
-    async def get_review_count(self, product_id: UUID) -> int:
-        """Get the total number of reviews for a product.
+    async def count_reviews(self, product_id: UUID) -> int:
+        """Count the total number of reviews for a product.
 
         Args:
             product_id (UUID): Product ID.
@@ -85,8 +85,8 @@ class ProductRepository(GenericRepository[Product], ABC):
         ...
 
     @abstractmethod
-    async def get_average_rating(self, product_id: UUID) -> float | None:
-        """Get the average rating for a product.
+    async def calculate_average_rating(self, product_id: UUID) -> float | None:
+        """Calculate the average rating for a product.
 
         Args:
             product_id (UUID): Product ID.
@@ -98,7 +98,7 @@ class ProductRepository(GenericRepository[Product], ABC):
 
     @abstractmethod
     async def list_autocomplete_suggestions(self, query: str, limit: int = 10) -> list[str]:
-        """Get autocomplete suggestions for product names based on a search query.
+        """List autocomplete suggestions for product names based on a search query.
 
         Args:
             query (str): Search query.
@@ -111,7 +111,7 @@ class ProductRepository(GenericRepository[Product], ABC):
 
     @abstractmethod
     async def list_by_category_slug(self, category_slug: str) -> list[Product]:
-        """Get products by category slug.
+        """List products by category slug.
 
         Args:
             category_slug (str): Category slug.
@@ -123,7 +123,7 @@ class ProductRepository(GenericRepository[Product], ABC):
 
     @abstractmethod
     async def list_by_category_id(self, category_id: UUID) -> list[Product]:
-        """Get products by category ID.
+        """List products by category ID.
 
         Args:
             category_id (UUID): Category ID.
@@ -134,23 +134,8 @@ class ProductRepository(GenericRepository[Product], ABC):
         ...
 
     @abstractmethod
-    async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
-        """Get total number of products.
-
-        Args:
-            **filters: Filter conditions.
-
-        Returns:
-            int: Total number of products.
-
-        Raises:
-            ValueError: Invalid filter condition.
-        """
-        ...
-
-    @abstractmethod
     async def count_low_stock(self, threshold: int = 10) -> int:
-        """Get number of products that are low in stock.
+        """Count number of products that are low in stock.
 
         Args:
             threshold (int): Stock threshold.
@@ -162,7 +147,7 @@ class ProductRepository(GenericRepository[Product], ABC):
 
     @abstractmethod
     async def list_low_stock(self, threshold: int = 10) -> list[Product]:
-        """Retrieve products that are low in stock.
+        """List products that are low in stock.
 
         Args:
             threshold (int): Stock threshold.
@@ -174,7 +159,7 @@ class ProductRepository(GenericRepository[Product], ABC):
 
     @abstractmethod
     async def list_top_selling(self, limit: int = 10, days: int = 30) -> list[Product]:
-        """Retrieve top selling products within a specified time frame.
+        """List top selling products within a specified time frame.
 
         Args:
             limit (int): Number of top selling products to retrieve.

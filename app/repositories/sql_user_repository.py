@@ -1,7 +1,6 @@
 """SQL User repository implementation."""
 
 from datetime import timedelta
-from typing import Any
 
 from sqlalchemy import func
 from sqlmodel import select
@@ -20,8 +19,8 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
         """Initialize the repository with a database session."""
         super().__init__(session, User)
 
-    async def get_by_email(self, email: str) -> User | None:
-        """Get a single user by email.
+    async def find_by_email(self, email: str) -> User | None:
+        """Find a user by email.
 
         Args:
             email (str): User email.
@@ -32,28 +31,6 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
         stmt = select(User).where(User.email == email)
         result = await self._session.exec(stmt)
         return result.first()
-
-    async def count(self, **filters: Any) -> int:  # noqa: ANN401
-        """Get total number of users.
-
-        Args:
-            **filters: Filter conditions.
-
-        Returns:
-            int: Total number of users.
-
-        Raises:
-            ValueError: If invalid filters are provided.
-        """
-        stmt = select(func.count()).select_from(User)
-
-        for attr, value in filters.items():
-            if not hasattr(User, attr):
-                raise ValueError(f"Invalid filter condition: {attr}")
-            stmt = stmt.where(getattr(User, attr) == value)
-
-        result = await self._session.exec(stmt)
-        return result.first() or 0
 
     async def count_recent(self, days: int) -> int:
         """Get number of users registered in the last N days.

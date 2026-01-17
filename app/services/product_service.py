@@ -85,7 +85,7 @@ class ProductService:
             raise HTTPException(status_code=400, detail="Query must be at least 2 characters long.")
         return await self.uow.products.list_autocomplete_suggestions(query, limit)
 
-    async def get_by_id(
+    async def find_by_id(
         self,
         product_id: UUID,
     ) -> Product:
@@ -100,7 +100,7 @@ class ProductService:
         Raises:
             HTTPException: If the product is not found.
         """
-        product = await self.uow.products.get_by_id(product_id)
+        product = await self.uow.products.find_by_id(product_id)
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
         return product
@@ -114,7 +114,7 @@ class ProductService:
         Returns:
             float | None: The average rating of the product, or None if no ratings exist.
         """
-        return await self.uow.products.get_average_rating(product_id)
+        return await self.uow.products.calculate_average_rating(product_id)
 
     async def get_review_count(self, product_id: UUID) -> int:
         """Retrieve the total number of reviews for a product.
@@ -125,7 +125,7 @@ class ProductService:
         Returns:
             int: The total number of reviews for the product.
         """
-        return await self.uow.products.get_review_count(product_id)
+        return await self.uow.products.count_reviews(product_id)
 
     async def get_by_slug(
         self,
@@ -142,7 +142,7 @@ class ProductService:
         Raises:
             HTTPException: If the product is not found.
         """
-        product = await self.uow.products.get_by_slug(slug)
+        product = await self.uow.products.find_by_slug(slug)
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
         return product
@@ -162,7 +162,7 @@ class ProductService:
         Raises:
             HTTPException: If the category is not found.
         """
-        category = await self.uow.categories.get_by_slug(category_slug)
+        category = await self.uow.categories.find_by_slug(category_slug)
         if not category:
             raise HTTPException(status_code=404, detail="Category not found.")
 
@@ -183,7 +183,7 @@ class ProductService:
         Raises:
             HTTPException: If the category is not found.
         """
-        category = await self.uow.categories.get_by_id(category_id)
+        category = await self.uow.categories.find_by_id(category_id)
         if not category:
             raise HTTPException(status_code=404, detail="Category not found.")
 
@@ -207,7 +207,7 @@ class ProductService:
         """
         # Validate category existence if category_id is provided
         if data.category_id:
-            category = await self.uow.categories.get_by_id(data.category_id)
+            category = await self.uow.categories.find_by_id(data.category_id)
             if not category:
                 raise HTTPException(status_code=404, detail="Category not found.")
 
@@ -239,13 +239,13 @@ class ProductService:
         Raises:
             HTTPException: If the product or category does not exist.
         """
-        product = await self.uow.products.get_by_id(product_id)
+        product = await self.uow.products.find_by_id(product_id)
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
 
         # Validate category existence if category_id is provided
         if data.category_id:
-            category = await self.uow.categories.get_by_id(data.category_id)
+            category = await self.uow.categories.find_by_id(data.category_id)
             if not category:
                 raise HTTPException(status_code=404, detail="Category not found.")
 
@@ -270,5 +270,7 @@ class ProductService:
         Raises:
             HTTPException: If the product does not exist.
         """
-        if not await self.uow.products.delete_by_id(product_id):
+        product = await self.uow.products.find_by_id(product_id)
+        if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
+        await self.uow.products.delete(product)

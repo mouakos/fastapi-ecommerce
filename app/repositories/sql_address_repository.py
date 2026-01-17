@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from sqlmodel import func, select
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.interfaces.address_repository import AddressRepository
@@ -16,19 +16,6 @@ class SqlAddressRepository(SqlGenericRepository[Address], AddressRepository):
     def __init__(self, session: AsyncSession) -> None:
         """Initialize the repository with a database session."""
         super().__init__(session, Address)
-
-    async def count(self, user_id: UUID) -> int:
-        """Count all addresses for a given user.
-
-        Args:
-            user_id (UUID): ID of the user owning the addresses.
-
-        Returns:
-            int: The count of addresses for the given user.
-        """
-        stmt = select(func.count()).select_from(Address).where(Address.user_id == user_id)
-        result = await self._session.exec(stmt)
-        return result.first() or 0
 
     async def find_user_address(self, address_id: UUID, user_id: UUID) -> Address | None:
         """Find a user address by address ID and user ID.

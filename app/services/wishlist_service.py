@@ -23,11 +23,11 @@ class WishlistService:
             user_id (UUID): User ID.
             product_id (UUID): Product ID.
         """
-        product = await self.uow.products.get_by_id(product_id)
+        product = await self.uow.products.find_by_id(product_id)
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
 
-        wishlist_item = await self.uow.wishlists.find_by_user_and_product(user_id, product_id)
+        wishlist_item = await self.uow.wishlists.find_item(user_id, product_id)
         if not wishlist_item:
             new_wishlist_item = WishlistItem(user_id=user_id, product_id=product_id)
             await self.uow.wishlists.add(new_wishlist_item)
@@ -41,7 +41,7 @@ class WishlistService:
         Returns:
             list[WishlistItem]: Wishlist items.
         """
-        return await self.uow.wishlists.find_by_user_id(user_id)
+        return await self.uow.wishlists.list_by_user_id(user_id)
 
     async def remove_item(self, user_id: UUID, product_id: UUID) -> None:
         """Remove a product from the user's wishlist.
@@ -50,11 +50,11 @@ class WishlistService:
             user_id (UUID): User ID.
             product_id (UUID): Product ID.
         """
-        wishlist_item = await self.uow.wishlists.find_by_user_and_product(user_id, product_id)
+        wishlist_item = await self.uow.wishlists.find_item(user_id, product_id)
         if not wishlist_item:
             raise HTTPException(status_code=404, detail="Product not found in wishlist.")
 
-        await self.uow.wishlists.delete_by_id(wishlist_item.id)
+        await self.uow.wishlists.delete(wishlist_item)
 
     async def clear(self, user_id: UUID) -> None:
         """Clear all wishlist items for a user.
@@ -73,7 +73,7 @@ class WishlistService:
         Returns:
             int: Wishlist item count.
         """
-        return await self.uow.wishlists.count(user_id)
+        return await self.uow.wishlists.count(user_id=user_id)
 
     async def move_to_cart(self, user_id: UUID, product_id: UUID) -> None:
         """Move a product from the wishlist to the cart.
@@ -82,7 +82,7 @@ class WishlistService:
             user_id (UUID): User ID.
             product_id (UUID): Product ID.
         """
-        product = await self.uow.products.get_by_id(product_id)
+        product = await self.uow.products.find_by_id(product_id)
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
 
@@ -92,17 +92,17 @@ class WishlistService:
         if product.stock < 1:
             raise HTTPException(status_code=400, detail="Product out of stock.")
 
-        wishlist_item = await self.uow.wishlists.find_by_user_and_product(user_id, product_id)
+        wishlist_item = await self.uow.wishlists.find_item(user_id, product_id)
         if not wishlist_item:
             raise HTTPException(status_code=404, detail="Product not found in wishlist.")
 
         # Add to cart
-        user_cart = await self.uow.carts.get_by_user_id(user_id)
+        user_cart = await self.uow.carts.find_user_cart(user_id)
         if not user_cart:
             user_cart = Cart(user_id=user_id)
             await self.uow.carts.add(user_cart)
 
-        cart_item = await self.uow.carts.get_item_by_cart_and_product(user_cart.id, product_id)
+        cart_item = await self.uow.carts.find_cart_item(user_cart.id, product_id)
         if cart_item:
             cart_item.quantity += 1
         else:
@@ -119,4 +119,4 @@ class WishlistService:
         await self.uow.carts.update(user_cart)
 
         # Remove from wishlist
-        await self.uow.wishlists.delete_by_id(wishlist_item.id)
+        await self.uow.wishlists.delete(wishlist_item)

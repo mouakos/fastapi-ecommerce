@@ -1,7 +1,6 @@
 """Interface for User repository."""
 
 from abc import ABC, abstractmethod
-from typing import Any
 
 from app.interfaces.generic_repository import GenericRepository
 from app.models.user import User, UserRole
@@ -11,8 +10,8 @@ class UserRepository(GenericRepository[User], ABC):
     """Interface for User repository."""
 
     @abstractmethod
-    async def get_by_email(self, email: str) -> User | None:
-        """Get a single user by email.
+    async def find_by_email(self, email: str) -> User | None:
+        """Find a user by email.
 
         Args:
             email (str): User email.
@@ -23,23 +22,8 @@ class UserRepository(GenericRepository[User], ABC):
         ...
 
     @abstractmethod
-    async def count(self, **filters: Any) -> int:  # noqa: ANN401
-        """Get total number of users.
-
-        Args:
-            **filters: Filter conditions.
-
-        Returns:
-            int: Total number of users.
-
-        Raises:
-            ValueError: If invalid filters are provided.
-        """
-        ...
-
-    @abstractmethod
     async def count_recent(self, days: int) -> int:
-        """Get number of users registered in the last N days.
+        """Count number of users registered in the last N days.
 
         Args:
             days (int): Number of days to look back from today.
@@ -57,7 +41,7 @@ class UserRepository(GenericRepository[User], ABC):
         role: UserRole | None = None,
         search: str | None = None,
     ) -> tuple[list[User], int]:
-        """Get all users with pagination and optional filters.
+        """Paginate users with optional filters.
 
         Args:
             page (int, optional): Page number. Defaults to 1.

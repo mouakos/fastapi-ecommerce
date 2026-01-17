@@ -13,8 +13,8 @@ class GenericRepository[T_model](ABC):
     """Generic base repository."""
 
     @abstractmethod
-    async def get_by_id(self, id: UUID) -> T_model | None:
-        """Get a single record by id.
+    async def find_by_id(self, id: UUID) -> T_model | None:
+        """Find a single record by id.
 
         Args:
             id (UUID): Record id.
@@ -26,7 +26,7 @@ class GenericRepository[T_model](ABC):
 
     @abstractmethod
     async def list_all(self, **filters: Any) -> list[T_model]:  # noqa: ANN401
-        """Gets a list of records.
+        """List records.
 
         Args:
             **filters: Filter conditions.
@@ -41,7 +41,7 @@ class GenericRepository[T_model](ABC):
 
     @abstractmethod
     async def add(self, record: T_model) -> T_model:
-        """Creates a new record.
+        """Create a new record.
 
         Args:
             record (T_model): The record to be created.
@@ -53,7 +53,7 @@ class GenericRepository[T_model](ABC):
 
     @abstractmethod
     async def update(self, record: T_model) -> T_model:
-        """Updates an existing record.
+        """Update an existing record.
 
         Args:
             record (T_model): The record to be updated incl. record id.
@@ -64,26 +64,26 @@ class GenericRepository[T_model](ABC):
         ...
 
     @abstractmethod
-    async def update_by_id(self, id: UUID, fields: dict[str, Any]) -> T_model | None:
-        """Updates specific fields of a record by id.
+    async def delete(self, record: T_model) -> None:
+        """Delete a record by id.
 
         Args:
-            id (UUID): Record id.
-            fields (dict[str, Any]): Fields to update.
+            record (T_model): The record to be deleted.
 
-        Returns:
-            T_model | None: Updated record or none if not found.
         """
         ...
 
     @abstractmethod
-    async def delete_by_id(self, id: UUID) -> bool:
-        """Deletes a record by id.
+    async def count(self, **filters: Any) -> int:  # noqa: ANN401
+        """Count total number of records.
 
         Args:
-            id (UUID): Record id.
+            **filters: Filter conditions.
 
         Returns:
-            bool: True if deleted, False otherwise.
+            int: Total number of records.
+
+        Raises:
+            ValueError: If invalid filters are provided.
         """
         ...

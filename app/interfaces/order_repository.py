@@ -2,7 +2,6 @@
 
 from abc import ABC, abstractmethod
 from decimal import Decimal
-from typing import Any
 from uuid import UUID
 
 from app.interfaces.generic_repository import GenericRepository
@@ -13,8 +12,8 @@ class OrderRepository(GenericRepository[Order], ABC):
     """Interface for Order repository."""
 
     @abstractmethod
-    async def get_total_sales(self) -> Decimal:
-        """Get total sales amount.
+    async def calculate_total_sales(self) -> Decimal:
+        """Calculate total sales amount.
 
         Returns:
             Decimal: Total sales amount.
@@ -22,8 +21,8 @@ class OrderRepository(GenericRepository[Order], ABC):
         ...
 
     @abstractmethod
-    async def get_total_sales_by_last_days(self, days: int) -> Decimal:
-        """Get total sales amount over the last specified number of days.
+    async def calculate_recent_sales(self, days: int) -> Decimal:
+        """Calculate total sales amount over the last specified number of days.
 
         Args:
             days (int): Number of days to look back.
@@ -34,29 +33,14 @@ class OrderRepository(GenericRepository[Order], ABC):
         ...
 
     @abstractmethod
-    async def get_total_sales_by_user(self, user_id: UUID) -> Decimal:
-        """Get total sales amount for a specific user.
+    async def calculate_user_sales(self, user_id: UUID) -> Decimal:
+        """Calculate total sales amount for a specific user.
 
         Args:
             user_id (UUID): User ID.
 
         Returns:
             Decimal: Total sales amount for the specified user.
-        """
-        ...
-
-    @abstractmethod
-    async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
-        """Get total number of orders.
-
-        Args:
-            **filters: Filter conditions.
-
-        Returns:
-            int: Total number of orders.
-
-        Raises:
-            ValueError: If invalid filters are provided.
         """
         ...
 
@@ -68,7 +52,7 @@ class OrderRepository(GenericRepository[Order], ABC):
         status: OrderStatus | None = None,
         user_id: UUID | None = None,
     ) -> tuple[list[Order], int]:
-        """Get all orders with pagination and optional filters.
+        """Paginate orders with optional filters.
 
         Args:
             page (int, optional): Page number. Defaults to 1.

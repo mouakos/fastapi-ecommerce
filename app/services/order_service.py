@@ -20,16 +20,16 @@ class OrderService:
     async def checkout(self, user_id: UUID, data: OrderCreate) -> Order:
         """Create a new order for the user."""
         # Validate addresses
-        billing_address = await self.uow.addresses.get_by_id(data.billing_address_id)
+        billing_address = await self.uow.addresses.find_by_id(data.billing_address_id)
         if not billing_address or billing_address.user_id != user_id:
             raise HTTPException(status_code=400, detail="Invalid billing address.")
 
-        shipping_address = await self.uow.addresses.get_by_id(data.shipping_address_id)
+        shipping_address = await self.uow.addresses.find_by_id(data.shipping_address_id)
         if not shipping_address or shipping_address.user_id != user_id:
             raise HTTPException(status_code=400, detail="Invalid shipping address.")
 
         # Validate cart
-        cart = await self.uow.carts.get_by_user_id(user_id)
+        cart = await self.uow.carts.find_user_cart(user_id)
         if not cart or not cart.items:
             raise HTTPException(status_code=400, detail="Cart is empty.")
 
@@ -71,11 +71,11 @@ class OrderService:
             await self.uow.products.update(item.product)
 
         # Clear cart
-        await self.uow.carts.delete_by_id(cart.id)
+        await self.uow.carts.delete(cart)
 
         return await self.uow.orders.update(created_order)
 
-    async def get_by_id(self, order_id: UUID) -> Order:
+    async def find_by_id(self, order_id: UUID) -> Order:
         """Get an order by its ID.
 
         Args:
@@ -87,7 +87,7 @@ class OrderService:
         Raises:
             HTTPException: If the order is not found.
         """
-        order = await self.uow.orders.get_by_id(order_id)
+        order = await self.uow.orders.find_by_id(order_id)
         if not order:
             raise HTTPException(status_code=404, detail="Order not found.")
         return order

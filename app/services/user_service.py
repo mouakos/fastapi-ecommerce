@@ -17,7 +17,7 @@ class UserService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def get_by_id(self, user_id: UUID) -> User:
+    async def find_by_id(self, user_id: UUID) -> User:
         """Fetch a user by id.
 
         Args:
@@ -29,7 +29,7 @@ class UserService:
         Raises:
             HTTPException: If the user does not exist.
         """
-        user = await self.uow.users.get_by_id(user_id)
+        user = await self.uow.users.find_by_id(user_id)
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
         return user
@@ -46,7 +46,7 @@ class UserService:
         Raises:
             HTTPException: If the user already exists.
         """
-        user = await self.uow.users.get_by_email(data.email)
+        user = await self.uow.users.find_by_email(data.email)
 
         if user:
             raise HTTPException(
@@ -72,7 +72,7 @@ class UserService:
         Raises:
             HTTPException: If the password or email is invalid.
         """
-        user = await self.uow.users.get_by_email(data.email)
+        user = await self.uow.users.find_by_email(data.email)
         if not user or not verify_password(data.password, user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password."
@@ -94,7 +94,7 @@ class UserService:
         Raises:
             HTTPException: If the user does not exist.
         """
-        user = await self.uow.users.get_by_id(user_id)
+        user = await self.uow.users.find_by_id(user_id)
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
 
@@ -113,8 +113,7 @@ class UserService:
         Raises:
             HTTPException: If the user does not exist.
         """
-        if not await self.uow.users.delete_by_id(user_id):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found.",
-            )
+        user = await self.uow.users.find_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+        await self.uow.users.delete(user)

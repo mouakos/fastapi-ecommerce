@@ -147,7 +147,7 @@ async def list_products_by_category_slug(
 )
 async def get_product(product_id: UUID, product_service: ProductServiceDep) -> ProductDetailRead:
     """Retrieve a product by its ID."""
-    product = await product_service.get_by_id(product_id)
+    product = await product_service.find_by_id(product_id)
     return ProductDetailRead(
         **product.model_dump(),
         review_count=await product_service.get_review_count(product_id),

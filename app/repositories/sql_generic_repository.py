@@ -3,7 +3,7 @@
 from typing import Any
 from uuid import UUID
 
-from sqlmodel import delete, select, update
+from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.interfaces.generic_repository import GenericRepository, T_model
@@ -22,8 +22,8 @@ class SqlGenericRepository(GenericRepository[T_model]):
         self._session = session
         self._model = model
 
-    async def get_by_id(self, id: UUID) -> T_model | None:
-        """Get a single record by id.
+    async def find_by_id(self, id: UUID) -> T_model | None:
+        """Find a single record by id.
 
         Args:
             id (UUID): Record id.
@@ -34,7 +34,7 @@ class SqlGenericRepository(GenericRepository[T_model]):
         return await self._session.get(self._model, id)
 
     async def list_all(self, **filters: Any) -> list[T_model]:  # noqa: ANN401
-        """Gets a list of records.
+        """List records.
 
         Args:
             **filters: Filter conditions.
@@ -54,7 +54,7 @@ class SqlGenericRepository(GenericRepository[T_model]):
         return list(result.all())
 
     async def add(self, record: T_model) -> T_model:
-        """Creates a new record.
+        """Create a new record.
 
         Args:
             record (T_model): The record to be created.
@@ -68,7 +68,7 @@ class SqlGenericRepository(GenericRepository[T_model]):
         return record
 
     async def update(self, record: T_model) -> T_model:
-        """Updates an existing record.
+        """Update an existing record.
 
         Args:
             record (T_model): The record to be updated incl. record id.
@@ -81,35 +81,31 @@ class SqlGenericRepository(GenericRepository[T_model]):
         await self._session.refresh(record)
         return record
 
-    async def update_by_id(self, id: UUID, fields: dict[str, Any]) -> T_model | None:
-        """Updates specific fields of a record by id.
+    async def delete(self, record: T_model) -> None:
+        """Delete a record.
 
         Args:
-            id (UUID): Record id.
-            fields (dict[str, Any]): Fields to update.
+            record (T_model): The record to be deleted.
+        """
+        await self._session.delete(record)
+        await self._session.flush()
+
+    async def count(self, **filters: Any) -> int:  # noqa: ANN401
+        """Get total number of records.
+
+        Args:
+            **filters: Filter conditions.
 
         Returns:
-            T_model: The updated record
+            int: Total number of records.
+
+        Raises:
+            ValueError: Invalid filter condition.
         """
-        stmt = (
-            update(self._model)
-            .where(self._model.id == id)  # type: ignore[arg-type]
-            .values(**fields)
-            .returning(self._model)
-        )
+        stmt = select(func.count()).select_from(self._model)
+        for attr, value in filters.items():
+            if not hasattr(self._model, attr):
+                raise ValueError(f"Invalid filter condition: {attr}")
+            stmt = stmt.where(getattr(self._model, attr) == value)
         result = await self._session.exec(stmt)
-        return result.first()  # type: ignore[return-value]
-
-    async def delete_by_id(self, id: UUID) -> bool:
-        """Deletes a record by id.
-
-        Args:
-            id (UUID): Record id.
-        """
-        result = await self._session.exec(
-            delete(self._model).where(self._model.id == id)  # type: ignore[arg-type]
-        )
-        if result.rowcount > 0:
-            await self._session.flush()
-            return True
-        return False
+        return result.first() or 0

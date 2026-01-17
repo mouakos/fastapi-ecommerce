@@ -128,7 +128,7 @@ async def get_current_user(
         )
 
     try:
-        return await user_service.get_by_id(token_data.user_id)
+        return await user_service.find_by_id(token_data.user_id)
     except HTTPException as exc:
         if exc.status_code == status.HTTP_404_NOT_FOUND:
             raise HTTPException(

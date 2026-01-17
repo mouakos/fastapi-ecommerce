@@ -15,8 +15,8 @@ class SqlPaymentRepository(SqlGenericRepository[Payment], PaymentRepository):
         """Initialize the repository with a database session."""
         super().__init__(session, Payment)
 
-    async def get_by_session_id(self, session_id: str) -> Payment | None:
-        """Get a single payment by session ID.
+    async def find_by_session_id(self, session_id: str) -> Payment | None:
+        """Find a payment by session ID.
 
         Args:
             session_id (str): Session ID.

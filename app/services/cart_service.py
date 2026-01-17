@@ -50,14 +50,14 @@ class CartService:
         """
         cart = await self._get_or_create(user_id, session_id)
 
-        product = await self.uow.products.get_by_id(data.product_id)
+        product = await self.uow.products.find_by_id(data.product_id)
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
 
         if not product.is_active:
             raise HTTPException(status_code=400, detail="Product is not available.")
 
-        item = await self.uow.carts.get_item_by_cart_and_product(cart.id, product.id)
+        item = await self.uow.carts.find_cart_item(cart.id, product.id)
 
         current_qty = item.quantity if item else 0
         new_qty = current_qty + data.quantity
@@ -103,11 +103,11 @@ class CartService:
         """
         cart = await self._get_or_create(user_id, session_id)
 
-        item = await self.uow.carts.get_item_by_cart_and_product(cart.id, product_id)
+        item = await self.uow.carts.find_cart_item(cart.id, product_id)
         if not item:
             raise HTTPException(status_code=404, detail="Product not found in cart.")
 
-        product = await self.uow.products.get_by_id(item.product_id)
+        product = await self.uow.products.find_by_id(item.product_id)
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
 
@@ -139,7 +139,7 @@ class CartService:
         """
         cart = await self._get_or_create(user_id, session_id)
 
-        item = await self.uow.carts.get_item_by_cart_and_product(cart.id, product_id)
+        item = await self.uow.carts.find_cart_item(cart.id, product_id)
 
         if not item:
             raise HTTPException(status_code=404, detail="Product not found in cart.")
@@ -187,7 +187,7 @@ class CartService:
             user_id (UUID): User ID.
             session_id (str): Session ID.
         """
-        guest_cart = await self.uow.carts.get_by_session_id(session_id)
+        guest_cart = await self.uow.carts.find_session_cart(session_id)
 
         if not guest_cart:
             return
@@ -195,9 +195,7 @@ class CartService:
         user_cart = await self._get_or_create(user_id, None)
 
         for item in guest_cart.items:
-            existing_item = await self.uow.carts.get_item_by_cart_and_product(
-                user_cart.id, item.product_id
-            )
+            existing_item = await self.uow.carts.find_cart_item(user_cart.id, item.product_id)
             if existing_item:
                 existing_item.quantity += item.quantity
             else:
@@ -206,4 +204,4 @@ class CartService:
                 user_cart.items.append(item)
 
         await self.uow.carts.update(user_cart)
-        await self.uow.carts.delete_by_id(guest_cart.id)
+        await self.uow.carts.delete(guest_cart)

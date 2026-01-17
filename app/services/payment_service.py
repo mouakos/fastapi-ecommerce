@@ -34,7 +34,7 @@ class PaymentService:
         Returns:
             str: The URL of the created checkout session.
         """
-        order = await self.uow.orders.get_by_id(order_id)
+        order = await self.uow.orders.find_by_id(order_id)
         if not order or order.user_id != user_id:
             raise HTTPException(status_code=404, detail="Order not found.")
 
@@ -122,7 +122,7 @@ class PaymentService:
             target_order_status (OrderStatus): The status to set for the order.
         """
         session_id = session["id"]
-        payment = await self.uow.payments.get_by_session_id(session_id)
+        payment = await self.uow.payments.find_by_session_id(session_id)
 
         if not payment:
             raise HTTPException(
@@ -139,7 +139,7 @@ class PaymentService:
         await self.uow.payments.update(payment)
 
         # Update Order Status
-        order = await self.uow.orders.get_by_id(payment.order_id)
+        order = await self.uow.orders.find_by_id(payment.order_id)
         if not order:
             raise HTTPException(
                 status_code=500,

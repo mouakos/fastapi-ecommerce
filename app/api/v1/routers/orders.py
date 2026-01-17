@@ -53,4 +53,4 @@ async def get_order(
     order_service: OrderServiceDep,
 ) -> OrderRead:
     """Retrieve an order by its ID for the current user."""
-    return await order_service.get_by_id(order_id)
+    return await order_service.find_by_id(order_id)

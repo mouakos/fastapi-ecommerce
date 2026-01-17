@@ -121,7 +121,7 @@ class AddressService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Address not found.",
             )
-        await self.uow.addresses.delete_by_id(address.id)
+        await self.uow.addresses.delete(address)
 
     async def set_default_billing(self, address_id: UUID, user_id: UUID) -> Address:
         """Set an address as the default billing address for a user.

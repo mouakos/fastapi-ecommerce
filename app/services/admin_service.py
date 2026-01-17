@@ -43,21 +43,21 @@ class AdminService:
             SalesStatistics: Sales statistics data.
         """
         # Total orders and revenue
-        total_orders = await self.uow.orders.count_all()
-        total_revenue = await self.uow.orders.get_total_sales()
+        total_orders = await self.uow.orders.count()
+        total_revenue = await self.uow.orders.calculate_total_sales()
 
         # Orders by status
-        pending_orders = await self.uow.orders.count_all(status=OrderStatus.PENDING)
-        paid_orders = await self.uow.orders.count_all(status=OrderStatus.PAID)
-        shipped_orders = await self.uow.orders.count_all(status=OrderStatus.SHIPPED)
-        delivered_orders = await self.uow.orders.count_all(status=OrderStatus.DELIVERED)
-        cancelled_orders = await self.uow.orders.count_all(status=OrderStatus.CANCELED)
+        pending_orders = await self.uow.orders.count(status=OrderStatus.PENDING)
+        paid_orders = await self.uow.orders.count(status=OrderStatus.PAID)
+        shipped_orders = await self.uow.orders.count(status=OrderStatus.SHIPPED)
+        delivered_orders = await self.uow.orders.count(status=OrderStatus.DELIVERED)
+        cancelled_orders = await self.uow.orders.count(status=OrderStatus.CANCELED)
 
         # Average order value
         average_order_value = total_revenue / total_orders if total_orders > 0 else 0.0
 
         # Revenue in the last 30 days
-        revenue_last_30_days = await self.uow.orders.get_total_sales_by_last_days(days=30)
+        revenue_last_30_days = await self.uow.orders.calculate_recent_sales(days=30)
 
         return SalesStatistics(
             total_revenue=total_revenue,
@@ -97,10 +97,10 @@ class AdminService:
         Returns:
             ProductStatistics: Product statistics data.
         """
-        total_products = await self.uow.products.count_all()
-        active_products = await self.uow.products.count_all(is_active=True)
-        inactive_products = await self.uow.products.count_all(is_active=False)
-        out_of_stock_count = await self.uow.products.count_all(stock=0)
+        total_products = await self.uow.products.count()
+        active_products = await self.uow.products.count(is_active=True)
+        inactive_products = await self.uow.products.count(is_active=False)
+        out_of_stock_count = await self.uow.products.count(stock=0)
         low_stock_count = await self.uow.products.count_low_stock(threshold=10)
 
         return ProductStatistics(
@@ -179,7 +179,7 @@ class AdminService:
             order_id (UUID): ID of the order to update.
             new_status (OrderStatus): New status to set for the order.
         """
-        order = await self.uow.orders.get_by_id(order_id)
+        order = await self.uow.orders.find_by_id(order_id)
         if not order:
             raise HTTPException(status_code=404, detail="Order not found.")
 
@@ -236,7 +236,7 @@ class AdminService:
         Returns:
             int: Total number of orders placed by the user.
         """
-        return await self.uow.orders.count_all(user_id=user_id)
+        return await self.uow.orders.count(user_id=user_id)
 
     async def get_user_total_spent(self, user_id: UUID) -> Decimal:
         """Get the total amount spent by a user across all orders.
@@ -247,7 +247,7 @@ class AdminService:
         Returns:
             Decimal: Total amount spent by the user.
         """
-        return await self.uow.orders.get_total_sales_by_user(user_id)
+        return await self.uow.orders.calculate_user_sales(user_id)
 
     async def update_user_role(self, user_id: UUID, new_role: UserRole) -> None:
         """Update the role of a user.
@@ -256,7 +256,7 @@ class AdminService:
             user_id (UUID): ID of the user to update.
             new_role (UserRole): New role to set for the user.
         """
-        user = await self.uow.users.get_by_id(user_id)
+        user = await self.uow.users.find_by_id(user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found.")
 
@@ -298,7 +298,7 @@ class AdminService:
         Returns:
             Review: The updated review instance.
         """
-        review = await self.uow.reviews.get_by_id(review_id)
+        review = await self.uow.reviews.find_by_id(review_id)
         if not review:
             raise HTTPException(status_code=404, detail="Review not found.")
 
@@ -319,7 +319,7 @@ class AdminService:
         Returns:
             Review: The updated review instance.
         """
-        review = await self.uow.reviews.get_by_id(review_id)
+        review = await self.uow.reviews.find_by_id(review_id)
         if not review:
             raise HTTPException(status_code=404, detail="Review not found.")
 
@@ -336,8 +336,10 @@ class AdminService:
         Args:
             review_id (UUID): ID of the review to delete.
         """
-        if not await self.uow.reviews.get_by_id(review_id):
+        review = await self.uow.reviews.find_by_id(review_id)
+        if not review:
             raise HTTPException(status_code=404, detail="Review not found.")
+        await self.uow.reviews.delete(review)
 
     # ---------------- Product Related Admin Services ---------------- #
     async def list_top_selling_products(self, limit: int = 10, days: int = 30) -> list[Product]:

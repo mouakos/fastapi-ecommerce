@@ -1,7 +1,6 @@
 """SQL User repository implementation."""
 
 from decimal import Decimal
-from typing import Any
 from uuid import UUID
 
 from sqlmodel import func, select
@@ -19,8 +18,8 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
         """Initialize the repository with a database session."""
         super().__init__(session, Order)
 
-    async def get_total_sales(self) -> Decimal:
-        """Get total sales amount.
+    async def calculate_total_sales(self) -> Decimal:
+        """Calculate total sales amount.
 
         Returns:
             Decimal: Total sales amount.
@@ -29,8 +28,8 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
         result = await self._session.exec(stmt)
         return result.first() or Decimal("0.00")
 
-    async def get_total_sales_by_last_days(self, days: int) -> Decimal:
-        """Get total sales amount over the last specified number of days.
+    async def calculate_recent_sales(self, days: int) -> Decimal:
+        """Calculate total sales amount over the last specified number of days.
 
         Args:
             days (int): Number of days to look back.
@@ -45,8 +44,8 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
         result = await self._session.exec(stmt)
         return result.first() or Decimal("0.00")
 
-    async def get_total_sales_by_user(self, user_id: UUID) -> Decimal:
-        """Get total sales amount for a specific user.
+    async def calculate_user_sales(self, user_id: UUID) -> Decimal:
+        """Calculate total sales amount for a specific user.
 
         Args:
             user_id (UUID): User ID.
@@ -59,25 +58,6 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
         )
         result = await self._session.exec(stmt)
         return result.first() or Decimal("0.00")
-
-    async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
-        """Get total number of orders.
-
-        Args:
-            **filters: Filter conditions.
-
-        Returns:
-            int: Total number of orders.
-        """
-        stmt = select(func.count()).select_from(Order)
-
-        for attr, value in filters.items():
-            if not hasattr(Order, attr):
-                raise ValueError(f"Invalid filter condition: {attr}")
-            stmt = stmt.where(getattr(Order, attr) == value)
-
-        result = await self._session.exec(stmt)
-        return result.first() or 0
 
     async def paginate(
         self,

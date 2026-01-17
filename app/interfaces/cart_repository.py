@@ -11,8 +11,8 @@ class CartRepository(GenericRepository[Cart], ABC):
     """Interface for Cart repository."""
 
     @abstractmethod
-    async def get_by_user_id(self, user_id: UUID) -> Cart | None:
-        """Get a single cart by user ID.
+    async def find_user_cart(self, user_id: UUID) -> Cart | None:
+        """Find a cart by user ID.
 
         Args:
             user_id (UUID): User ID.
@@ -23,8 +23,8 @@ class CartRepository(GenericRepository[Cart], ABC):
         ...
 
     @abstractmethod
-    async def get_by_session_id(self, session_id: str) -> Cart | None:
-        """Get a single cart by session ID.
+    async def find_session_cart(self, session_id: str) -> Cart | None:
+        """Find a cart by session ID.
 
         Args:
             session_id (str): Session ID.
@@ -35,17 +35,15 @@ class CartRepository(GenericRepository[Cart], ABC):
         ...
 
     @abstractmethod
-    async def get_item_by_cart_and_product(
-        self, cart_id: UUID, product_id: UUID
-    ) -> CartItem | None:
-        """Get a single cart item by cart ID and product ID.
+    async def find_cart_item(self, cart_id: UUID, product_id: UUID) -> CartItem | None:
+        """Find a cart item by cart ID and product ID.
 
         Args:
             cart_id (UUID): Cart ID.
             product_id (UUID): Product ID.
 
         Returns:
-            Cart | None: Cart item or none.
+            CartItem | None: Cart item or none.
         """
         ...
 

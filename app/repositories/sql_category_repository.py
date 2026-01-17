@@ -16,8 +16,8 @@ class SqlCategoryRepository(SqlGenericRepository[Category], CategoryRepository):
         """Initialize the repository with a database session."""
         super().__init__(session, Category)
 
-    async def get_by_slug(self, slug: str) -> Category | None:
-        """Get a single category by slug.
+    async def find_by_slug(self, slug: str) -> Category | None:
+        """Find a category by slug.
 
         Args:
             slug (str): Category slug.

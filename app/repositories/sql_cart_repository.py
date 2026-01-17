@@ -17,8 +17,8 @@ class SqlCartRepository(SqlGenericRepository[Cart], CartRepository):
         """Initialize the repository with a database session."""
         super().__init__(session, Cart)
 
-    async def get_by_user_id(self, user_id: UUID) -> Cart | None:
-        """Get a single cart by user ID.
+    async def find_user_cart(self, user_id: UUID) -> Cart | None:
+        """Find a cart by user ID.
 
         Args:
             user_id (UUID): User ID.
@@ -30,8 +30,8 @@ class SqlCartRepository(SqlGenericRepository[Cart], CartRepository):
         result = await self._session.exec(stmt)
         return result.first()
 
-    async def get_by_session_id(self, session_id: str) -> Cart | None:
-        """Get a single cart by session ID.
+    async def find_session_cart(self, session_id: str) -> Cart | None:
+        """Find a cart by session ID.
 
         Args:
             session_id (str): Session ID.
@@ -43,10 +43,8 @@ class SqlCartRepository(SqlGenericRepository[Cart], CartRepository):
         result = await self._session.exec(stmt)
         return result.first()
 
-    async def get_item_by_cart_and_product(
-        self, cart_id: UUID, product_id: UUID
-    ) -> CartItem | None:
-        """Get a cart item by cart ID and product ID.
+    async def find_cart_item(self, cart_id: UUID, product_id: UUID) -> CartItem | None:
+        """Find a cart item by cart ID and product ID.
 
         Args:
             cart_id (UUID): Cart ID.
@@ -75,7 +73,7 @@ class SqlCartRepository(SqlGenericRepository[Cart], CartRepository):
             ValueError: If session_id is not provided for guest cart.
         """
         if user_id:
-            user_cart = await self.get_by_user_id(user_id)
+            user_cart = await self.find_user_cart(user_id)
             if user_cart:
                 return user_cart
 
@@ -86,7 +84,7 @@ class SqlCartRepository(SqlGenericRepository[Cart], CartRepository):
         if not session_id:
             raise ValueError("session_id is required for guest cart.")
 
-        guest_cart = await self.get_by_session_id(session_id)
+        guest_cart = await self.find_session_cart(session_id)
         if guest_cart:
             return guest_cart
 

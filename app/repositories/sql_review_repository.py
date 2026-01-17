@@ -61,38 +61,6 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         result = await self._session.exec(stmt)
         return result.first()
 
-    async def count(
-        self,
-        product_id: UUID | None = None,
-        status: ReviewStatus | None = None,
-        user_id: UUID | None = None,
-        rating: int | None = None,
-    ) -> int:
-        """Count total number of reviews.
-
-        Args:
-            product_id (UUID | None, optional): Filter by product ID. Defaults to None.
-            status (ReviewStatus | None, optional): Filter by review status. Defaults to None.
-            user_id (UUID | None, optional): Filter by user ID. Defaults to None.
-            rating (int | None, optional): Filter by rating. Defaults to None.
-
-        Returns:
-            int: Total number of reviews.
-        """
-        stmt = select(func.count()).select_from(Review)
-
-        if product_id is not None:
-            stmt = stmt.where(Review.product_id == product_id)
-        if status is not None:
-            stmt = stmt.where(Review.status == status)
-        if user_id is not None:
-            stmt = stmt.where(Review.user_id == user_id)
-        if rating is not None:
-            stmt = stmt.where(Review.rating == rating)
-
-        result = await self._session.exec(stmt)
-        return result.first() or 0
-
     async def calculate_average_rating(self) -> float:
         """Calculate the average rating of all reviews.
 
@@ -117,7 +85,7 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
 
         Args:
             page (int, optional): Page number. Defaults to 1.
-            page_size (int, optional): Number of records per page. Defaults to 100.
+            page_size (int, optional): Number of records per page. Defaults to 10.
             product_id (UUID | None, optional): Filter by product ID. Defaults to None.
             status (ReviewStatus | None, optional): Filter by review status. Defaults to None.
             user_id (UUID | None, optional): Filter by user ID. Defaults to None.

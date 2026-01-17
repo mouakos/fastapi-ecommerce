@@ -37,27 +37,6 @@ class ReviewRepository(GenericRepository[Review], ABC):
         ...
 
     @abstractmethod
-    async def count(
-        self,
-        product_id: UUID | None = None,
-        status: ReviewStatus | None = None,
-        user_id: UUID | None = None,
-        rating: int | None = None,
-    ) -> int:
-        """Get the total number of reviews with optional filters.
-
-        Args:
-            product_id (UUID | None, optional): Filter by product ID. Defaults to None.
-            status (ReviewStatus | None, optional): Filter by review status. Defaults to None.
-            user_id (UUID | None, optional): Filter by user ID. Defaults to None.
-            rating (int | None, optional): Filter by rating. Defaults to None.
-
-        Returns:
-            int: Total number of reviews.
-        """
-        ...
-
-    @abstractmethod
     async def calculate_average_rating(self) -> float:
         """Calculate the average rating of all reviews.
 
@@ -88,7 +67,7 @@ class ReviewRepository(GenericRepository[Review], ABC):
         user_id: UUID | None = None,
         rating: int | None = None,
     ) -> tuple[list[Review], int]:
-        """Get paginated reviews with optional filters.
+        """Paginate reviews with optional filters.
 
         Args:
             page (int, optional): Page number. Defaults to 1.
@@ -99,6 +78,6 @@ class ReviewRepository(GenericRepository[Review], ABC):
             rating (int | None, optional): Filter by rating. Defaults to None.
 
         Returns:
-            tuple[int, list[Review]]: Total count and list of reviews.
+            tuple[list[Review], int]: List of reviews and total count.
         """
         ...

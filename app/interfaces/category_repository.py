@@ -10,8 +10,8 @@ class CategoryRepository(GenericRepository[Category], ABC):
     """Interface for Category repository."""
 
     @abstractmethod
-    async def get_by_slug(self, slug: str) -> Category | None:
-        """Get a single category by slug.
+    async def find_by_slug(self, slug: str) -> Category | None:
+        """Find a category by slug.
 
         Args:
             slug (str): Category slug.
