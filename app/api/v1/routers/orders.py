@@ -6,7 +6,9 @@ from uuid import UUID
 from fastapi import APIRouter
 
 from app.api.v1.dependencies import CurrentUserDep, OrderServiceDep
+from app.schemas.common import Page
 from app.schemas.order import OrderCreate, OrderRead
+from app.utils.pagination import build_page
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -14,13 +16,16 @@ router = APIRouter(prefix="/orders", tags=["Orders"])
 # Collection paths
 @router.get(
     "",
-    response_model=list[OrderRead],
+    response_model=Page[OrderRead],
     summary="List orders",
     description="Retrieve all orders for the authenticated user, sorted by creation date (newest first).",
 )
-async def list_all(current_user: CurrentUserDep, order_service: OrderServiceDep) -> list[OrderRead]:
+async def list_all(
+    current_user: CurrentUserDep, order_service: OrderServiceDep, page: int = 1, page_size: int = 10
+) -> Page[OrderRead]:
     """List all orders for the current user."""
-    return await order_service.list_all(current_user.id)
+    orders, total = await order_service.list_all(current_user.id)
+    return build_page(items=orders, page=page, size=page_size, total=total)  # type: ignore [arg-type]
 
 
 @router.post(

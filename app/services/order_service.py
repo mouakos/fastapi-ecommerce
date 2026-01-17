@@ -92,16 +92,20 @@ class OrderService:
             raise HTTPException(status_code=404, detail="Order not found.")
         return order
 
-    async def list_all(self, user_id: UUID) -> list[Order]:
+    async def list_all(
+        self, user_id: UUID, page: int = 1, page_size: int = 10
+    ) -> tuple[list[Order], int]:
         """List all orders for a user.
 
         Args:
             user_id (UUID): The ID of the user.
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of orders per page. Defaults to 10.
 
         Returns:
-            list[Order]: List of orders for the user.
+            tuple[list[Order], int]: List of orders for the user and total count.
         """
-        return await self.uow.orders.list_all(user_id=user_id)
+        return await self.uow.orders.paginate(user_id=user_id, page=page, page_size=page_size)
 
     def _order_number(self) -> str:
         return f"ORD-{ulid.new().str}"
