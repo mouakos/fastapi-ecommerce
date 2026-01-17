@@ -19,7 +19,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
     summary="Get current user profile",
     description="Retrieve the profile information of the currently authenticated user.",
 )
-async def get_user(
+async def get(
     current_user: CurrentUserDep,
 ) -> UserRead:
     """Retrieve the profile of the currently authenticated user."""
@@ -32,7 +32,7 @@ async def get_user(
     summary="Update current user profile",
     description="Update profile information such as name, email, or other personal details.",
 )
-async def update_user(
+async def update(
     data: UserUpdate,
     current_user: CurrentUserDep,
     user_service: UserServiceDep,
@@ -47,7 +47,7 @@ async def update_user(
     summary="Delete user account",
     description="Permanently delete the current user's account. This action cannot be undone.",
 )
-async def delete_user(
+async def delete(
     current_user: CurrentUserDep,
     user_service: UserServiceDep,
 ) -> None:

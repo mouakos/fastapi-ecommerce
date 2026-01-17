@@ -27,7 +27,7 @@ router = APIRouter(prefix="/products", tags=["Products"])
     summary="Get product name suggestions",
     description="Retrieve autocomplete suggestions for product names based on search query. Returns up to 10 matching product names.",
 )
-async def list_product_autocomplete_suggestions(
+async def autocomplete(
     product_service: ProductServiceDep,
     query: Annotated[
         str,
@@ -51,7 +51,7 @@ async def list_product_autocomplete_suggestions(
     summary="List products",
     description="Retrieve paginated list of products with advanced filtering by category, price range, rating, and availability. Supports search and sorting.",
 )
-async def list_products(
+async def list_all(
     product_service: ProductServiceDep,
     page: Annotated[int, Query(ge=1, description="Page number")] = 1,
     per_page: Annotated[int, Query(ge=1, le=100, description="Number of items per page")] = 10,
@@ -99,9 +99,7 @@ async def list_products(
     description="Create a new product. Admin access required.",
     dependencies=[AdminRoleDep],
 )
-async def create_product(
-    data: ProductCreate, product_service: ProductServiceDep
-) -> ProductDetailRead:
+async def create(data: ProductCreate, product_service: ProductServiceDep) -> ProductDetailRead:
     """Create a new product."""
     product = await product_service.create(data)
     return ProductDetailRead(
@@ -118,7 +116,7 @@ async def create_product(
     summary="Get products by category ID",
     description="Retrieve all products belonging to a specific category using the category's UUID.",
 )
-async def list_products_by_category_id(
+async def list_by_category_id(
     category_id: UUID, product_service: ProductServiceDep
 ) -> list[ProductRead]:
     """Retrieve products by category ID."""
@@ -131,7 +129,7 @@ async def list_products_by_category_id(
     summary="Get products by category slug",
     description="Retrieve all products belonging to a specific category using the category's URL-friendly slug.",
 )
-async def list_products_by_category_slug(
+async def list_by_category_slug(
     category_slug: str, product_service: ProductServiceDep
 ) -> list[ProductRead]:
     """Retrieve products by category slug."""
@@ -145,7 +143,7 @@ async def list_products_by_category_slug(
     summary="Get product by ID",
     description="Retrieve detailed information about a specific product using its UUID.",
 )
-async def get_product(product_id: UUID, product_service: ProductServiceDep) -> ProductDetailRead:
+async def get(product_id: UUID, product_service: ProductServiceDep) -> ProductDetailRead:
     """Retrieve a product by its ID."""
     product = await product_service.find_by_id(product_id)
     return ProductDetailRead(
@@ -161,7 +159,7 @@ async def get_product(product_id: UUID, product_service: ProductServiceDep) -> P
     summary="Get product by slug",
     description="Retrieve detailed information about a specific product using its URL-friendly slug.",
 )
-async def get_product_by_slug(slug: str, product_service: ProductServiceDep) -> ProductDetailRead:
+async def get_by_slug(slug: str, product_service: ProductServiceDep) -> ProductDetailRead:
     """Retrieve a product by its slug."""
     product = await product_service.find_by_slug(slug)
     return ProductDetailRead(
@@ -179,7 +177,7 @@ async def get_product_by_slug(slug: str, product_service: ProductServiceDep) -> 
     description="Update an existing product's information. Admin access required.",
     dependencies=[AdminRoleDep],
 )
-async def update_product(
+async def update(
     product_id: UUID, data: ProductUpdate, product_service: ProductServiceDep
 ) -> ProductDetailRead:
     """Update a product by its ID."""
@@ -198,6 +196,6 @@ async def update_product(
     description="Permanently delete a product from the catalog. Admin access required. This action cannot be undone.",
     dependencies=[AdminRoleDep],
 )
-async def delete_product(product_id: UUID, product_service: ProductServiceDep) -> None:
+async def delete(product_id: UUID, product_service: ProductServiceDep) -> None:
     """Delete a product by its ID."""
     await product_service.delete(product_id)

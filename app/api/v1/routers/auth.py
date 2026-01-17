@@ -16,7 +16,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
     summary="Register user",
     description="Create a new user account with email and password. Email must be unique and password must meet security requirements.",
 )
-async def create_user(data: UserCreate, user_service: UserServiceDep) -> UserRead:
+async def register(data: UserCreate, user_service: UserServiceDep) -> UserRead:
     """Register a new user."""
     return await user_service.create(data)
 
@@ -33,7 +33,7 @@ async def login(
     user_service: UserServiceDep,
     cart_service: CartServiceDep,
 ) -> Token:
-    """Register a new user."""
+    """Authenticate user and return access token."""
     token, user = await user_service.login(data)
     if session_id:
         await cart_service.merge_carts(user.id, session_id)

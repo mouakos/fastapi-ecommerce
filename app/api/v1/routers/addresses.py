@@ -17,7 +17,7 @@ router = APIRouter(prefix="/addresses", tags=["Addresses"])
     summary="List user addresses",
     description="Retrieve all delivery and billing addresses associated with the current user.",
 )
-async def list_addresses(
+async def list_all(
     current_user: CurrentUserDep,
     address_service: AddressServiceDep,
 ) -> list[AddressRead]:
@@ -32,7 +32,7 @@ async def list_addresses(
     summary="Add new address",
     description="Create a new delivery or billing address for the current user.",
 )
-async def add_address(
+async def create(
     data: AddressCreate,
     current_user: CurrentUserDep,
     address_service: AddressServiceDep,
@@ -47,7 +47,7 @@ async def add_address(
     summary="Update address",
     description="Update an existing address. Only the address owner can modify it.",
 )
-async def update_address(
+async def update(
     address_id: UUID,
     data: AddressUpdate,
     current_user: CurrentUserDep,
@@ -93,7 +93,7 @@ async def set_default_billing(
     summary="Delete user address",
     description="Remove an address from the user's account.",
 )
-async def delete_address(
+async def delete(
     address_id: UUID,
     current_user: CurrentUserDep,
     address_service: AddressServiceDep,

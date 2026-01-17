@@ -18,7 +18,7 @@ router = APIRouter(prefix="/categories", tags=["Categories"])
     summary="List categories",
     description="Retrieve all product categories with their hierarchy information.",
 )
-async def list_categories(
+async def list_all(
     category_service: CategoryServiceDep,
 ) -> list[CategoryRead]:
     """List all categories."""
@@ -33,9 +33,7 @@ async def list_categories(
     description="Create a new product category. Admin access required.",
     dependencies=[AdminRoleDep],
 )
-async def create_category(
-    data: CategoryCreate, category_service: CategoryServiceDep
-) -> CategoryRead:
+async def create(data: CategoryCreate, category_service: CategoryServiceDep) -> CategoryRead:
     """Create a new category."""
     return await category_service.create(data)
 
@@ -47,7 +45,7 @@ async def create_category(
     summary="Get category by ID",
     description="Retrieve a specific category using its UUID.",
 )
-async def get_category(category_id: UUID, category_service: CategoryServiceDep) -> CategoryRead:
+async def get(category_id: UUID, category_service: CategoryServiceDep) -> CategoryRead:
     """Retrieve a category by its ID."""
     return await category_service.find_by_id(category_id)
 
@@ -58,7 +56,7 @@ async def get_category(category_id: UUID, category_service: CategoryServiceDep) 
     summary="Get category by slug",
     description="Retrieve a specific category using its URL-friendly slug.",
 )
-async def get_category_by_slug(slug: str, category_service: CategoryServiceDep) -> CategoryRead:
+async def get_by_slug(slug: str, category_service: CategoryServiceDep) -> CategoryRead:
     """Retrieve a category by its slug."""
     return await category_service.find_by_slug(slug)
 
@@ -71,7 +69,7 @@ async def get_category_by_slug(slug: str, category_service: CategoryServiceDep) 
     description="Update an existing category's information. Admin access required.",
     dependencies=[AdminRoleDep],
 )
-async def update_category(
+async def update(
     category_id: UUID,
     data: CategoryUpdate,
     category_service: CategoryServiceDep,
@@ -87,6 +85,6 @@ async def update_category(
     description="Permanently delete a category. Admin access required. This action cannot be undone.",
     dependencies=[AdminRoleDep],
 )
-async def delete_category(category_id: UUID, category_service: CategoryServiceDep) -> None:
+async def delete(category_id: UUID, category_service: CategoryServiceDep) -> None:
     """Delete a category by its ID."""
     return await category_service.delete(category_id)

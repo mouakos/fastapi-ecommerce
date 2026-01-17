@@ -328,7 +328,7 @@ async def delete_review(
     summary="Get low stock products",
     description="Retrieve products with stock levels below the specified threshold for inventory monitoring and restocking alerts.",
 )
-async def list_low_stock_products(
+async def list_low_stock(
     admin_service: AdminServiceDep,
     threshold: int = Query(10, ge=1, description="Stock threshold for alerts"),
 ) -> list[ProductRead]:
@@ -342,7 +342,7 @@ async def list_low_stock_products(
     summary="Get top-moving products",
     description="Retrieve the best-selling products ranked by order volume. Useful for identifying popular items and inventory planning.",
 )
-async def list_top_moving_products(
+async def list_top_moving(
     admin_service: AdminServiceDep,
     limit: int = Query(10, ge=1, description="Number of top products to retrieve"),
 ) -> list[ProductRead]:

@@ -18,9 +18,7 @@ router = APIRouter(prefix="/orders", tags=["Orders"])
     summary="List orders",
     description="Retrieve all orders for the authenticated user, sorted by creation date (newest first).",
 )
-async def list_orders(
-    current_user: CurrentUserDep, order_service: OrderServiceDep
-) -> list[OrderRead]:
+async def list_all(current_user: CurrentUserDep, order_service: OrderServiceDep) -> list[OrderRead]:
     """List all orders for the current user."""
     return await order_service.list_all(current_user.id)
 
@@ -31,7 +29,7 @@ async def list_orders(
     summary="Checkout and create order",
     description="Create a new order from the user's cart and specified shipping/billing addresses. The cart will be emptied after successful order creation.",
 )
-async def checkout_order(
+async def checkout(
     data: OrderCreate,
     current_user: CurrentUserDep,
     order_service: OrderServiceDep,
@@ -47,7 +45,7 @@ async def checkout_order(
     summary="Get order by ID",
     description="Retrieve detailed information about a specific order. Only the order owner can access this endpoint.",
 )
-async def get_order(
+async def get(
     order_id: UUID,
     _: CurrentUserDep,
     order_service: OrderServiceDep,

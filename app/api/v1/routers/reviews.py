@@ -35,7 +35,7 @@ async def add_review(
     summary="Get product reviews",
     description="Retrieve all approved reviews for a specific product with pagination support.",
 )
-async def list_reviews(
+async def list(
     product_id: UUID,
     review_service: ReviewServiceDep,
     page: int = Query(1, description="Page number"),
@@ -52,7 +52,7 @@ async def list_reviews(
     summary="Get review by ID",
     description="Retrieve detailed information about a specific review using its UUID.",
 )
-async def get_review(
+async def get(
     review_id: UUID,
     review_service: ReviewServiceDep,
     current_user: CurrentUserDep,
@@ -67,7 +67,7 @@ async def get_review(
     summary="Update review",
     description="Update an existing review's rating or comment.",
 )
-async def update_review(
+async def update(
     review_id: UUID,
     data: ReviewUpdate,
     review_service: ReviewServiceDep,
@@ -83,7 +83,7 @@ async def update_review(
     summary="Delete review",
     description="Permanently delete a review.",
 )
-async def delete_review(
+async def delete(
     review_id: UUID,
     review_service: ReviewServiceDep,
     current_user: CurrentUserDep,
