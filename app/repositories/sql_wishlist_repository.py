@@ -17,7 +17,7 @@ class SqlWishlistRepository(SqlGenericRepository[WishlistItem], WishlistReposito
         """Initialize the repository with a database session."""
         super().__init__(session, WishlistItem)
 
-    async def get_by_user_id(self, user_id: UUID) -> list[WishlistItem]:
+    async def find_by_user_id(self, user_id: UUID) -> list[WishlistItem]:
         """Get all wishlist items by user ID.
 
         Args:
@@ -30,7 +30,9 @@ class SqlWishlistRepository(SqlGenericRepository[WishlistItem], WishlistReposito
         result = await self._session.exec(stmt)
         return list(result.all())
 
-    async def get_by_user_and_product(self, user_id: UUID, product_id: UUID) -> WishlistItem | None:
+    async def find_by_user_and_product(
+        self, user_id: UUID, product_id: UUID
+    ) -> WishlistItem | None:
         """Get a wishlist item by user ID and product ID.
 
         Args:
@@ -56,7 +58,7 @@ class SqlWishlistRepository(SqlGenericRepository[WishlistItem], WishlistReposito
         await self._session.exec(stmt)
         await self._session.flush()
 
-    async def count_by_user_id(self, user_id: UUID) -> int:
+    async def count(self, user_id: UUID) -> int:
         """Get the count of wishlist items for a user.
 
         Args:

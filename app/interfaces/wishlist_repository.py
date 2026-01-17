@@ -11,7 +11,7 @@ class WishlistRepository(GenericRepository[WishlistItem], ABC):
     """Interface for Wishlist repository."""
 
     @abstractmethod
-    async def get_by_user_id(self, user_id: UUID) -> list[WishlistItem]:
+    async def find_by_user_id(self, user_id: UUID) -> list[WishlistItem]:
         """Get all wishlist items by user ID.
 
         Args:
@@ -23,7 +23,9 @@ class WishlistRepository(GenericRepository[WishlistItem], ABC):
         ...
 
     @abstractmethod
-    async def get_by_user_and_product(self, user_id: UUID, product_id: UUID) -> WishlistItem | None:
+    async def find_by_user_and_product(
+        self, user_id: UUID, product_id: UUID
+    ) -> WishlistItem | None:
         """Get a wishlist item by user ID and product ID.
 
         Args:
@@ -46,7 +48,7 @@ class WishlistRepository(GenericRepository[WishlistItem], ABC):
         ...
 
     @abstractmethod
-    async def count_by_user_id(self, user_id: UUID) -> int:
+    async def count(self, user_id: UUID) -> int:
         """Get the count of wishlist items for a user.
 
         Args:

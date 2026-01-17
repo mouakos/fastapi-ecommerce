@@ -47,12 +47,3 @@ class WishlistStatsRead(BaseModel):
     count: int
 
     model_config = ConfigDict(frozen=True)
-
-
-class WishlistActionRead(BaseModel):
-    """Schema for reading wishlist action result."""
-
-    message: str
-    product_id: UUID | None
-
-    model_config = ConfigDict(frozen=True)
