@@ -49,7 +49,7 @@ class ReviewService:
     async def list_paginated(
         self, product_id: UUID, page: int = 1, page_size: int = 10
     ) -> tuple[list[Review], int]:
-        """Get reviews for a specific product.
+        """List reviews for a specific product.
 
         Args:
             product_id (UUID): The ID of the product.
@@ -72,7 +72,7 @@ class ReviewService:
         return total, reviews
 
     async def find_by_id(self, review_id: UUID, user_id: UUID) -> Review:
-        """Get a review by its ID.
+        """Find a review by its ID.
 
         Args:
             review_id (UUID): The ID of the review.

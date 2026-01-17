@@ -31,7 +31,7 @@ class AddressService:
         return await self.uow.addresses.list_all(user_id=user_id)
 
     async def find_by_id(self, address_id: UUID, user_id: UUID) -> Address:
-        """Retrieve an address for a specific user.
+        """Find an address for a specific user.
 
         Args:
             address_id (UUID): Address ID.

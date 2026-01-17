@@ -30,10 +30,10 @@ class CategoryService:
         self,
         category_id: UUID,
     ) -> Category:
-        """Retrieve a category by its ID.
+        """Find a category by its ID.
 
         Args:
-            category_id (UUID): The ID of the category to retrieve.
+            category_id (UUID): The ID of the category to find.
 
         Returns:
             Category: The category with the specified ID.
@@ -50,10 +50,10 @@ class CategoryService:
         self,
         slug: str,
     ) -> Category:
-        """Retrieve a category by its slug.
+        """Find a category by its slug.
 
         Args:
-            slug (str): The slug of the category to retrieve.
+            slug (str): The slug of the category to find.
 
         Returns:
             Category: The category with the specified slug.

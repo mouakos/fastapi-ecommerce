@@ -33,7 +33,7 @@ class WishlistService:
             await self.uow.wishlists.add(new_wishlist_item)
 
     async def list_items(self, user_id: UUID) -> list[WishlistItem]:
-        """Get all wishlist items for a user.
+        """List all wishlist items for a user.
 
         Args:
             user_id (UUID): User ID.
@@ -65,7 +65,7 @@ class WishlistService:
         await self.uow.wishlists.delete_by_user_id(user_id)
 
     async def count(self, user_id: UUID) -> int:
-        """Get the count of wishlist items for a user.
+        """Count the total number of wishlist items for a user.
 
         Args:
             user_id (UUID): User ID.

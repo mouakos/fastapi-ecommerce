@@ -18,7 +18,7 @@ class UserService:
         self.uow = uow
 
     async def find_by_id(self, user_id: UUID) -> User:
-        """Fetch a user by id.
+        """Find a user by id.
 
         Args:
             user_id (UUID): User ID.

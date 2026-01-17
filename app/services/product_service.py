@@ -89,10 +89,10 @@ class ProductService:
         self,
         product_id: UUID,
     ) -> Product:
-        """Retrieve a product by its ID.
+        """Find a product by its ID.
 
         Args:
-            product_id (UUID): The ID of the product to retrieve.
+            product_id (UUID): The ID of the product to find.
 
         Returns:
             Product: The product with the specified ID.
@@ -106,7 +106,7 @@ class ProductService:
         return product
 
     async def calculate_average_rating(self, product_id: UUID) -> float | None:
-        """Retrieve the average rating for a product.
+        """Calculate the average rating for a product.
 
         Args:
             product_id (UUID): The ID of the product.
@@ -117,7 +117,7 @@ class ProductService:
         return await self.uow.products.calculate_average_rating(product_id)
 
     async def count_reviews(self, product_id: UUID) -> int:
-        """Retrieve the total number of reviews for a product.
+        """Count the total number of reviews for a product.
 
         Args:
             product_id (UUID): The ID of the product.
@@ -131,10 +131,10 @@ class ProductService:
         self,
         slug: str,
     ) -> Product:
-        """Retrieve a product by its slug.
+        """Find a product by its slug.
 
         Args:
-            slug (str): The slug of the product to retrieve.
+            slug (str): The slug of the product to find.
 
         Returns:
             Product: The product with the specified slug.

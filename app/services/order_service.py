@@ -76,7 +76,7 @@ class OrderService:
         return await self.uow.orders.update(created_order)
 
     async def find_by_id(self, order_id: UUID) -> Order:
-        """Get an order by its ID.
+        """Find an order by its ID.
 
         Args:
             order_id (UUID): The ID of the order.

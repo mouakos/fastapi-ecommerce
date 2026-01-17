@@ -37,7 +37,7 @@ class AdminService:
 
     # ----------------------------- Statistics Related Admin Services ----------------------------- #
     async def get_sales_statistics(self) -> SalesStatistics:
-        """Retrieve sales statistics data.
+        """Calculate sales statistics data.
 
         Returns:
             SalesStatistics: Sales statistics data.
@@ -72,7 +72,7 @@ class AdminService:
         )
 
     async def get_user_statistics(self) -> UserStatistics:
-        """Retrieve user statistics data.
+        """Calculate user statistics data.
 
         Returns:
             UserStatistics: User statistics data.
@@ -92,7 +92,7 @@ class AdminService:
         )
 
     async def get_product_statistics(self) -> ProductStatistics:
-        """Retrieve product statistics data.
+        """Calculate product statistics data.
 
         Returns:
             ProductStatistics: Product statistics data.
@@ -112,7 +112,7 @@ class AdminService:
         )
 
     async def get_review_statistics(self) -> ReviewStatistics:
-        """Retrieve review statistics data.
+        """Calculate review statistics data.
 
         Returns:
             ReviewStatistics: Review statistics data.
@@ -130,7 +130,7 @@ class AdminService:
         )
 
     async def get_dashboard_data(self) -> AdminDashboard:
-        """Retrieve comprehensive dashboard data.
+        """Calculate comprehensive dashboard data.
 
         Returns:
             AdminDashboard: Comprehensive dashboard data, including sales, users, products, and reviews.
@@ -155,7 +155,7 @@ class AdminService:
         status: OrderStatus | None = None,
         user_id: UUID | None = None,
     ) -> tuple[list[Order], int]:
-        """Retrieve all orders with pagination and optional filters.
+        """List all orders with pagination and optional filters.
 
         Args:
             page (int, optional): Page number. Defaults to 1.
@@ -214,7 +214,7 @@ class AdminService:
         role: UserRole | None = None,
         search: str | None = None,
     ) -> tuple[list[User], int]:
-        """Retrieve all users in the system.
+        """List all users in the system.
 
         Returns:
             tuple[list[User], int]: List of users and total number of users.
@@ -239,7 +239,7 @@ class AdminService:
         return await self.uow.orders.count(user_id=user_id)
 
     async def get_user_total_spent(self, user_id: UUID) -> Decimal:
-        """Get the total amount spent by a user across all orders.
+        """Calculate the total amount spent by a user across all orders.
 
         Args:
             user_id (UUID): ID of the user.
@@ -273,7 +273,7 @@ class AdminService:
         user_id: UUID | None = None,
         rating: int | None = None,
     ) -> tuple[list[Review], int]:
-        """Retrieve all product reviews with pagination and optional product filter.
+        """List all product reviews with pagination and optional product filter.
 
         Returns:
             list[Review]: List of all product reviews.
