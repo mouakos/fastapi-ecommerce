@@ -1,6 +1,5 @@
 """Service layer for user-related operations."""
 
-# mypy: disable-error-code=return-value
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -8,7 +7,7 @@ from fastapi import HTTPException, status
 from app.core.security import create_access_token, hash_password, verify_password
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.user import User
-from app.schemas.user import Login, Token, UserCreate, UserRead, UserUpdate
+from app.schemas.user import Login, Token, UserCreate, UserUpdate
 
 
 class UserService:
@@ -18,14 +17,14 @@ class UserService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def get_by_id(self, user_id: UUID) -> UserRead:
+    async def get_by_id(self, user_id: UUID) -> User:
         """Fetch a user by id.
 
         Args:
             user_id (UUID): User ID.
 
         Returns:
-            UserRead: The user with the specified ID.
+            User: The user with the specified ID.
 
         Raises:
             HTTPException: If the user does not exist.
@@ -35,14 +34,14 @@ class UserService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
         return user
 
-    async def create(self, data: UserCreate) -> UserRead:
+    async def create(self, data: UserCreate) -> User:
         """Create a new user.
 
         Args:
             data (UserCreate): User data.
 
         Returns:
-            UserRead: The created user.
+            User: The created user.
 
         Raises:
             HTTPException: If the user already exists.
@@ -61,14 +60,14 @@ class UserService:
 
         return await self.uow.users.add(new_user)
 
-    async def login(self, data: Login) -> tuple[Token, UserRead]:
+    async def login(self, data: Login) -> tuple[Token, User]:
         """Authenticate a user.
 
         Args:
             data (Login): Login data.
 
         Returns:
-            Token: Token data.
+            tuple[Token, User]: Access token and user.
 
         Raises:
             HTTPException: If the password or email is invalid.
@@ -82,7 +81,7 @@ class UserService:
         token = create_access_token({"sub": str(user.id)})
         return Token(access_token=token), user
 
-    async def update(self, user_id: UUID, data: UserUpdate) -> UserRead:
+    async def update(self, user_id: UUID, data: UserUpdate) -> User:
         """Update mutable profile fields (first/last name, phone number).
 
         Args:
@@ -90,7 +89,7 @@ class UserService:
             data (UserUpdate): User data.
 
         Returns:
-            UserRead: The updated user.
+            User: The updated user.
 
         Raises:
             HTTPException: If the user does not exist.

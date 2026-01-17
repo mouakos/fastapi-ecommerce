@@ -1,5 +1,6 @@
 """User profile management API routes for authenticated users."""
 
+# mypy: disable-error-code=return-value
 from fastapi import APIRouter, status
 
 from app.api.v1.dependencies import (

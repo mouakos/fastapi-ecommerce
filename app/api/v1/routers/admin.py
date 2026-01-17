@@ -100,7 +100,7 @@ async def get_review_statistics(
     summary="List users",
     description="Retrieve paginated list of all users with optional filtering by name, email, or role.",
 )
-async def list_all_users(
+async def list_users(
     admin_service: AdminServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
@@ -110,9 +110,27 @@ async def list_all_users(
     ] = None,
 ) -> Page[UserAdminRead]:
     """List all users with pagination and filters."""
-    return await admin_service.get_all_users(
+    total, users = await admin_service.list_users(
         page=page, page_size=page_size, search=search, role=role
     )
+    users_dto = [
+        UserAdminRead(
+            id=user.id,
+            email=user.email,
+            is_superuser=user.is_superuser,
+            role=user.role,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            phone_number=user.phone_number,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+            total_orders=await admin_service.count_user_orders(user.id),
+            total_spent=await admin_service.get_user_total_spent(user.id),
+        )
+        for user in users
+    ]
+
+    return build_page(total=total, items=users_dto, page=page, size=page_size)
 
 
 @router.patch(

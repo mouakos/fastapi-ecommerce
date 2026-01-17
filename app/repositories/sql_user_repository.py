@@ -33,7 +33,7 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
         result = await self._session.exec(stmt)
         return result.first()
 
-    async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
+    async def count(self, **filters: Any) -> int:  # noqa: ANN401
         """Get total number of users.
 
         Args:
@@ -55,7 +55,7 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
         result = await self._session.exec(stmt)
         return result.first() or 0
 
-    async def count_recent_users(self, days: int) -> int:
+    async def count_recent(self, days: int) -> int:
         """Get number of users registered in the last N days.
 
         Args:
@@ -69,7 +69,7 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
         result = await self._session.exec(stmt)
         return result.first() or 0
 
-    async def get_all_paginated(
+    async def paginate(
         self,
         page: int = 1,
         page_size: int = 10,
@@ -80,7 +80,7 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
 
         Args:
             page (int, optional): Page number. Defaults to 1.
-            page_size (int, optional): Number of records per page. Defaults to 100.
+            page_size (int, optional): Number of records per page. Defaults to 10.
             role (UserRole | None, optional): Filter by user role. Defaults to None.
             search (str | None, optional): Search query for name or email. Defaults to None.
 

@@ -1,5 +1,6 @@
 """User authentication API routes for registration and login."""
 
+# mypy: disable-error-code=return-value
 from fastapi import APIRouter, status
 
 from app.api.v1.dependencies import CartServiceDep, CartSessionIdDep, UserServiceDep

@@ -11,8 +11,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.core.security import decode_access_token
 from app.db.database import get_session
 from app.interfaces.unit_of_work import UnitOfWork
-from app.models.user import UserRole
-from app.schemas.user import UserRead
+from app.models.user import User, UserRole
 from app.services.address_service import AddressService
 from app.services.admin_service import AdminService
 from app.services.cart_service import CartService
@@ -111,7 +110,7 @@ AdminServiceDep = Annotated[AdminService, Depends(get_admin_service)]
 async def get_current_user(
     credentials: TokenDep,
     user_service: UserServiceDep,
-) -> UserRead:
+) -> User:
     """Get current authenticated user from JWT token."""
     if credentials is None or not credentials.credentials:
         raise HTTPException(
@@ -140,13 +139,13 @@ async def get_current_user(
         raise
 
 
-CurrentUserDep = Annotated[UserRead, Depends(get_current_user)]
+CurrentUserDep = Annotated[User, Depends(get_current_user)]
 
 
 async def get_optional_current_user(
     credentials: TokenDep,
     user_service: UserServiceDep,
-) -> UserRead | None:
+) -> User | None:
     """Get current authenticated user from JWT token, or None if not authenticated."""
     try:
         return await get_current_user(credentials, user_service)
@@ -156,7 +155,7 @@ async def get_optional_current_user(
         raise
 
 
-OptionalCurrentUserDep = Annotated[UserRead | None, Depends(get_optional_current_user)]
+OptionalCurrentUserDep = Annotated[User | None, Depends(get_optional_current_user)]
 
 # Cart session constants
 CART_SESSION_COOKIE = "cart_session_id"

@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import OrderStatus
 from app.models.review import Review, ReviewStatus
-from app.models.user import UserRole
+from app.models.user import User, UserRole
 from app.schemas.common import Page
 from app.schemas.order import OrderAdminRead
 from app.schemas.product import ProductRead
@@ -19,7 +19,6 @@ from app.schemas.statistics import (
     SalesStatistics,
     UserStatistics,
 )
-from app.schemas.user import UserAdminRead
 from app.utils.utc_time import utcnow
 
 
@@ -80,12 +79,12 @@ class AdminService:
         Returns:
             UserStatistics: User statistics data.
         """
-        total_users = await self.uow.users.count_all()
-        total_customers = await self.uow.users.count_all(role=UserRole.USER)
-        total_admins = await self.uow.users.count_all(role=UserRole.ADMIN)
+        total_users = await self.uow.users.count()
+        total_customers = await self.uow.users.count(role=UserRole.USER)
+        total_admins = await self.uow.users.count(role=UserRole.ADMIN)
 
         # New users in the last 30 days
-        new_users_last_30_days = await self.uow.users.count_recent_users(days=30)
+        new_users_last_30_days = await self.uow.users.count_recent(days=30)
 
         return UserStatistics(
             total_users=total_users,
@@ -237,52 +236,47 @@ class AdminService:
         await self.uow.orders.update(order)
 
     # ----------------------------- User Related Admin Services ----------------------------- #
-    async def get_all_users(
+    async def list_users(
         self,
         page: int = 1,
         page_size: int = 10,
         role: UserRole | None = None,
         search: str | None = None,
-    ) -> Page[UserAdminRead]:
+    ) -> tuple[int, list[User]]:
         """Retrieve all users in the system.
 
         Returns:
-            Page[UserAdminRead]: Paginated list of all users.
+            tuple[int, list[User]]: Total number of users and list of users.
         """
-        total, users = await self.uow.users.get_all_paginated(
+        total, users = await self.uow.users.paginate(
             page=page,
             page_size=page_size,
             role=role,
             search=search,
         )
-        user_items = []
-        for user in users:
-            total_orders = await self.uow.orders.count_all(user_id=user.id)
-            total_spent = await self.uow.orders.get_total_sales_by_user(user.id)
+        return total, users
 
-            user_items.append(
-                UserAdminRead(
-                    id=user.id,
-                    email=user.email,
-                    first_name=user.first_name,
-                    last_name=user.last_name,
-                    phone_number=user.phone_number,
-                    role=user.role,
-                    created_at=user.created_at,
-                    updated_at=user.updated_at,
-                    is_superuser=user.is_superuser,
-                    total_orders=total_orders,
-                    total_spent=total_spent,
-                )
-            )
+    async def count_user_orders(self, user_id: UUID) -> int:
+        """Count the total number of orders placed by a user.
 
-        return Page[UserAdminRead](
-            items=user_items,
-            total=total,
-            page=page,
-            size=page_size,
-            pages=(total + page_size - 1) // page_size,
-        )
+        Args:
+            user_id (UUID): ID of the user.
+
+        Returns:
+            int: Total number of orders placed by the user.
+        """
+        return await self.uow.orders.count_all(user_id=user_id)
+
+    async def get_user_total_spent(self, user_id: UUID) -> Decimal:
+        """Get the total amount spent by a user across all orders.
+
+        Args:
+            user_id (UUID): ID of the user.
+
+        Returns:
+            Decimal: Total amount spent by the user.
+        """
+        return await self.uow.orders.get_total_sales_by_user(user_id)
 
     async def update_user_role(self, user_id: UUID, new_role: UserRole) -> None:
         """Update the role of a user.
