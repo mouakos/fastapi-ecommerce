@@ -6,12 +6,10 @@ from uuid import UUID
 from fastapi import HTTPException
 
 from app.interfaces.unit_of_work import UnitOfWork
-from app.models.order import OrderStatus
+from app.models.order import Order, OrderStatus
+from app.models.product import Product
 from app.models.review import Review, ReviewStatus
 from app.models.user import User, UserRole
-from app.schemas.common import Page
-from app.schemas.order import OrderAdminRead
-from app.schemas.product import ProductRead
 from app.schemas.statistics import (
     AdminDashboard,
     ProductStatistics,
@@ -150,13 +148,13 @@ class AdminService:
         )
 
     # ----------------------------- Order Related Admin Services ----------------------------- #
-    async def get_all_orders(
+    async def list_orders(
         self,
         page: int = 1,
         page_size: int = 10,
         status: OrderStatus | None = None,
         user_id: UUID | None = None,
-    ) -> Page[OrderAdminRead]:
+    ) -> tuple[list[Order], int]:
         """Retrieve all orders with pagination and optional filters.
 
         Args:
@@ -166,40 +164,13 @@ class AdminService:
             user_id (UUID | None, optional): Filter by user ID. Defaults to None.
 
         Returns:
-            Page[OrderAdminRead]: Paginated list of orders.
+            tuple[list[Order], int]: List of orders and total count.
         """
-        total, orders = await self.uow.orders.get_all_paginated(
+        orders, total = await self.uow.orders.paginate(
             page=page, page_size=page_size, status=status, user_id=user_id
         )
 
-        order_items = []
-
-        for order in orders:
-            order_items.append(
-                OrderAdminRead(
-                    id=order.id,
-                    order_number=order.order_number,
-                    user_id=order.user_id,
-                    user_email=order.user.email,
-                    total_amount=order.total_amount,
-                    status=order.status,
-                    payment_status=order.payment_status,
-                    updated_at=order.updated_at,
-                    created_at=order.created_at,
-                    shipped_at=order.shipped_at,
-                    paid_at=order.paid_at,
-                    canceled_at=order.canceled_at,
-                    delivered_at=order.delivered_at,
-                )
-            )
-
-        return Page[OrderAdminRead](
-            items=order_items,
-            total=total,
-            page=page,
-            size=page_size,
-            pages=(total + page_size - 1) // page_size,
-        )
+        return orders, total
 
     async def update_order_status(self, order_id: UUID, new_status: OrderStatus) -> None:
         """Update the status of an order.
@@ -242,19 +213,19 @@ class AdminService:
         page_size: int = 10,
         role: UserRole | None = None,
         search: str | None = None,
-    ) -> tuple[int, list[User]]:
+    ) -> tuple[list[User], int]:
         """Retrieve all users in the system.
 
         Returns:
-            tuple[int, list[User]]: Total number of users and list of users.
+            tuple[list[User], int]: List of users and total number of users.
         """
-        total, users = await self.uow.users.paginate(
+        users, total = await self.uow.users.paginate(
             page=page,
             page_size=page_size,
             role=role,
             search=search,
         )
-        return total, users
+        return users, total
 
     async def count_user_orders(self, user_id: UUID) -> int:
         """Count the total number of orders placed by a user.
@@ -293,7 +264,7 @@ class AdminService:
         await self.uow.users.update(user)
 
     # ----------------------------- Review Related Admin Services ----------------------------- #
-    async def get_reviews(
+    async def list_reviews(
         self,
         page: int = 1,
         page_size: int = 10,
@@ -301,13 +272,13 @@ class AdminService:
         status: ReviewStatus | None = None,
         user_id: UUID | None = None,
         rating: int | None = None,
-    ) -> tuple[int, list[Review]]:
+    ) -> tuple[list[Review], int]:
         """Retrieve all product reviews with pagination and optional product filter.
 
         Returns:
             list[Review]: List of all product reviews.
         """
-        total, reviews = await self.uow.reviews.paginate(
+        reviews, total = await self.uow.reviews.paginate(
             page=page,
             page_size=page_size,
             product_id=product_id,
@@ -315,7 +286,7 @@ class AdminService:
             user_id=user_id,
             rating=rating,
         )
-        return total, reviews
+        return reviews, total
 
     async def approve_review(self, review_id: UUID, moderator_id: UUID) -> Review:
         """Approve a product review.
@@ -369,7 +340,7 @@ class AdminService:
             raise HTTPException(status_code=404, detail="Review not found.")
 
     # ---------------- Product Related Admin Services ---------------- #
-    async def get_top_selling_products(self, limit: int = 10, days: int = 30) -> list[ProductRead]:
+    async def list_top_selling_products(self, limit: int = 10, days: int = 30) -> list[Product]:
         """Retrieve top selling products.
 
         Args:
@@ -377,19 +348,17 @@ class AdminService:
             days (int): Number of days to consider for sales data.
 
         Returns:
-            list[ProductRead]: List of top selling products.
+            list[Product]: List of top selling products.
         """
-        products = await self.uow.products.get_top_selling(limit=limit, days=days)
-        return [ProductRead.model_validate(product) for product in products]
+        return await self.uow.products.list_top_selling(limit=limit, days=days)
 
-    async def get_low_stock_products(self, threshold: int = 10) -> list[ProductRead]:
+    async def list_low_stock_products(self, threshold: int = 10) -> list[Product]:
         """Retrieve products that are low in stock.
 
         Args:
             threshold (int): Stock threshold.
 
         Returns:
-            list[ProductRead]: List of low stock products.
+            list[Product]: List of low stock products.
         """
-        products = await self.uow.products.get_low_stock(threshold=threshold)
-        return [ProductRead.model_validate(product) for product in products]
+        return await self.uow.products.list_low_stock(threshold=threshold)

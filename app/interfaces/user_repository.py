@@ -56,7 +56,7 @@ class UserRepository(GenericRepository[User], ABC):
         page_size: int = 10,
         role: UserRole | None = None,
         search: str | None = None,
-    ) -> tuple[int, list[User]]:
+    ) -> tuple[list[User], int]:
         """Get all users with pagination and optional filters.
 
         Args:
@@ -66,6 +66,6 @@ class UserRepository(GenericRepository[User], ABC):
             search (str | None, optional): Search query for name or email. Defaults to None.
 
         Returns:
-            tuple[int, list[User]]: Total count and list of users.
+            tuple[list[User], int]: List of users and total count.
         """
         ...

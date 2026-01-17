@@ -27,7 +27,7 @@ router = APIRouter(prefix="/products", tags=["Products"])
     summary="Get product name suggestions",
     description="Retrieve autocomplete suggestions for product names based on search query. Returns up to 10 matching product names.",
 )
-async def get_product_autocomplete_suggestions(
+async def list_product_autocomplete_suggestions(
     product_service: ProductServiceDep,
     query: Annotated[
         str,
@@ -39,8 +39,8 @@ async def get_product_autocomplete_suggestions(
     ],
     limit: Annotated[int, Query(ge=1, le=10, description="Maximum number of suggestions")] = 10,
 ) -> ProductAutocompleteRead:
-    """Get autocomplete suggestions for product names based on a search query."""
-    suggestions = await product_service.get_autocomplete_suggestions(query, limit)
+    """List autocomplete suggestions for product names based on a search query."""
+    suggestions = await product_service.list_autocomplete_suggestions(query, limit)
     return ProductAutocompleteRead(suggestions=suggestions)
 
 
@@ -118,11 +118,11 @@ async def create_product(
     summary="Get products by category ID",
     description="Retrieve all products belonging to a specific category using the category's UUID.",
 )
-async def get_products_by_category_id(
+async def list_products_by_category_id(
     category_id: UUID, product_service: ProductServiceDep
 ) -> list[ProductRead]:
     """Retrieve products by category ID."""
-    return await product_service.get_by_category_id(category_id)
+    return await product_service.list_by_category_id(category_id)
 
 
 @router.get(
@@ -131,11 +131,11 @@ async def get_products_by_category_id(
     summary="Get products by category slug",
     description="Retrieve all products belonging to a specific category using the category's URL-friendly slug.",
 )
-async def get_products_by_category_slug(
+async def list_products_by_category_slug(
     category_slug: str, product_service: ProductServiceDep
 ) -> list[ProductRead]:
     """Retrieve products by category slug."""
-    return await product_service.get_by_category_slug(category_slug)
+    return await product_service.list_by_category_slug(category_slug)
 
 
 # Single product lookup paths (by ID or slug)

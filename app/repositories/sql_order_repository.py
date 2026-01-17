@@ -79,23 +79,23 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
         result = await self._session.exec(stmt)
         return result.first() or 0
 
-    async def get_all_paginated(
+    async def paginate(
         self,
         page: int = 1,
         page_size: int = 10,
         status: OrderStatus | None = None,
         user_id: UUID | None = None,
-    ) -> tuple[int, list[Order]]:
+    ) -> tuple[list[Order], int]:
         """Get all orders with pagination and optional filters.
 
         Args:
             page (int, optional): Page number. Defaults to 1.
-            page_size (int, optional): Number of records per page. Defaults to 100.
+            page_size (int, optional): Number of records per page. Defaults to 10.
             status (OrderStatus | None, optional): Filter by order status. Defaults to None.
             user_id (UUID | None, optional): Filter by user ID. Defaults to None.
 
         Returns:
-            tuple[int, list[Order]]: Total count and list of orders.
+            tuple[list[Order], int]: List of orders and total count.
         """
         # Build the base query
         stmt = select(Order)
@@ -120,4 +120,4 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
         result = await self._session.exec(stmt)
         orders = list(result.all())
 
-        return total, orders
+        return orders, total

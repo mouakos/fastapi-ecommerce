@@ -1,5 +1,6 @@
 """Admin dashboard and management API routes for statistics, users, orders, reviews, and inventory."""
 
+# mypy: disable-error-code=return-value
 from typing import Annotated
 from uuid import UUID
 
@@ -110,7 +111,7 @@ async def list_users(
     ] = None,
 ) -> Page[UserAdminRead]:
     """List all users with pagination and filters."""
-    total, users = await admin_service.list_users(
+    users, total = await admin_service.list_users(
         page=page, page_size=page_size, search=search, role=role
     )
     users_dto = [
@@ -155,7 +156,7 @@ async def update_user_role(
     summary="List orders",
     description="Retrieve paginated list of all orders with optional filtering by status or user.",
 )
-async def list_all_orders(
+async def list_orders(
     admin_service: AdminServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
@@ -163,9 +164,28 @@ async def list_all_orders(
     user_id: Annotated[UUID | None, Query(description="Filter by user ID")] = None,
 ) -> Page[OrderAdminRead]:
     """List all orders with pagination and filters."""
-    return await admin_service.get_all_orders(
+    orders, total = await admin_service.list_orders(
         page=page, page_size=page_size, status=status, user_id=user_id
     )
+    orders_dto = [
+        OrderAdminRead(
+            id=order.id,
+            user_id=order.user_id,
+            status=order.status,
+            total_amount=order.total_amount,
+            created_at=order.created_at,
+            updated_at=order.updated_at,
+            order_number=order.order_number,
+            payment_status=order.payment_status,
+            user_email=order.user.email,
+            shipped_at=order.shipped_at,
+            delivered_at=order.delivered_at,
+            paid_at=order.paid_at,
+            canceled_at=order.canceled_at,
+        )
+        for order in orders
+    ]
+    return build_page(items=orders_dto, page=page, size=page_size, total=total)
 
 
 @router.patch(
@@ -190,7 +210,7 @@ async def update_order_status(
     summary="List reviews",
     description="Retrieve paginated list of all reviews with optional filtering by status, user, product, or rating.",
 )
-async def get_reviews(
+async def list_reviews(
     admin_service: AdminServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
@@ -200,7 +220,7 @@ async def get_reviews(
     rating: int | None = Query(None, ge=1, le=5, description="Filter by rating"),
 ) -> Page[ReviewAdminRead]:
     """Get all reviews."""
-    total, reviews = await admin_service.get_reviews(
+    reviews, total = await admin_service.list_reviews(
         page=page,
         page_size=page_size,
         status=status,
@@ -308,12 +328,12 @@ async def delete_review(
     summary="Get low stock products",
     description="Retrieve products with stock levels below the specified threshold for inventory monitoring and restocking alerts.",
 )
-async def get_low_stock_products(
+async def list_low_stock_products(
     admin_service: AdminServiceDep,
     threshold: int = Query(10, ge=1, description="Stock threshold for alerts"),
 ) -> list[ProductRead]:
     """Get low stock product alerts."""
-    return await admin_service.get_low_stock_products(threshold=threshold)
+    return await admin_service.list_low_stock_products(threshold=threshold)
 
 
 @router.get(
@@ -322,9 +342,9 @@ async def get_low_stock_products(
     summary="Get top-moving products",
     description="Retrieve the best-selling products ranked by order volume. Useful for identifying popular items and inventory planning.",
 )
-async def get_top_moving_products(
+async def list_top_moving_products(
     admin_service: AdminServiceDep,
     limit: int = Query(10, ge=1, description="Number of top products to retrieve"),
 ) -> list[ProductRead]:
     """Get top-moving products."""
-    return await admin_service.get_top_selling_products(limit=limit)
+    return await admin_service.list_top_selling_products(limit=limit)

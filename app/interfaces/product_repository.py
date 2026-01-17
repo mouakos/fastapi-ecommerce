@@ -97,7 +97,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         ...
 
     @abstractmethod
-    async def get_autocomplete_suggestions(self, query: str, limit: int = 10) -> list[str]:
+    async def list_autocomplete_suggestions(self, query: str, limit: int = 10) -> list[str]:
         """Get autocomplete suggestions for product names based on a search query.
 
         Args:
@@ -110,7 +110,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         ...
 
     @abstractmethod
-    async def get_by_category_slug(self, category_slug: str) -> list[Product]:
+    async def list_by_category_slug(self, category_slug: str) -> list[Product]:
         """Get products by category slug.
 
         Args:
@@ -122,7 +122,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         ...
 
     @abstractmethod
-    async def get_by_category_id(self, category_id: UUID) -> list[Product]:
+    async def list_by_category_id(self, category_id: UUID) -> list[Product]:
         """Get products by category ID.
 
         Args:
@@ -161,7 +161,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         ...
 
     @abstractmethod
-    async def get_low_stock(self, threshold: int = 10) -> list[Product]:
+    async def list_low_stock(self, threshold: int = 10) -> list[Product]:
         """Retrieve products that are low in stock.
 
         Args:
@@ -173,7 +173,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         ...
 
     @abstractmethod
-    async def get_top_selling(self, limit: int = 10, days: int = 30) -> list[Product]:
+    async def list_top_selling(self, limit: int = 10, days: int = 30) -> list[Product]:
         """Retrieve top selling products within a specified time frame.
 
         Args:

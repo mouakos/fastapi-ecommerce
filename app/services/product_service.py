@@ -68,8 +68,8 @@ class ProductService:
         )
         return products, total
 
-    async def get_autocomplete_suggestions(self, query: str, limit: int = 10) -> list[str]:
-        """Get autocomplete suggestions for product names based on a search query.
+    async def list_autocomplete_suggestions(self, query: str, limit: int = 10) -> list[str]:
+        """List autocomplete suggestions for product names based on a search query.
 
         Args:
             query (str): The search query string.
@@ -83,7 +83,7 @@ class ProductService:
         """
         if not query or len(query) < 2:
             raise HTTPException(status_code=400, detail="Query must be at least 2 characters long.")
-        return await self.uow.products.get_autocomplete_suggestions(query, limit)
+        return await self.uow.products.list_autocomplete_suggestions(query, limit)
 
     async def get_by_id(
         self,
@@ -147,11 +147,11 @@ class ProductService:
             raise HTTPException(status_code=404, detail="Product not found.")
         return product
 
-    async def get_by_category_slug(
+    async def list_by_category_slug(
         self,
         category_slug: str,
     ) -> list[Product]:
-        """Retrieve products by category slug.
+        """List products by category slug.
 
         Args:
             category_slug (str): The slug of the category.
@@ -166,13 +166,13 @@ class ProductService:
         if not category:
             raise HTTPException(status_code=404, detail="Category not found.")
 
-        return await self.uow.products.get_by_category_slug(category.slug)
+        return await self.uow.products.list_by_category_slug(category.slug)
 
-    async def get_by_category_id(
+    async def list_by_category_id(
         self,
         category_id: UUID,
     ) -> list[Product]:
-        """Retrieve products by category ID.
+        """List products by category ID.
 
         Args:
             category_id (UUID): The ID of the category.
@@ -187,7 +187,7 @@ class ProductService:
         if not category:
             raise HTTPException(status_code=404, detail="Category not found.")
 
-        return await self.uow.products.get_by_category_id(category.id)
+        return await self.uow.products.list_by_category_id(category.id)
 
     async def create(
         self,

@@ -112,7 +112,7 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         status: ReviewStatus | None = None,
         user_id: UUID | None = None,
         rating: int | None = None,
-    ) -> tuple[int, list[Review]]:
+    ) -> tuple[list[Review], int]:
         """Get all reviews with pagination and optional filters.
 
         Args:
@@ -124,7 +124,7 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
             rating (int | None, optional): Filter by rating. Defaults to None.
 
         Returns:
-            tuple[int, list[Review]]: Total count and list of reviews.
+            tuple[list[Review], int]: List of reviews and total count.
         """
         # Build the query
         stmt = select(Review)
@@ -152,4 +152,4 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         result = await self._session.exec(stmt.order_by(desc(Review.created_at)))
         reviews = list(result.all())
 
-        return total, reviews
+        return reviews, total

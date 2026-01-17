@@ -75,7 +75,7 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
         page_size: int = 10,
         role: UserRole | None = None,
         search: str | None = None,
-    ) -> tuple[int, list[User]]:
+    ) -> tuple[list[User], int]:
         """Get all users with pagination and optional filters.
 
         Args:
@@ -85,7 +85,7 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
             search (str | None, optional): Search query for name or email. Defaults to None.
 
         Returns:
-            tuple[int, list[User]]: Total count and list of users.
+            tuple[list[User], int]: List of users and total count.
         """
         stmt = select(User)
 
@@ -112,4 +112,4 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
         result = await self._session.exec(stmt)
         users = list(result.all())
 
-        return total, users
+        return users, total

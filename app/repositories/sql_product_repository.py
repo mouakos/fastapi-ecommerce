@@ -190,7 +190,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         avg_rating = result.first()
         return float(avg_rating) if avg_rating is not None else None
 
-    async def get_autocomplete_suggestions(self, query: str, limit: int = 10) -> list[str]:
+    async def list_autocomplete_suggestions(self, query: str, limit: int = 10) -> list[str]:
         """Get autocomplete suggestions for product names based on a search query.
 
         Args:
@@ -235,8 +235,8 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
 
         return prefix_matches + contains_matches
 
-    async def get_by_category_slug(self, category_slug: str) -> list[Product]:
-        """Get products by category slug.
+    async def list_by_category_slug(self, category_slug: str) -> list[Product]:
+        """List products by category slug.
 
         Args:
             category_slug (str): Category slug.
@@ -254,8 +254,8 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         result = await self._session.exec(stmt)
         return list(result.all())
 
-    async def get_by_category_id(self, category_id: UUID) -> list[Product]:
-        """Get products by category ID.
+    async def list_by_category_id(self, category_id: UUID) -> list[Product]:
+        """List products by category ID.
 
         Args:
             category_id (UUID): Category ID.
@@ -313,7 +313,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         result = await self._session.exec(stmt)
         return result.first() or 0
 
-    async def get_low_stock(self, threshold: int = 10) -> list[Product]:
+    async def list_low_stock(self, threshold: int = 10) -> list[Product]:
         """Retrieve products that are low in stock.
 
         Args:
@@ -331,7 +331,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         result = await self._session.exec(stmt)
         return list(result.all())
 
-    async def get_top_selling(self, limit: int = 10, days: int = 30) -> list[Product]:
+    async def list_top_selling(self, limit: int = 10, days: int = 30) -> list[Product]:
         """Retrieve top selling products within a specified time frame.
 
         Args:

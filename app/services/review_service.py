@@ -48,7 +48,7 @@ class ReviewService:
 
     async def list_reviews(
         self, product_id: UUID, page: int = 1, page_size: int = 10
-    ) -> tuple[int, list[Review]]:
+    ) -> tuple[list[Review], int]:
         """Get reviews for a specific product.
 
         Args:
@@ -57,7 +57,7 @@ class ReviewService:
             page_size (int, optional): Number of reviews per page. Defaults to 10.
 
         Returns:
-            tuple[int, list[Review]]: Total count and list of reviews for the product.
+            tuple[list[Review], int]: List of reviews and total count for the product.
 
         Raises:
             HTTPException: If the product does not exist.

@@ -87,7 +87,7 @@ class ReviewRepository(GenericRepository[Review], ABC):
         status: ReviewStatus | None = None,
         user_id: UUID | None = None,
         rating: int | None = None,
-    ) -> tuple[int, list[Review]]:
+    ) -> tuple[list[Review], int]:
         """Get paginated reviews with optional filters.
 
         Args:
