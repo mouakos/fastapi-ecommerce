@@ -106,8 +106,8 @@ async def create_product(
     product = await product_service.create(data)
     return ProductDetailRead(
         **product.model_dump(),
-        review_count=await product_service.get_review_count(product.id),
-        average_rating=await product_service.get_average_rating(product.id),
+        review_count=await product_service.count_reviews(product.id),
+        average_rating=await product_service.calculate_average_rating(product.id),
     )
 
 
@@ -150,8 +150,8 @@ async def get_product(product_id: UUID, product_service: ProductServiceDep) -> P
     product = await product_service.find_by_id(product_id)
     return ProductDetailRead(
         **product.model_dump(),
-        review_count=await product_service.get_review_count(product_id),
-        average_rating=await product_service.get_average_rating(product_id),
+        review_count=await product_service.count_reviews(product_id),
+        average_rating=await product_service.calculate_average_rating(product_id),
     )
 
 
@@ -163,11 +163,11 @@ async def get_product(product_id: UUID, product_service: ProductServiceDep) -> P
 )
 async def get_product_by_slug(slug: str, product_service: ProductServiceDep) -> ProductDetailRead:
     """Retrieve a product by its slug."""
-    product = await product_service.get_by_slug(slug)
+    product = await product_service.find_by_slug(slug)
     return ProductDetailRead(
         **product.model_dump(),
-        review_count=await product_service.get_review_count(product.id),
-        average_rating=await product_service.get_average_rating(product.id),
+        review_count=await product_service.count_reviews(product.id),
+        average_rating=await product_service.calculate_average_rating(product.id),
     )
 
 
@@ -186,8 +186,8 @@ async def update_product(
     product = await product_service.update(product_id, data)
     return ProductDetailRead(
         **product.model_dump(),
-        review_count=await product_service.get_review_count(product_id),
-        average_rating=await product_service.get_average_rating(product_id),
+        review_count=await product_service.count_reviews(product_id),
+        average_rating=await product_service.calculate_average_rating(product_id),
     )
 
 

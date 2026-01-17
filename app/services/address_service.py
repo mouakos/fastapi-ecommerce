@@ -18,7 +18,7 @@ class AddressService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def list_addresses(self, user_id: UUID) -> list[Address]:
+    async def list(self, user_id: UUID) -> list[Address]:
         """List all Addresses for a user.
 
         Args:
@@ -30,7 +30,7 @@ class AddressService:
         """
         return await self.uow.addresses.list_all(user_id=user_id)
 
-    async def get_address(self, address_id: UUID, user_id: UUID) -> Address:
+    async def find_by_id(self, address_id: UUID, user_id: UUID) -> Address:
         """Retrieve an address for a specific user.
 
         Args:
@@ -51,7 +51,7 @@ class AddressService:
             )
         return address
 
-    async def add_address(
+    async def create(
         self,
         user_id: UUID,
         data: AddressCreate,
@@ -105,7 +105,7 @@ class AddressService:
 
         return await self.uow.addresses.update(address)
 
-    async def delete_address(self, address_id: UUID, user_id: UUID) -> None:
+    async def delete(self, address_id: UUID, user_id: UUID) -> None:
         """Delete an address for a user.
 
         Args:

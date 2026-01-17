@@ -16,7 +16,7 @@ class ReviewService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def add_review(self, user_id: UUID, data: ReviewCreate) -> Review:
+    async def create(self, user_id: UUID, data: ReviewCreate) -> Review:
         """Create a new review for a product.
 
         Args:
@@ -46,7 +46,7 @@ class ReviewService:
         )
         return await self.uow.reviews.add(new_review)
 
-    async def list_reviews(
+    async def list_paginated(
         self, product_id: UUID, page: int = 1, page_size: int = 10
     ) -> tuple[list[Review], int]:
         """Get reviews for a specific product.
@@ -71,7 +71,7 @@ class ReviewService:
         )
         return total, reviews
 
-    async def get_review(self, review_id: UUID, user_id: UUID) -> Review:
+    async def find_by_id(self, review_id: UUID, user_id: UUID) -> Review:
         """Get a review by its ID.
 
         Args:
@@ -90,7 +90,7 @@ class ReviewService:
 
         return review
 
-    async def update_review(self, review_id: UUID, user_id: UUID, data: ReviewUpdate) -> Review:
+    async def update(self, review_id: UUID, user_id: UUID, data: ReviewUpdate) -> Review:
         """Update a review by its ID.
 
         Args:
@@ -119,7 +119,7 @@ class ReviewService:
 
         return await self.uow.reviews.update(review)
 
-    async def delete_review(self, review_id: UUID, user_id: UUID) -> None:
+    async def delete(self, review_id: UUID, user_id: UUID) -> None:
         """Delete a review by its ID.
 
         Args:

@@ -22,7 +22,7 @@ async def list_addresses(
     address_service: AddressServiceDep,
 ) -> list[AddressRead]:
     """List all addresses for the current user."""
-    return await address_service.list_addresses(current_user.id)
+    return await address_service.list(current_user.id)
 
 
 @router.post(
@@ -38,7 +38,7 @@ async def add_address(
     address_service: AddressServiceDep,
 ) -> AddressRead:
     """Add a new address to the currently authenticated user's account."""
-    return await address_service.add_address(current_user.id, data)
+    return await address_service.create(current_user.id, data)
 
 
 @router.patch(
@@ -99,4 +99,4 @@ async def delete_address(
     address_service: AddressServiceDep,
 ) -> None:
     """Delete an existing address. Only the owner or an admin can delete an address."""
-    await address_service.delete_address(address_id, current_user.id)
+    await address_service.delete(address_id, current_user.id)

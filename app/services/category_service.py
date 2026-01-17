@@ -46,7 +46,7 @@ class CategoryService:
             raise HTTPException(status_code=404, detail="Category not found.")
         return category
 
-    async def get_by_slug(
+    async def find_by_slug(
         self,
         slug: str,
     ) -> Category:

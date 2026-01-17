@@ -105,7 +105,7 @@ class ProductService:
             raise HTTPException(status_code=404, detail="Product not found.")
         return product
 
-    async def get_average_rating(self, product_id: UUID) -> float | None:
+    async def calculate_average_rating(self, product_id: UUID) -> float | None:
         """Retrieve the average rating for a product.
 
         Args:
@@ -116,7 +116,7 @@ class ProductService:
         """
         return await self.uow.products.calculate_average_rating(product_id)
 
-    async def get_review_count(self, product_id: UUID) -> int:
+    async def count_reviews(self, product_id: UUID) -> int:
         """Retrieve the total number of reviews for a product.
 
         Args:
@@ -127,7 +127,7 @@ class ProductService:
         """
         return await self.uow.products.count_reviews(product_id)
 
-    async def get_by_slug(
+    async def find_by_slug(
         self,
         slug: str,
     ) -> Product:

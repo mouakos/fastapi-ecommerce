@@ -60,7 +60,7 @@ async def get_category(category_id: UUID, category_service: CategoryServiceDep) 
 )
 async def get_category_by_slug(slug: str, category_service: CategoryServiceDep) -> CategoryRead:
     """Retrieve a category by its slug."""
-    return await category_service.get_by_slug(slug)
+    return await category_service.find_by_slug(slug)
 
 
 # Parameterized admin operations

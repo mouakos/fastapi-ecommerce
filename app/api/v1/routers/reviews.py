@@ -26,7 +26,7 @@ async def add_review(
     current_user: CurrentUserDep,
 ) -> ReviewRead:
     """Create a new review for a product."""
-    return await review_service.add_review(current_user.id, data)
+    return await review_service.create(current_user.id, data)
 
 
 @router.get(
@@ -42,7 +42,7 @@ async def list_reviews(
     page_size: int = Query(10, description="Number of reviews per page"),
 ) -> Page[ReviewRead]:
     """Get all reviews for a specific product."""
-    total, items = await review_service.list_reviews(product_id, page=page, page_size=page_size)
+    total, items = await review_service.list_paginated(product_id, page=page, page_size=page_size)
     return build_page(items=items, page=page, size=page_size, total=total)  # type: ignore [arg-type]
 
 
@@ -58,7 +58,7 @@ async def get_review(
     current_user: CurrentUserDep,
 ) -> ReviewRead:
     """Get a review by its ID."""
-    return await review_service.get_review(review_id, current_user.id)
+    return await review_service.find_by_id(review_id, current_user.id)
 
 
 @router.patch(
@@ -74,7 +74,7 @@ async def update_review(
     current_user: CurrentUserDep,
 ) -> ReviewRead:
     """Update a review by its ID."""
-    return await review_service.update_review(current_user.id, review_id, data)
+    return await review_service.update(review_id, current_user.id, data)
 
 
 @router.delete(
@@ -89,4 +89,4 @@ async def delete_review(
     current_user: CurrentUserDep,
 ) -> None:
     """Delete a review by its ID."""
-    await review_service.delete_review(current_user.id, review_id)
+    await review_service.delete(review_id, current_user.id)
