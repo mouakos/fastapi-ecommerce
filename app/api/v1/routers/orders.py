@@ -1,5 +1,6 @@
 """Order management API routes for checkout and order history."""
 
+# mypy: disable-error-code=return-value
 from uuid import UUID
 
 from fastapi import APIRouter

@@ -8,7 +8,7 @@ from pydantic import HttpUrl
 
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.category import Category
-from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
+from app.schemas.category import CategoryCreate, CategoryUpdate
 
 
 class CategoryService:
@@ -18,25 +18,25 @@ class CategoryService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def list_all(self) -> list[CategoryRead]:
+    async def list_all(self) -> list[Category]:
         """List all categories.
 
         Returns:
-            list[CategoryRead]: A list of all categories.
+            list[Category]: A list of all categories.
         """
         return await self.uow.categories.list_all()
 
     async def get_by_id(
         self,
         category_id: UUID,
-    ) -> CategoryRead:
+    ) -> Category:
         """Retrieve a category by its ID.
 
         Args:
             category_id (UUID): The ID of the category to retrieve.
 
         Returns:
-            CategoryRead: The category with the specified ID.
+            Category: The category with the specified ID.
 
         Raises:
             HTTPException: If the category is not found.
@@ -49,7 +49,7 @@ class CategoryService:
     async def get_by_slug(
         self,
         slug: str,
-    ) -> CategoryRead:
+    ) -> Category:
         """Retrieve a category by its slug.
 
         Args:
@@ -57,7 +57,7 @@ class CategoryService:
             slug (str): The slug of the category to retrieve.
 
         Returns:
-            CategoryRead: The category with the specified slug.
+            Category: The category with the specified slug.
 
         Raises:
             HTTPException: If the category is not found.
@@ -70,14 +70,14 @@ class CategoryService:
     async def create(
         self,
         data: CategoryCreate,
-    ) -> CategoryRead:
+    ) -> Category:
         """Create a new category.
 
         Args:
             data (CategoryCreate): The data for the new category.
 
         Returns:
-            CategoryRead: The newly created category.
+            Category: The newly created category.
 
         Raises:
             HTTPException: If the parent category does not exist.
@@ -99,7 +99,7 @@ class CategoryService:
         self,
         category_id: UUID,
         data: CategoryUpdate,
-    ) -> CategoryRead:
+    ) -> Category:
         """Update an existing category.
 
         Args:
@@ -107,7 +107,7 @@ class CategoryService:
             data (CategoryUpdate): The updated data for the category.
 
         Returns:
-            CategoryRead: The updated category.
+            Category: The updated category.
 
         Raises:
             HTTPException: If the category or new parent category does not exist, or if trying to set itself as parent.

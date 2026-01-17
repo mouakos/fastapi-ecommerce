@@ -1,6 +1,5 @@
 """Order service for handling order-related operations."""
 
-# mypy: disable-error-code=return-value
 from uuid import UUID
 
 import ulid
@@ -8,7 +7,7 @@ from fastapi import HTTPException
 
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import Order, OrderItem, OrderStatus
-from app.schemas.order import OrderCreate, OrderRead
+from app.schemas.order import OrderCreate
 
 
 class OrderService:
@@ -18,7 +17,7 @@ class OrderService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def checkout(self, user_id: UUID, data: OrderCreate) -> OrderRead:
+    async def checkout(self, user_id: UUID, data: OrderCreate) -> Order:
         """Create a new order for the user."""
         # Validate addresses
         billing_address = await self.uow.addresses.get_by_id(data.billing_address_id)
@@ -76,14 +75,14 @@ class OrderService:
 
         return await self.uow.orders.update(created_order)
 
-    async def get_by_id(self, order_id: UUID) -> OrderRead:
+    async def get_by_id(self, order_id: UUID) -> Order:
         """Get an order by its ID.
 
         Args:
             order_id (UUID): The ID of the order.
 
         Returns:
-            OrderRead: The order data.
+            Order: The order data.
 
         Raises:
             HTTPException: If the order is not found.
@@ -93,14 +92,14 @@ class OrderService:
             raise HTTPException(status_code=404, detail="Order not found.")
         return order
 
-    async def list_all(self, user_id: UUID) -> list[OrderRead]:
+    async def list_all(self, user_id: UUID) -> list[Order]:
         """List all orders for a user.
 
         Args:
             user_id (UUID): The ID of the user.
 
         Returns:
-            list[OrderRead]: List of orders for the user.
+            list[Order]: List of orders for the user.
         """
         return await self.uow.orders.list_all(user_id=user_id)
 

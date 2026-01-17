@@ -1,5 +1,6 @@
 """Shopping cart management API routes for authenticated and guest users."""
 
+# mypy: disable-error-code=return-value
 from uuid import UUID
 
 from fastapi import APIRouter

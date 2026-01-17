@@ -1,5 +1,6 @@
 """Product category management API routes with hierarchical support."""
 
+# mypy: disable-error-code=return-value
 from uuid import UUID
 
 from fastapi import APIRouter, status

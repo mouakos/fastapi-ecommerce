@@ -34,7 +34,7 @@ class CartService:
 
     async def add_item(
         self, user_id: UUID | None, session_id: str | None, data: CartItemCreate
-    ) -> CartRead:
+    ) -> Cart:
         """Add an item to the cart.
 
         Args:
@@ -43,7 +43,7 @@ class CartService:
             data (CartItemCreate): Data for the cart item.
 
         Returns:
-            CartRead: Updated cart instance.
+            Cart: Updated cart instance.
 
         Raises:
             HTTPException: If the product is out of stock or not available.
@@ -86,7 +86,7 @@ class CartService:
         session_id: str | None,
         product_id: UUID,
         data: CartItemUpdate,
-    ) -> CartRead:
+    ) -> Cart:
         """Update the quantity of an item in the cart.
 
         Args:
@@ -96,7 +96,7 @@ class CartService:
             data (CartItemUpdate): Data for updating the cart item.
 
         Returns:
-            CartRead: Updated cart instance.
+            Cart: Updated cart instance.
 
         Raises:
             HTTPException: If product is not found in cart, out of stock, or not available.
@@ -123,7 +123,7 @@ class CartService:
 
     async def remove_item(
         self, user_id: UUID | None, session_id: str | None, product_id: UUID
-    ) -> CartRead:
+    ) -> Cart:
         """Remove an item from the cart.
 
         Args:
@@ -132,7 +132,7 @@ class CartService:
             product_id (UUID): Product ID.
 
         Returns:
-            CartRead: Updated cart instance.
+            Cart: Updated cart instance.
 
         Raises:
             HTTPException: If product is not found in cart.
