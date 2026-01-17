@@ -24,7 +24,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         """Initialize the repository with a database session."""
         super().__init__(session, Product)
 
-    async def list_all_paginated(
+    async def paginate(
         self,
         *,
         page: int = 1,
@@ -37,14 +37,14 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         availability: str = "all",
         sort_by: allowed_sort_by = "id",
         sort_order: allowed_sort_order = "asc",
-    ) -> tuple[int, list[Product]]:
+    ) -> tuple[list[Product], int]:
         """Gets a list of products with optional filters, sorting, and pagination.
 
         Args:
             page (int, optional): Page number for pagination.
             per_page (int, optional): Number of items per page for pagination.
             search (str | None): Search query to filter products by name or description.
-            category_id (int | None): Category ID to filter products.
+            category_id (UUID | None): Category ID to filter products.
             min_price (float | None): Minimum price to filter products.
             max_price (float | None): Maximum price to filter products.
             min_rating (float | None): Minimum average rating to filter products.
@@ -53,7 +53,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
             sort_order (allowed_sort_order, optional): Sort order ("asc" or "desc").
 
         Returns:
-            tuple[int, list[Product]]: A tuple containing the total number of items and a list of products.
+            tuple[list[Product], int]: A tuple containing a list of products and the total number of items.
         """
         page = max(page, 1)
         per_page = max(min(per_page, 100), 1)
@@ -124,7 +124,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         result = await self._session.exec(stmt)
         products = list(result.all())
 
-        return total, products
+        return products, total
 
     async def get_by_slug(self, slug: str) -> Product | None:
         """Get a single product by slug.
@@ -163,7 +163,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
             slug = f"{base_slug}-{index}"
             index += 1
 
-    async def review_count(self, product_id: UUID) -> int:
+    async def get_review_count(self, product_id: UUID) -> int:
         """Get the total number of reviews for a product.
 
         Args:
@@ -176,7 +176,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         result = await self._session.exec(stmt)
         return result.first() or 0
 
-    async def average_rating(self, product_id: UUID) -> float | None:
+    async def get_average_rating(self, product_id: UUID) -> float | None:
         """Get the average rating for a product.
 
         Args:

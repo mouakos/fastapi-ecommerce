@@ -1,4 +1,5 @@
 """Product catalog API routes with advanced filtering, search, and CRUD operations."""
+# mypy: disable-error-code=return-value
 
 from typing import Annotated
 from uuid import UUID
@@ -6,7 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, Query, status
 
 from app.api.v1.dependencies import AdminRoleDep, ProductServiceDep
-from app.schemas.common import PaginatedRead
+from app.schemas.common import Page
 from app.schemas.product import ProductCreate, ProductDetailRead, ProductRead, ProductUpdate
 from app.schemas.search import (
     AvailabilityFilter,
@@ -14,6 +15,7 @@ from app.schemas.search import (
     SortByField,
     SortOrder,
 )
+from app.utils.pagination import build_page
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -38,13 +40,14 @@ async def get_product_autocomplete_suggestions(
     limit: Annotated[int, Query(ge=1, le=10, description="Maximum number of suggestions")] = 10,
 ) -> ProductAutocompleteRead:
     """Get autocomplete suggestions for product names based on a search query."""
-    return await product_service.get_autocomplete_suggestions(query, limit)
+    suggestions = await product_service.get_autocomplete_suggestions(query, limit)
+    return ProductAutocompleteRead(suggestions=suggestions)
 
 
 # Collection paths
 @router.get(
     "",
-    response_model=PaginatedRead[ProductRead],
+    response_model=Page[ProductRead],
     summary="List products",
     description="Retrieve paginated list of products with advanced filtering by category, price range, rating, and availability. Supports search and sorting.",
 )
@@ -71,9 +74,9 @@ async def list_products(
     ] = AvailabilityFilter.ALL,
     sort_by: Annotated[SortByField, Query(description="Sort by field")] = SortByField.ID,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.ASC,
-) -> PaginatedRead[ProductRead]:
+) -> Page[ProductRead]:
     """List all products with optional filters, sorting, and pagination."""
-    return await product_service.list_all(
+    products, total = await product_service.list_all(
         page=page,
         per_page=per_page,
         search=search,
@@ -85,6 +88,7 @@ async def list_products(
         sort_by=sort_by,
         sort_order=sort_order,
     )
+    return build_page(items=products, total=total, page=page, size=per_page)  # type: ignore [arg-type]
 
 
 @router.post(
@@ -99,7 +103,12 @@ async def create_product(
     data: ProductCreate, product_service: ProductServiceDep
 ) -> ProductDetailRead:
     """Create a new product."""
-    return await product_service.create(data)
+    product = await product_service.create(data)
+    return ProductDetailRead(
+        **product.model_dump(),
+        review_count=await product_service.get_review_count(product.id),
+        average_rating=await product_service.get_average_rating(product.id),
+    )
 
 
 # Category filter paths (more specific than parameterized paths)
@@ -138,7 +147,12 @@ async def get_products_by_category_slug(
 )
 async def get_product(product_id: UUID, product_service: ProductServiceDep) -> ProductDetailRead:
     """Retrieve a product by its ID."""
-    return await product_service.get_by_id(product_id)
+    product = await product_service.get_by_id(product_id)
+    return ProductDetailRead(
+        **product.model_dump(),
+        review_count=await product_service.get_review_count(product_id),
+        average_rating=await product_service.get_average_rating(product_id),
+    )
 
 
 @router.get(
@@ -149,7 +163,12 @@ async def get_product(product_id: UUID, product_service: ProductServiceDep) -> P
 )
 async def get_product_by_slug(slug: str, product_service: ProductServiceDep) -> ProductDetailRead:
     """Retrieve a product by its slug."""
-    return await product_service.get_by_slug(slug)
+    product = await product_service.get_by_slug(slug)
+    return ProductDetailRead(
+        **product.model_dump(),
+        review_count=await product_service.get_review_count(product.id),
+        average_rating=await product_service.get_average_rating(product.id),
+    )
 
 
 # Parameterized admin operations (last)
@@ -164,7 +183,12 @@ async def update_product(
     product_id: UUID, data: ProductUpdate, product_service: ProductServiceDep
 ) -> ProductDetailRead:
     """Update a product by its ID."""
-    return await product_service.update(product_id, data)
+    product = await product_service.update(product_id, data)
+    return ProductDetailRead(
+        **product.model_dump(),
+        review_count=await product_service.get_review_count(product_id),
+        average_rating=await product_service.get_average_rating(product_id),
+    )
 
 
 @router.delete(
