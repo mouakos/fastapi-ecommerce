@@ -150,14 +150,18 @@ class ProductService:
     async def list_by_category_slug(
         self,
         category_slug: str,
-    ) -> list[Product]:
+        page: int = 1,
+        page_size: int = 10,
+    ) -> tuple[list[Product], int]:
         """List products by category slug.
 
         Args:
             category_slug (str): The slug of the category.
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of products per page. Defaults to 10.
 
         Returns:
-            list[Product]: List of products in the specified category.
+            tuple[list[Product], int]: List of products in the specified category and total count.
 
         Raises:
             HTTPException: If the category is not found.
@@ -166,19 +170,25 @@ class ProductService:
         if not category:
             raise HTTPException(status_code=404, detail="Category not found.")
 
-        return await self.uow.products.list_by_category_slug(category.slug)
+        return await self.uow.products.list_by_category_slug(
+            category.slug, page=page, page_size=page_size
+        )
 
     async def list_by_category_id(
         self,
         category_id: UUID,
-    ) -> list[Product]:
+        page: int = 1,
+        page_size: int = 10,
+    ) -> tuple[list[Product], int]:
         """List products by category ID.
 
         Args:
             category_id (UUID): The ID of the category.
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of products per page. Defaults to 10.
 
         Returns:
-            list[Product]: List of products in the specified category.
+            tuple[list[Product], int]: List of products in the specified category and total count.
 
         Raises:
             HTTPException: If the category is not found.
@@ -187,7 +197,9 @@ class ProductService:
         if not category:
             raise HTTPException(status_code=404, detail="Category not found.")
 
-        return await self.uow.products.list_by_category_id(category.id)
+        return await self.uow.products.list_by_category_id(
+            category.id, page=page, page_size=page_size
+        )
 
     async def create(
         self,

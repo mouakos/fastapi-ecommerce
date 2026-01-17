@@ -53,8 +53,8 @@ async def autocomplete(
 )
 async def list_all(
     product_service: ProductServiceDep,
-    page: Annotated[int, Query(ge=1, description="Page number")] = 1,
-    per_page: Annotated[int, Query(ge=1, le=100, description="Number of items per page")] = 10,
+    page: int = Query(1, ge=1, description="Page number"),
+    per_page: int = Query(10, ge=1, le=100, description="Number of items per page"),
     search: Annotated[
         str | None,
         Query(
@@ -117,23 +117,35 @@ async def create(data: ProductCreate, product_service: ProductServiceDep) -> Pro
     description="Retrieve all products belonging to a specific category using the category's UUID.",
 )
 async def list_by_category_id(
-    category_id: UUID, product_service: ProductServiceDep
-) -> list[ProductRead]:
+    category_id: UUID,
+    product_service: ProductServiceDep,
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, le=100, description="Number of products per page"),
+) -> Page[ProductRead]:
     """Retrieve products by category ID."""
-    return await product_service.list_by_category_id(category_id)
+    products, total = await product_service.list_by_category_id(
+        category_id, page=page, page_size=page_size
+    )
+    return build_page(items=products, total=total, page=page, size=page_size)  # type: ignore [arg-type]
 
 
 @router.get(
     "/category/slug/{category_slug}",
-    response_model=list[ProductRead],
+    response_model=Page[ProductRead],
     summary="Get products by category slug",
     description="Retrieve all products belonging to a specific category using the category's URL-friendly slug.",
 )
 async def list_by_category_slug(
-    category_slug: str, product_service: ProductServiceDep
-) -> list[ProductRead]:
+    category_slug: str,
+    product_service: ProductServiceDep,
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, le=100, description="Number of products per page"),
+) -> Page[ProductRead]:
     """Retrieve products by category slug."""
-    return await product_service.list_by_category_slug(category_slug)
+    product, total = await product_service.list_by_category_slug(
+        category_slug, page=page, page_size=page_size
+    )
+    return build_page(items=product, total=total, page=page, size=page_size)  # type: ignore [arg-type]
 
 
 # Single product lookup paths (by ID or slug)

@@ -110,26 +110,34 @@ class ProductRepository(GenericRepository[Product], ABC):
         ...
 
     @abstractmethod
-    async def list_by_category_slug(self, category_slug: str) -> list[Product]:
+    async def list_by_category_slug(
+        self, category_slug: str, page: int = 1, page_size: int = 10
+    ) -> tuple[list[Product], int]:
         """List products by category slug.
 
         Args:
             category_slug (str): Category slug.
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of products per page. Defaults to 10.
 
         Returns:
-            list[Product]: List of products in the specified category.
+            tuple[list[Product], int]: List of products in the specified category and total count.
         """
         ...
 
     @abstractmethod
-    async def list_by_category_id(self, category_id: UUID) -> list[Product]:
+    async def list_by_category_id(
+        self, category_id: UUID, page: int = 1, page_size: int = 10
+    ) -> tuple[list[Product], int]:
         """List products by category ID.
 
         Args:
             category_id (UUID): Category ID.
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of products per page. Defaults to 10.
 
         Returns:
-            list[Product]: List of products in the specified category.
+            tuple[list[Product], int]: List of products in the specified category and total count.
         """
         ...
 

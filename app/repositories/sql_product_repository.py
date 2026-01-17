@@ -234,14 +234,18 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
 
         return prefix_matches + contains_matches
 
-    async def list_by_category_slug(self, category_slug: str) -> list[Product]:
+    async def list_by_category_slug(
+        self, category_slug: str, page: int = 1, page_size: int = 10
+    ) -> tuple[list[Product], int]:
         """List products by category slug.
 
         Args:
             category_slug (str): Category slug.
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of products per page. Defaults to 10.
 
         Returns:
-            list[Product]: List of products in the specified category.
+            tuple[list[Product], int]: List of products in the specified category and total count.
         """
         stmt = (
             select(Product)
@@ -250,17 +254,30 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
             .where(Product.is_active)
             .order_by(Product.id)  # type: ignore [arg-type]
         )
-        result = await self._session.exec(stmt)
-        return list(result.all())
 
-    async def list_by_category_id(self, category_id: UUID) -> list[Product]:
+        # total items matching filters
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total = (await self._session.exec(count_stmt)).first() or 0
+
+        # Apply pagination
+        stmt = stmt.offset((page - 1) * page_size).limit(page_size)
+        result = await self._session.exec(stmt)
+        products = list(result.all())
+
+        return products, total
+
+    async def list_by_category_id(
+        self, category_id: UUID, page: int = 1, page_size: int = 10
+    ) -> tuple[list[Product], int]:
         """List products by category ID.
 
         Args:
             category_id (UUID): Category ID.
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of products per page. Defaults to 10.
 
         Returns:
-            list[Product]: List of products in the specified category.
+            tuple[list[Product], int]: List of products in the specified category and total count.
         """
         stmt = (
             select(Product)
@@ -268,8 +285,17 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
             .where(Product.is_active)
             .order_by(Product.id)  # type: ignore [arg-type]
         )
+
+        # total items matching filters
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total = (await self._session.exec(count_stmt)).first() or 0
+
+        # Apply pagination
+        stmt = stmt.offset((page - 1) * page_size).limit(page_size)
         result = await self._session.exec(stmt)
-        return list(result.all())
+        products = list(result.all())
+
+        return products, total
 
     async def count_low_stock(self, threshold: int = 10) -> int:
         """Get number of products that are low in stock.
