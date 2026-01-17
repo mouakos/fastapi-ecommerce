@@ -85,12 +85,13 @@ class PageResponse[T](BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class Paged[T](BaseModel):
+class Page[T](BaseModel):
     """Pagination information."""
 
     items: list[T]
     total: int
     page: int
-    page_size: int
+    size: int
+    pages: int
 
     model_config = ConfigDict(frozen=True)

@@ -1,11 +1,14 @@
 """Product review API routes for creating, updating, and moderating customer reviews."""
 
+# mypy: disable-error-code=return-value
 from uuid import UUID
 
 from fastapi import APIRouter, Query, status
 
 from app.api.v1.dependencies import CurrentUserDep, ReviewServiceDep
+from app.schemas.common import Page
 from app.schemas.review import ReviewCreate, ReviewRead, ReviewUpdate
+from app.utils.pagination import build_page
 
 router = APIRouter(prefix="/reviews", tags=["Reviews"])
 
@@ -28,7 +31,7 @@ async def add_product_review(
 
 @router.get(
     "/product/{product_id}",
-    response_model=list[ReviewRead],
+    response_model=Page[ReviewRead],
     summary="Get product reviews",
     description="Retrieve all approved reviews for a specific product with pagination support.",
 )
@@ -37,9 +40,12 @@ async def get_product_reviews(
     review_service: ReviewServiceDep,
     page: int = Query(1, description="Page number"),
     page_size: int = Query(10, description="Number of reviews per page"),
-) -> list[ReviewRead]:
+) -> Page[ReviewRead]:
     """Get all reviews for a specific product."""
-    return await review_service.get_product_reviews(product_id, page=page, page_size=page_size)
+    total, items = await review_service.get_product_reviews(
+        product_id, page=page, page_size=page_size
+    )
+    return build_page(items=items, page=page, size=page_size, total=total)  # type: ignore [arg-type]
 
 
 @router.get(

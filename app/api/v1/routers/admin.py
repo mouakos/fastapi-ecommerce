@@ -9,7 +9,7 @@ from app.api.v1.dependencies import AdminRoleDep, AdminServiceDep, CurrentUserDe
 from app.models.order import OrderStatus
 from app.models.review import ReviewStatus
 from app.models.user import UserRole
-from app.schemas.common import Paged
+from app.schemas.common import Page
 from app.schemas.order import OrderAdminRead, OrderAdminStatusUpdate
 from app.schemas.product import ProductRead
 from app.schemas.review import ReviewAdminRead
@@ -21,11 +21,12 @@ from app.schemas.statistics import (
     UserStatistics,
 )
 from app.schemas.user import UserAdminRead, UserAdminRoleUpdate
+from app.utils.pagination import build_page
 
 router = APIRouter(prefix="/admin", tags=["Admin"], dependencies=[AdminRoleDep])
 
 
-# Dashboard overview
+# ------------------------- Dashboard Overview ------------------------ #
 @router.get(
     "/dashboard",
     response_model=AdminDashboard,
@@ -39,7 +40,7 @@ async def get_dashboard(
     return await admin_service.get_dashboard_data()
 
 
-# Analytics endpoints
+# ------------------------ Statistics Endpoints ------------------------ #
 @router.get(
     "/statistics/sales",
     response_model=SalesStatistics,
@@ -92,10 +93,10 @@ async def get_review_statistics(
     return await admin_service.get_review_statistics()
 
 
-# User management
+# ------------------------ User management ------------------------ #
 @router.get(
     "/users",
-    response_model=Paged[UserAdminRead],
+    response_model=Page[UserAdminRead],
     summary="List users",
     description="Retrieve paginated list of all users with optional filtering by name, email, or role.",
 )
@@ -107,7 +108,7 @@ async def list_all_users(
     role: Annotated[
         UserRole | None, Query(description="Filter by role: 'customer' or 'admin'")
     ] = None,
-) -> Paged[UserAdminRead]:
+) -> Page[UserAdminRead]:
     """List all users with pagination and filters."""
     return await admin_service.get_all_users(
         page=page, page_size=page_size, search=search, role=role
@@ -129,10 +130,10 @@ async def update_user_role(
     await admin_service.update_user_role(user_id=user_id, new_role=role_update.role)
 
 
-# Order management
+# ------------------------ Order management ------------------------ #
 @router.get(
     "/orders",
-    response_model=Paged[OrderAdminRead],
+    response_model=Page[OrderAdminRead],
     summary="List orders",
     description="Retrieve paginated list of all orders with optional filtering by status or user.",
 )
@@ -142,7 +143,7 @@ async def list_all_orders(
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
     status: Annotated[OrderStatus | None, Query(description="Filter by order status")] = None,
     user_id: Annotated[UUID | None, Query(description="Filter by user ID")] = None,
-) -> Paged[OrderAdminRead]:
+) -> Page[OrderAdminRead]:
     """List all orders with pagination and filters."""
     return await admin_service.get_all_orders(
         page=page, page_size=page_size, status=status, user_id=user_id
@@ -164,14 +165,14 @@ async def update_order_status(
     await admin_service.update_order_status(order_id=order_id, new_status=status_update.status)
 
 
-# Review moderation
+# -------------------------- Review management ------------------------ #
 @router.get(
     "/reviews",
-    response_model=Paged[ReviewAdminRead],
+    response_model=Page[ReviewAdminRead],
     summary="List reviews",
     description="Retrieve paginated list of all reviews with optional filtering by status, user, product, or rating.",
 )
-async def get_all_reviews(
+async def get_reviews(
     admin_service: AdminServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
@@ -179,9 +180,9 @@ async def get_all_reviews(
     user_id: Annotated[UUID | None, Query(description="Filter by user ID")] = None,
     product_id: Annotated[UUID | None, Query(description="Filter by product ID")] = None,
     rating: int | None = Query(None, ge=1, le=5, description="Filter by rating"),
-) -> Paged[ReviewAdminRead]:
+) -> Page[ReviewAdminRead]:
     """Get all reviews."""
-    return await admin_service.get_all_reviews(
+    total, reviews = await admin_service.get_reviews(
         page=page,
         page_size=page_size,
         status=status,
@@ -189,39 +190,100 @@ async def get_all_reviews(
         user_id=user_id,
         rating=rating,
     )
+    # Manually construct DTOs with relationship data
+    review_items = [
+        ReviewAdminRead(
+            id=review.id,
+            rating=review.rating,
+            comment=review.comment,
+            user_id=review.user_id,
+            product_id=review.product_id,
+            created_at=review.created_at,
+            user_email=review.user.email,
+            product_name=review.product.name,
+            status=review.status,
+            moderated_at=review.moderated_at,
+            moderated_by=review.moderated_by,
+            updated_at=review.updated_at,
+        )
+        for review in reviews
+    ]
+    return build_page(items=review_items, page=page, size=page_size, total=total)
 
 
 @router.post(
     "/reviews/{review_id}/approve",
+    response_model=ReviewAdminRead,
     summary="Approve review",
     description="Approve a pending review to make it publicly visible on the product page.",
-    status_code=status.HTTP_204_NO_CONTENT,
 )
 async def approve_review(
     review_id: UUID,
     admin_service: AdminServiceDep,
     current_user: CurrentUserDep,
-) -> None:
+) -> ReviewAdminRead:
     """Approve a review."""
-    await admin_service.approve_review(review_id=review_id, moderator_id=current_user.id)
+    review = await admin_service.approve_review(review_id=review_id, moderator_id=current_user.id)
+    return ReviewAdminRead(
+        id=review.id,
+        rating=review.rating,
+        comment=review.comment,
+        user_id=review.user_id,
+        product_id=review.product_id,
+        created_at=review.created_at,
+        user_email=review.user.email,
+        product_name=review.product.name,
+        status=review.status,
+        moderated_at=review.moderated_at,
+        moderated_by=review.moderated_by,
+        updated_at=review.updated_at,
+    )
 
 
-@router.delete(
+@router.patch(
     "/reviews/{review_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="Reject and delete review",
-    description="Permanently reject and delete a review. This action cannot be undone.",
+    response_model=ReviewAdminRead,
+    summary="Reject a review",
+    description="Reject a review, marking it as inappropriate or not meeting guidelines.",
 )
 async def reject_review(
     review_id: UUID,
     admin_service: AdminServiceDep,
     current_user: CurrentUserDep,
+) -> ReviewAdminRead:
+    """Reject a review."""
+    review = await admin_service.reject_review(review_id=review_id, moderator_id=current_user.id)
+    return ReviewAdminRead(
+        id=review.id,
+        rating=review.rating,
+        comment=review.comment,
+        user_id=review.user_id,
+        product_id=review.product_id,
+        created_at=review.created_at,
+        user_email=review.user.email,
+        product_name=review.product.name,
+        status=review.status,
+        moderated_at=review.moderated_at,
+        moderated_by=review.moderated_by,
+        updated_at=review.updated_at,
+    )
+
+
+@router.delete(
+    "/reviews/{review_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete review",
+    description="Delete a review from the system. This action is irreversible.",
+)
+async def delete_review(
+    review_id: UUID,
+    admin_service: AdminServiceDep,
 ) -> None:
-    """Reject/delete a review."""
-    await admin_service.reject_review(review_id=review_id, moderator_id=current_user.id)
+    """Delete a review."""
+    await admin_service.delete_review(review_id=review_id)
 
 
-# Inventory management
+# ------------------------ Product management ------------------------ #
 @router.get(
     "/inventory/low-stock",
     response_model=list[ProductRead],

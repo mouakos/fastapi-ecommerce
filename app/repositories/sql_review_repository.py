@@ -1,10 +1,9 @@
 """SQL Review repository implementation."""
 
-from typing import Any
 from uuid import UUID
 
 from sqlalchemy import func
-from sqlmodel import select
+from sqlmodel import desc, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.interfaces.review_repository import ReviewRepository
@@ -19,8 +18,8 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         """Initialize the repository with a database session."""
         super().__init__(session, Review)
 
-    async def get_by_id_and_user_id(self, review_id: UUID, user_id: UUID) -> Review | None:
-        """Get a review by its ID and user ID.
+    async def find_user_review(self, review_id: UUID, user_id: UUID) -> Review | None:
+        """Find a review by its ID and user ID.
 
         Args:
             review_id (UUID): Review ID.
@@ -33,8 +32,23 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         result = await self._session.exec(stmt)
         return result.first()
 
-    async def get_by_user_id_and_product_id(self, user_id: UUID, product_id: UUID) -> Review | None:
-        """Get a review by user ID and product ID.
+    async def find_approved_review_by_id(self, review_id: UUID) -> Review | None:
+        """Find an approved review by its ID.
+
+        Args:
+            review_id (UUID): Review ID.
+
+        Returns:
+            Review | None: Review or none.
+        """
+        stmt = select(Review).where(
+            (Review.id == review_id) & (Review.status == ReviewStatus.APPROVED)
+        )
+        result = await self._session.exec(stmt)
+        return result.first()
+
+    async def find_user_product_review(self, user_id: UUID, product_id: UUID) -> Review | None:
+        """Find a review by user ID and product ID.
 
         Args:
             user_id (UUID): User ID.
@@ -47,30 +61,40 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         result = await self._session.exec(stmt)
         return result.first()
 
-    async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
-        """Get total number of reviews.
+    async def count(
+        self,
+        product_id: UUID | None = None,
+        status: ReviewStatus | None = None,
+        user_id: UUID | None = None,
+        rating: int | None = None,
+    ) -> int:
+        """Count total number of reviews.
 
         Args:
-            **filters: Filter conditions.
+            product_id (UUID | None, optional): Filter by product ID. Defaults to None.
+            status (ReviewStatus | None, optional): Filter by review status. Defaults to None.
+            user_id (UUID | None, optional): Filter by user ID. Defaults to None.
+            rating (int | None, optional): Filter by rating. Defaults to None.
 
         Returns:
             int: Total number of reviews.
-
-        Raises:
-            ValueError: If invalid filters are provided.
         """
         stmt = select(func.count()).select_from(Review)
 
-        for attr, value in filters.items():
-            if not hasattr(Review, attr):
-                raise ValueError(f"Invalid filter condition: {attr}")
-            stmt = stmt.where(getattr(Review, attr) == value)
+        if product_id is not None:
+            stmt = stmt.where(Review.product_id == product_id)
+        if status is not None:
+            stmt = stmt.where(Review.status == status)
+        if user_id is not None:
+            stmt = stmt.where(Review.user_id == user_id)
+        if rating is not None:
+            stmt = stmt.where(Review.rating == rating)
 
         result = await self._session.exec(stmt)
         return result.first() or 0
 
-    async def get_average_rating(self) -> float:
-        """Get the average rating for all reviews.
+    async def calculate_average_rating(self) -> float:
+        """Calculate the average rating of all reviews.
 
         Returns:
             float: Average rating or 0 if no reviews.
@@ -80,7 +104,7 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         average = result.first()
         return float(average) if average is not None else 0
 
-    async def get_all_paginated(
+    async def paginate(
         self,
         page: int = 1,
         page_size: int = 10,
@@ -125,7 +149,7 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         stmt = stmt.offset(offset).limit(page_size)
 
         # Execute query
-        result = await self._session.exec(stmt)
+        result = await self._session.exec(stmt.order_by(desc(Review.created_at)))
         reviews = list(result.all())
 
         return total, reviews

@@ -1,7 +1,6 @@
 """Interface for Product repository."""
 
 from abc import ABC, abstractmethod
-from typing import Any
 from uuid import UUID
 
 from app.interfaces.generic_repository import GenericRepository
@@ -12,8 +11,8 @@ class ReviewRepository(GenericRepository[Review], ABC):
     """Interface for Review repository."""
 
     @abstractmethod
-    async def get_by_id_and_user_id(self, review_id: UUID, user_id: UUID) -> Review | None:
-        """Get a review by its ID and user ID.
+    async def find_user_review(self, review_id: UUID, user_id: UUID) -> Review | None:
+        """Find a review by its ID and user ID.
 
         Args:
             review_id (UUID): Review ID.
@@ -25,8 +24,8 @@ class ReviewRepository(GenericRepository[Review], ABC):
         ...
 
     @abstractmethod
-    async def get_by_user_id_and_product_id(self, user_id: UUID, product_id: UUID) -> Review | None:
-        """Get a review by user ID and product ID.
+    async def find_user_product_review(self, user_id: UUID, product_id: UUID) -> Review | None:
+        """Find a review by user ID and product ID.
 
         Args:
             user_id (UUID): User ID.
@@ -38,31 +37,49 @@ class ReviewRepository(GenericRepository[Review], ABC):
         ...
 
     @abstractmethod
-    async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
-        """Get total number of reviews.
+    async def count(
+        self,
+        product_id: UUID | None = None,
+        status: ReviewStatus | None = None,
+        user_id: UUID | None = None,
+        rating: int | None = None,
+    ) -> int:
+        """Get the total number of reviews with optional filters.
 
         Args:
-            **filters: Filter conditions.
+            product_id (UUID | None, optional): Filter by product ID. Defaults to None.
+            status (ReviewStatus | None, optional): Filter by review status. Defaults to None.
+            user_id (UUID | None, optional): Filter by user ID. Defaults to None.
+            rating (int | None, optional): Filter by rating. Defaults to None.
 
         Returns:
             int: Total number of reviews.
-
-        Raises:
-            ValueError: If invalid filters are provided.
         """
         ...
 
     @abstractmethod
-    async def get_average_rating(self) -> float | None:
-        """Get the average rating for all reviews.
+    async def calculate_average_rating(self) -> float:
+        """Calculate the average rating of all reviews.
 
         Returns:
-            float | None: Average rating or none if no reviews.
+            float: Average rating.
         """
         ...
 
     @abstractmethod
-    async def get_all_paginated(
+    async def find_approved_review_by_id(self, review_id: UUID) -> Review | None:
+        """Find an approved review by its ID.
+
+        Args:
+            review_id (UUID): Review ID.
+
+        Returns:
+            Review | None: Review or none.
+        """
+        ...
+
+    @abstractmethod
+    async def paginate(
         self,
         page: int = 1,
         page_size: int = 10,
@@ -71,11 +88,11 @@ class ReviewRepository(GenericRepository[Review], ABC):
         user_id: UUID | None = None,
         rating: int | None = None,
     ) -> tuple[int, list[Review]]:
-        """Get all reviews with pagination and optional filters.
+        """Get paginated reviews with optional filters.
 
         Args:
             page (int, optional): Page number. Defaults to 1.
-            page_size (int, optional): Number of records per page. Defaults to 100.
+            page_size (int, optional): Number of records per page. Defaults to 10.
             product_id (UUID | None, optional): Filter by product ID. Defaults to None.
             status (ReviewStatus | None, optional): Filter by review status. Defaults to None.
             user_id (UUID | None, optional): Filter by user ID. Defaults to None.

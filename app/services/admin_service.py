@@ -7,12 +7,11 @@ from fastapi import HTTPException
 
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import OrderStatus
-from app.models.review import ReviewStatus
+from app.models.review import Review, ReviewStatus
 from app.models.user import UserRole
-from app.schemas.common import Paged
+from app.schemas.common import Page
 from app.schemas.order import OrderAdminRead
 from app.schemas.product import ProductRead
-from app.schemas.review import ReviewAdminRead
 from app.schemas.statistics import (
     AdminDashboard,
     ProductStatistics,
@@ -39,6 +38,7 @@ class AdminService:
         OrderStatus.CANCELED: set(),
     }
 
+    # ----------------------------- Statistics Related Admin Services ----------------------------- #
     async def get_sales_statistics(self) -> SalesStatistics:
         """Retrieve sales statistics data.
 
@@ -120,10 +120,10 @@ class AdminService:
         Returns:
             ReviewStatistics: Review statistics data.
         """
-        total_reviews = await self.uow.reviews.count_all()
-        pending_reviews = await self.uow.reviews.count_all(is_approved=False)
-        approved_reviews = await self.uow.reviews.count_all(is_approved=True)
-        average_rating = await self.uow.reviews.get_average_rating()
+        total_reviews = await self.uow.reviews.count()
+        pending_reviews = await self.uow.reviews.count(status=ReviewStatus.PENDING)
+        approved_reviews = await self.uow.reviews.count(status=ReviewStatus.APPROVED)
+        average_rating = await self.uow.reviews.calculate_average_rating()
 
         return ReviewStatistics(
             total_reviews=total_reviews,
@@ -150,13 +150,14 @@ class AdminService:
             reviews=reviews,
         )
 
+    # ----------------------------- Order Related Admin Services ----------------------------- #
     async def get_all_orders(
         self,
         page: int = 1,
         page_size: int = 10,
         status: OrderStatus | None = None,
         user_id: UUID | None = None,
-    ) -> Paged[OrderAdminRead]:
+    ) -> Page[OrderAdminRead]:
         """Retrieve all orders with pagination and optional filters.
 
         Args:
@@ -166,7 +167,7 @@ class AdminService:
             user_id (UUID | None, optional): Filter by user ID. Defaults to None.
 
         Returns:
-            Paged[OrderAdminRead]: Paginated list of orders.
+            Page[OrderAdminRead]: Paginated list of orders.
         """
         total, orders = await self.uow.orders.get_all_paginated(
             page=page, page_size=page_size, status=status, user_id=user_id
@@ -193,11 +194,12 @@ class AdminService:
                 )
             )
 
-        return Paged[OrderAdminRead](
+        return Page[OrderAdminRead](
             items=order_items,
             total=total,
             page=page,
-            page_size=page_size,
+            size=page_size,
+            pages=(total + page_size - 1) // page_size,
         )
 
     async def update_order_status(self, order_id: UUID, new_status: OrderStatus) -> None:
@@ -234,17 +236,18 @@ class AdminService:
         order.status = new_status
         await self.uow.orders.update(order)
 
+    # ----------------------------- User Related Admin Services ----------------------------- #
     async def get_all_users(
         self,
         page: int = 1,
         page_size: int = 10,
         role: UserRole | None = None,
         search: str | None = None,
-    ) -> Paged[UserAdminRead]:
+    ) -> Page[UserAdminRead]:
         """Retrieve all users in the system.
 
         Returns:
-            Paged[UserAdminRead]: Paginated list of all users.
+            Page[UserAdminRead]: Paginated list of all users.
         """
         total, users = await self.uow.users.get_all_paginated(
             page=page,
@@ -273,11 +276,12 @@ class AdminService:
                 )
             )
 
-        return Paged[UserAdminRead](
+        return Page[UserAdminRead](
             items=user_items,
             total=total,
             page=page,
-            page_size=page_size,
+            size=page_size,
+            pages=(total + page_size - 1) // page_size,
         )
 
     async def update_user_role(self, user_id: UUID, new_role: UserRole) -> None:
@@ -294,7 +298,8 @@ class AdminService:
         user.role = new_role
         await self.uow.users.update(user)
 
-    async def get_all_reviews(
+    # ----------------------------- Review Related Admin Services ----------------------------- #
+    async def get_reviews(
         self,
         page: int = 1,
         page_size: int = 10,
@@ -302,13 +307,13 @@ class AdminService:
         status: ReviewStatus | None = None,
         user_id: UUID | None = None,
         rating: int | None = None,
-    ) -> Paged[ReviewAdminRead]:
+    ) -> tuple[int, list[Review]]:
         """Retrieve all product reviews with pagination and optional product filter.
 
         Returns:
             list[Review]: List of all product reviews.
         """
-        total, reviews = await self.uow.reviews.get_all_paginated(
+        total, reviews = await self.uow.reviews.paginate(
             page=page,
             page_size=page_size,
             product_id=product_id,
@@ -316,63 +321,60 @@ class AdminService:
             user_id=user_id,
             rating=rating,
         )
-        review_items = []
-        for review in reviews:
-            review_items.append(
-                ReviewAdminRead(
-                    id=review.id,
-                    user_email=review.user.email,
-                    product_name=review.product.name,
-                    product_id=review.product_id,
-                    user_id=review.user_id,
-                    rating=review.rating,
-                    comment=review.comment,
-                    status=review.status,
-                    created_at=review.created_at,
-                    updated_at=review.updated_at,
-                )
-            )
+        return total, reviews
 
-        return Paged[ReviewAdminRead](
-            items=review_items,
-            total=total,
-            page=page,
-            page_size=page_size,
-        )
-
-    async def approve_review(self, review_id: UUID, moderator_id: UUID) -> None:
+    async def approve_review(self, review_id: UUID, moderator_id: UUID) -> Review:
         """Approve a product review.
 
         Args:
             review_id (UUID): ID of the review to approve.
             moderator_id (UUID): ID of the admin approving the review.
+
+        Returns:
+            Review: The updated review instance.
         """
         review = await self.uow.reviews.get_by_id(review_id)
         if not review:
             raise HTTPException(status_code=404, detail="Review not found.")
 
+        # Approve the review
         review.status = ReviewStatus.APPROVED
         review.moderated_at = utcnow()
         review.moderated_by = moderator_id
-        await self.uow.reviews.update(review)
 
-    async def reject_review(self, review_id: UUID, moderator_id: UUID) -> None:
-        """Reject (delete) a product review.
+        return await self.uow.reviews.update(review)
+
+    async def reject_review(self, review_id: UUID, moderator_id: UUID) -> Review:
+        """Reject a product review.
 
         Args:
             review_id (UUID): ID of the review to reject.
             moderator_id (UUID): ID of the admin rejecting the review.
+
+        Returns:
+            Review: The updated review instance.
         """
         review = await self.uow.reviews.get_by_id(review_id)
         if not review:
             raise HTTPException(status_code=404, detail="Review not found.")
 
+        # Reject the review
         review.status = ReviewStatus.REJECTED
         review.moderated_at = utcnow()
         review.moderated_by = moderator_id
 
-        await self.uow.reviews.update(review)
+        return await self.uow.reviews.update(review)
 
+    async def delete_review(self, review_id: UUID) -> None:
+        """Delete a product review.
+
+        Args:
+            review_id (UUID): ID of the review to delete.
+        """
+        if not await self.uow.reviews.get_by_id(review_id):
+            raise HTTPException(status_code=404, detail="Review not found.")
+
+    # ---------------- Product Related Admin Services ---------------- #
     async def get_top_selling_products(self, limit: int = 10, days: int = 30) -> list[ProductRead]:
         """Retrieve top selling products.
 
