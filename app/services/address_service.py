@@ -18,7 +18,7 @@ class AddressService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def get_user_addresses(self, user_id: UUID) -> list[Address]:
+    async def list_addresses(self, user_id: UUID) -> list[Address]:
         """List all Addresses for a user.
 
         Args:
@@ -30,7 +30,7 @@ class AddressService:
         """
         return await self.uow.addresses.list_all(user_id=user_id)
 
-    async def get_user_address(self, address_id: UUID, user_id: UUID) -> Address:
+    async def get_address(self, address_id: UUID, user_id: UUID) -> Address:
         """Retrieve an address for a specific user.
 
         Args:
@@ -43,7 +43,7 @@ class AddressService:
         Raises:
             HTTPException: If the address does not exists.
         """
-        address = await self.uow.addresses.get_by_id_and_user_id(address_id, user_id)
+        address = await self.uow.addresses.find_user_address(address_id, user_id)
         if not address:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -51,7 +51,7 @@ class AddressService:
             )
         return address
 
-    async def add_user_address(
+    async def add_address(
         self,
         user_id: UUID,
         data: AddressCreate,
@@ -66,7 +66,7 @@ class AddressService:
             Address: The created address.
 
         """
-        count = await self.uow.addresses.count_all(user_id=user_id)
+        count = await self.uow.addresses.count(user_id=user_id)
         if count >= MAX_ADDRESSES_PER_USER:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -77,9 +77,7 @@ class AddressService:
 
         return await self.uow.addresses.add(new_address)
 
-    async def update_user_address(
-        self, address_id: UUID, user_id: UUID, data: AddressUpdate
-    ) -> Address:
+    async def update_address(self, address_id: UUID, user_id: UUID, data: AddressUpdate) -> Address:
         """Update an address for a user.
 
         Args:
@@ -93,7 +91,7 @@ class AddressService:
         Raises:
             HTTPException: If the address does not exists.
         """
-        address = await self.uow.addresses.get_by_id_and_user_id(address_id, user_id)
+        address = await self.uow.addresses.find_user_address(address_id, user_id)
         if not address:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -107,7 +105,7 @@ class AddressService:
 
         return await self.uow.addresses.update(address)
 
-    async def delete_user_address(self, address_id: UUID, user_id: UUID) -> None:
+    async def delete_address(self, address_id: UUID, user_id: UUID) -> None:
         """Delete an address for a user.
 
         Args:
@@ -117,7 +115,7 @@ class AddressService:
         Raises:
             HTTPException: If the address does not exists.
         """
-        address = await self.uow.addresses.get_by_id_and_user_id(address_id, user_id)
+        address = await self.uow.addresses.find_user_address(address_id, user_id)
         if not address:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -125,7 +123,7 @@ class AddressService:
             )
         await self.uow.addresses.delete_by_id(address.id)
 
-    async def set_user_default_billing_address(self, address_id: UUID, user_id: UUID) -> Address:
+    async def set_default_billing(self, address_id: UUID, user_id: UUID) -> Address:
         """Set an address as the default billing address for a user.
 
         Args:
@@ -138,20 +136,20 @@ class AddressService:
         Raises:
             HTTPException: If the address does not exists.
         """
-        address = await self.uow.addresses.get_by_id_and_user_id(address_id, user_id)
+        address = await self.uow.addresses.find_user_address(address_id, user_id)
         if not address:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Address not found.",
             )
 
-        await self.uow.addresses.unset_default_billing_by_user_id(user_id)
+        await self.uow.addresses.unset_default_billing(user_id)
 
         address.is_default_billing = True
 
         return await self.uow.addresses.update(address)
 
-    async def set_user_default_shipping_address(self, address_id: UUID, user_id: UUID) -> Address:
+    async def set_default_shipping(self, address_id: UUID, user_id: UUID) -> Address:
         """Set an address as the default shipping address for a user.
 
         Args:
@@ -164,14 +162,14 @@ class AddressService:
         Raises:
             HTTPException: If the address does not exists.
         """
-        address = await self.uow.addresses.get_by_id_and_user_id(address_id, user_id)
+        address = await self.uow.addresses.find_user_address(address_id, user_id)
         if not address:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Address not found.",
             )
 
-        await self.uow.addresses.unset_default_shipping_by_user_id(user_id)
+        await self.uow.addresses.unset_default_shipping(user_id)
 
         address.is_default_shipping = True
 

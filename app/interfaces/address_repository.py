@@ -1,7 +1,6 @@
 """Interface for Address repository."""
 
 from abc import ABC, abstractmethod
-from typing import Any
 from uuid import UUID
 
 from app.interfaces.generic_repository import GenericRepository
@@ -12,7 +11,7 @@ class AddressRepository(GenericRepository[Address], ABC):
     """Interface for Address repository."""
 
     @abstractmethod
-    async def unset_default_billing_by_user_id(self, user_id: UUID) -> None:
+    async def unset_default_billing(self, user_id: UUID) -> None:
         """Unset the default billing address for a user.
 
         Args:
@@ -21,7 +20,7 @@ class AddressRepository(GenericRepository[Address], ABC):
         ...
 
     @abstractmethod
-    async def unset_default_shipping_by_user_id(self, user_id: UUID) -> None:
+    async def unset_default_shipping(self, user_id: UUID) -> None:
         """Unset the default shipping address for a user.
 
         Args:
@@ -30,8 +29,8 @@ class AddressRepository(GenericRepository[Address], ABC):
         ...
 
     @abstractmethod
-    async def get_by_id_and_user_id(self, address_id: UUID, user_id: UUID) -> Address | None:
-        """Get a single address for a user.
+    async def find_user_address(self, address_id: UUID, user_id: UUID) -> Address | None:
+        """Find a user address by address ID and user ID.
 
         Args:
             address_id (UUID): Address ID.
@@ -43,16 +42,13 @@ class AddressRepository(GenericRepository[Address], ABC):
         ...
 
     @abstractmethod
-    async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
-        """Count all addresses matching the given filters.
+    async def count(self, user_id: UUID) -> int:  # noqa: ANN401
+        """Count all addresses for a given user.
 
         Args:
-            **filters: Filter conditions.
+            user_id (UUID): ID of the user owning the addresses.
 
         Returns:
-            int: The count of addresses matching the filters.
-
-        Raises:
-            ValueError: Invalid filter condition.
+            int: The count of addresses for the given user.
         """
         ...

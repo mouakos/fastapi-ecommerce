@@ -1,6 +1,5 @@
 """SQL Address repository implementation."""
 
-from typing import Any
 from uuid import UUID
 
 from sqlmodel import func, select
@@ -18,30 +17,21 @@ class SqlAddressRepository(SqlGenericRepository[Address], AddressRepository):
         """Initialize the repository with a database session."""
         super().__init__(session, Address)
 
-    async def count_all(self, **filters: Any) -> int:  # noqa: ANN401
-        """Count all addresses matching the given filters.
+    async def count(self, user_id: UUID) -> int:
+        """Count all addresses for a given user.
 
         Args:
-            **filters (dict): Filter conditions.
+            user_id (UUID): ID of the user owning the addresses.
 
         Returns:
-            int: The count of addresses matching the filters.
-
-        Raises:
-            ValueError: Invalid filter condition.
+            int: The count of addresses for the given user.
         """
-        stmt = select(func.count()).select_from(Address)
-
-        for attr, value in filters.items():
-            if not hasattr(Address, attr):
-                raise ValueError(f"Invalid filter condition: {attr}")
-            stmt = stmt.where(getattr(Address, attr) == value)
-
+        stmt = select(func.count()).select_from(Address).where(Address.user_id == user_id)
         result = await self._session.exec(stmt)
         return result.first() or 0
 
-    async def get_by_id_and_user_id(self, address_id: UUID, user_id: UUID) -> Address | None:
-        """Get a single address for a user.
+    async def find_user_address(self, address_id: UUID, user_id: UUID) -> Address | None:
+        """Find a user address by address ID and user ID.
 
         Args:
             address_id (UUID): Address ID.
@@ -54,7 +44,7 @@ class SqlAddressRepository(SqlGenericRepository[Address], AddressRepository):
         result = await self._session.exec(stmt)
         return result.first()
 
-    async def unset_default_billing_by_user_id(self, user_id: UUID) -> None:
+    async def unset_default_billing(self, user_id: UUID) -> None:
         """Unset the default billing address for a user.
 
         Args:
@@ -68,7 +58,7 @@ class SqlAddressRepository(SqlGenericRepository[Address], AddressRepository):
             self._session.add(address)
             await self._session.flush()
 
-    async def unset_default_shipping_by_user_id(self, user_id: UUID) -> None:
+    async def unset_default_shipping(self, user_id: UUID) -> None:
         """Unset the default shipping address for a user.
 
         Args:
