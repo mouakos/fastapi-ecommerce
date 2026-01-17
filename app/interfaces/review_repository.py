@@ -46,18 +46,6 @@ class ReviewRepository(GenericRepository[Review], ABC):
         ...
 
     @abstractmethod
-    async def find_approved_review(self, review_id: UUID) -> Review | None:
-        """Find an approved review by its ID.
-
-        Args:
-            review_id (UUID): Review ID.
-
-        Returns:
-            Review | None: Review or none.
-        """
-        ...
-
-    @abstractmethod
     async def paginate(
         self,
         page: int = 1,

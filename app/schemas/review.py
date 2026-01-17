@@ -47,6 +47,7 @@ class ReviewRead(ReviewBase, UUIDMixin):
 
     user_id: UUID
     product_id: UUID
+    status: ReviewStatus
     created_at: datetime
 
     model_config = ConfigDict(frozen=True)
@@ -57,7 +58,6 @@ class ReviewAdminRead(ReviewRead):
 
     user_email: str = Field(..., max_length=255)
     product_name: str = Field(..., max_length=255)
-    status: ReviewStatus
     moderated_at: datetime | None
     moderated_by: UUID | None
     updated_at: datetime

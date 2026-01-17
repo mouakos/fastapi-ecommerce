@@ -55,9 +55,10 @@ async def list_reviews(
 async def get_review(
     review_id: UUID,
     review_service: ReviewServiceDep,
+    current_user: CurrentUserDep,
 ) -> ReviewRead:
     """Get a review by its ID."""
-    return await review_service.get_review(review_id)
+    return await review_service.get_review(review_id, current_user.id)
 
 
 @router.patch(

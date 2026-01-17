@@ -71,11 +71,12 @@ class ReviewService:
         )
         return total, reviews
 
-    async def get_review(self, review_id: UUID) -> Review:
+    async def get_review(self, review_id: UUID, user_id: UUID) -> Review:
         """Get a review by its ID.
 
         Args:
             review_id (UUID): The ID of the review.
+            user_id (UUID): The ID of the current user.
 
         Returns:
             Review: The review with the specified ID.
@@ -83,7 +84,7 @@ class ReviewService:
         Raises:
             HTTPException: If the review is not found or not approved.
         """
-        review = await self.uow.reviews.find_approved_review(review_id)
+        review = await self.uow.reviews.find_user_review(review_id, user_id)
         if not review:
             raise HTTPException(status_code=404, detail="Review not found.")
 
