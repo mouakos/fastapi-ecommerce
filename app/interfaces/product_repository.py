@@ -154,14 +154,18 @@ class ProductRepository(GenericRepository[Product], ABC):
         ...
 
     @abstractmethod
-    async def list_low_stock(self, threshold: int = 10) -> list[Product]:
+    async def list_low_stock(
+        self, threshold: int = 10, page: int = 1, page_size: int = 10
+    ) -> tuple[list[Product], int]:
         """List products that are low in stock.
 
         Args:
             threshold (int): Stock threshold.
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of products per page. Defaults to 10.
 
         Returns:
-            list[Product]: List of low stock products.
+            tuple[list[Product], int]: List of low stock products and total count.
         """
         ...
 

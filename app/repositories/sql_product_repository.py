@@ -315,14 +315,18 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         result = await self._session.exec(stmt)
         return result.first() or 0
 
-    async def list_low_stock(self, threshold: int = 10) -> list[Product]:
+    async def list_low_stock(
+        self, threshold: int = 10, page: int = 1, page_size: int = 10
+    ) -> tuple[list[Product], int]:
         """Retrieve products that are low in stock.
 
         Args:
             threshold (int): Stock threshold.
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of products per page. Defaults to 10.
 
         Returns:
-            list[Product]: List of low stock products.
+            tuple[list[Product], int]: List of low stock products and total count.
         """
         stmt = (
             select(Product)
@@ -330,8 +334,15 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
             .where(Product.is_active)
             .order_by(Product.stock.asc())  # type: ignore [attr-defined]
         )
+
+        # total items matching filters
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total = (await self._session.exec(count_stmt)).first() or 0
+
+        # Apply pagination
+        stmt = stmt.offset((page - 1) * page_size).limit(page_size)
         result = await self._session.exec(stmt)
-        return list(result.all())
+        return list(result.all()), total
 
     async def list_top_selling(self, limit: int = 10, days: int = 30) -> list[Product]:
         """Retrieve top selling products within a specified time frame.

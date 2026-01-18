@@ -324,27 +324,33 @@ async def delete_review(
 # ------------------------ Product management ------------------------ #
 @router.get(
     "/inventory/low-stock",
-    response_model=list[ProductRead],
+    response_model=Page[ProductRead],
     summary="Get low stock products",
     description="Retrieve products with stock levels below the specified threshold for inventory monitoring and restocking alerts.",
 )
 async def list_low_stock(
     admin_service: AdminServiceDep,
-    threshold: int = Query(10, ge=1, description="Stock threshold for alerts"),
-) -> list[ProductRead]:
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, ge=1, le=100, description="Items per page"),
+    threshold: int = Query(10, ge=0, description="Stock threshold for alerts"),
+) -> Page[ProductRead]:
     """Get low stock product alerts."""
-    return await admin_service.list_low_stock_products(threshold=threshold)
+    products, total = await admin_service.list_low_stock_products(
+        threshold=threshold, page=page, page_size=page_size
+    )
+    return build_page(items=products, page=page, size=page_size, total=total)  # type: ignore [arg-type]
 
 
 @router.get(
     "/inventory/top-moving",
     response_model=list[ProductRead],
     summary="Get top-moving products",
-    description="Retrieve the best-selling products ranked by order volume. Useful for identifying popular items and inventory planning.",
+    description="Retrieve top-selling products within a specified time frame to identify bestsellers and trends.",
 )
 async def list_top_moving(
     admin_service: AdminServiceDep,
     limit: int = Query(10, ge=1, description="Number of top products to retrieve"),
+    days: int = Query(30, ge=1, le=365, description="Time frame in days to consider for top sales"),
 ) -> list[ProductRead]:
     """Get top-moving products."""
-    return await admin_service.list_top_selling_products(limit=limit)
+    return await admin_service.list_top_selling_products(limit=limit, days=days)
