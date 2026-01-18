@@ -30,6 +30,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         per_page: int = 10,
         search: str | None = None,
         category_id: UUID | None = None,
+        category_slug: str | None = None,
         min_price: float | None = None,
         max_price: float | None = None,
         min_rating: float | None = None,
@@ -44,6 +45,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
             per_page (int, optional): Number of items per page for pagination.
             search (str | None): Search query to filter products by name or description.
             category_id (UUID | None): Category ID to filter products.
+            category_slug (str | None): Category slug to filter products.
             min_price (float | None): Minimum price to filter products.
             max_price (float | None): Maximum price to filter products.
             min_rating (float | None): Minimum average rating to filter products.
@@ -69,6 +71,9 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
             )
         if category_id is not None:
             stmt = stmt.where(Product.category_id == category_id)
+
+        if category_slug is not None:
+            stmt = stmt.join(Product.category).where(Category.slug == category_slug)  # type: ignore [arg-type]
 
         if min_price is not None:
             stmt = stmt.where(Product.price >= min_price)
@@ -233,69 +238,6 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         contains_matches = list(result.all())
 
         return prefix_matches + contains_matches
-
-    async def list_by_category_slug(
-        self, category_slug: str, page: int = 1, page_size: int = 10
-    ) -> tuple[list[Product], int]:
-        """List products by category slug.
-
-        Args:
-            category_slug (str): Category slug.
-            page (int, optional): Page number. Defaults to 1.
-            page_size (int, optional): Number of products per page. Defaults to 10.
-
-        Returns:
-            tuple[list[Product], int]: List of products in the specified category and total count.
-        """
-        stmt = (
-            select(Product)
-            .join(Product.category)  # type: ignore [arg-type]
-            .where(Category.slug == category_slug)
-            .where(Product.is_active)
-            .order_by(Product.id)  # type: ignore [arg-type]
-        )
-
-        # total items matching filters
-        count_stmt = select(func.count()).select_from(stmt.subquery())
-        total = (await self._session.exec(count_stmt)).first() or 0
-
-        # Apply pagination
-        stmt = stmt.offset((page - 1) * page_size).limit(page_size)
-        result = await self._session.exec(stmt)
-        products = list(result.all())
-
-        return products, total
-
-    async def list_by_category_id(
-        self, category_id: UUID, page: int = 1, page_size: int = 10
-    ) -> tuple[list[Product], int]:
-        """List products by category ID.
-
-        Args:
-            category_id (UUID): Category ID.
-            page (int, optional): Page number. Defaults to 1.
-            page_size (int, optional): Number of products per page. Defaults to 10.
-
-        Returns:
-            tuple[list[Product], int]: List of products in the specified category and total count.
-        """
-        stmt = (
-            select(Product)
-            .where(Product.category_id == category_id)
-            .where(Product.is_active)
-            .order_by(Product.id)  # type: ignore [arg-type]
-        )
-
-        # total items matching filters
-        count_stmt = select(func.count()).select_from(stmt.subquery())
-        total = (await self._session.exec(count_stmt)).first() or 0
-
-        # Apply pagination
-        stmt = stmt.offset((page - 1) * page_size).limit(page_size)
-        result = await self._session.exec(stmt)
-        products = list(result.all())
-
-        return products, total
 
     async def count_low_stock(self, threshold: int = 10) -> int:
         """Get number of products that are low in stock.

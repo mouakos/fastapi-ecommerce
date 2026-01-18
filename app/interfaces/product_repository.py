@@ -22,6 +22,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         per_page: int = 10,
         search: str | None = None,
         category_id: UUID | None = None,
+        category_slug: str | None = None,
         min_price: float | None = None,
         max_price: float | None = None,
         min_rating: float | None = None,
@@ -36,6 +37,7 @@ class ProductRepository(GenericRepository[Product], ABC):
             per_page (int, optional): Number of items per page for pagination.
             search (str | None): Search query to filter products by name or description.
             category_id (UUID | None): Category ID to filter products.
+            category_slug (str | None): Category slug to filter products.
             min_price (float | None): Minimum price to filter products.
             max_price (float | None): Maximum price to filter products.
             min_rating (float | None): Minimum average rating to filter products.
@@ -106,38 +108,6 @@ class ProductRepository(GenericRepository[Product], ABC):
 
         Returns:
             list[str]: List of suggested product names.
-        """
-        ...
-
-    @abstractmethod
-    async def list_by_category_slug(
-        self, category_slug: str, page: int = 1, page_size: int = 10
-    ) -> tuple[list[Product], int]:
-        """List products by category slug.
-
-        Args:
-            category_slug (str): Category slug.
-            page (int, optional): Page number. Defaults to 1.
-            page_size (int, optional): Number of products per page. Defaults to 10.
-
-        Returns:
-            tuple[list[Product], int]: List of products in the specified category and total count.
-        """
-        ...
-
-    @abstractmethod
-    async def list_by_category_id(
-        self, category_id: UUID, page: int = 1, page_size: int = 10
-    ) -> tuple[list[Product], int]:
-        """List products by category ID.
-
-        Args:
-            category_id (UUID): Category ID.
-            page (int, optional): Page number. Defaults to 1.
-            page_size (int, optional): Number of products per page. Defaults to 10.
-
-        Returns:
-            tuple[list[Product], int]: List of products in the specified category and total count.
         """
         ...
 

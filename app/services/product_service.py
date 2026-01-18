@@ -30,6 +30,7 @@ class ProductService:
         per_page: int = 10,
         search: str | None = None,
         category_id: UUID | None = None,
+        category_slug: str | None = None,
         min_price: float | None = None,
         max_price: float | None = None,
         min_rating: float | None = None,
@@ -44,6 +45,7 @@ class ProductService:
             per_page (int, optional): Number of items per page for pagination.
             search (str | None): Search query to filter products by name or description.
             category_id (UUID | None): Category ID to filter products.
+            category_slug (str | None): Category slug to filter products.
             min_price (float | None): Minimum price to filter products.
             max_price (float | None): Maximum price to filter products.
             min_rating (float | None): Minimum average rating to filter products.
@@ -59,6 +61,7 @@ class ProductService:
             per_page=per_page,
             search=search,
             category_id=category_id,
+            category_slug=category_slug,
             min_price=min_price,
             max_price=max_price,
             min_rating=min_rating,
@@ -146,60 +149,6 @@ class ProductService:
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
         return product
-
-    async def list_by_category_slug(
-        self,
-        category_slug: str,
-        page: int = 1,
-        page_size: int = 10,
-    ) -> tuple[list[Product], int]:
-        """List products by category slug.
-
-        Args:
-            category_slug (str): The slug of the category.
-            page (int, optional): Page number. Defaults to 1.
-            page_size (int, optional): Number of products per page. Defaults to 10.
-
-        Returns:
-            tuple[list[Product], int]: List of products in the specified category and total count.
-
-        Raises:
-            HTTPException: If the category is not found.
-        """
-        category = await self.uow.categories.find_by_slug(category_slug)
-        if not category:
-            raise HTTPException(status_code=404, detail="Category not found.")
-
-        return await self.uow.products.list_by_category_slug(
-            category.slug, page=page, page_size=page_size
-        )
-
-    async def list_by_category_id(
-        self,
-        category_id: UUID,
-        page: int = 1,
-        page_size: int = 10,
-    ) -> tuple[list[Product], int]:
-        """List products by category ID.
-
-        Args:
-            category_id (UUID): The ID of the category.
-            page (int, optional): Page number. Defaults to 1.
-            page_size (int, optional): Number of products per page. Defaults to 10.
-
-        Returns:
-            tuple[list[Product], int]: List of products in the specified category and total count.
-
-        Raises:
-            HTTPException: If the category is not found.
-        """
-        category = await self.uow.categories.find_by_id(category_id)
-        if not category:
-            raise HTTPException(status_code=404, detail="Category not found.")
-
-        return await self.uow.products.list_by_category_id(
-            category.id, page=page, page_size=page_size
-        )
 
     async def create(
         self,

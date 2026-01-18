@@ -64,6 +64,7 @@ async def list_all(
         ),
     ] = None,
     category_id: Annotated[UUID | None, Query(description="Filter by category ID")] = None,
+    category_slug: Annotated[str | None, Query(description="Filter by category slug")] = None,
     min_price: Annotated[float | None, Query(ge=0, description="Minimum price")] = None,
     max_price: Annotated[float | None, Query(ge=0, description="Maximum price")] = None,
     min_rating: Annotated[
@@ -81,6 +82,7 @@ async def list_all(
         per_page=per_page,
         search=search,
         category_id=category_id,
+        category_slug=category_slug,
         min_price=min_price,
         max_price=max_price,
         min_rating=min_rating,
@@ -107,45 +109,6 @@ async def create(data: ProductCreate, product_service: ProductServiceDep) -> Pro
         review_count=await product_service.count_reviews(product.id),
         average_rating=await product_service.calculate_average_rating(product.id),
     )
-
-
-# Category filter paths (more specific than parameterized paths)
-@router.get(
-    "/category/id/{category_id}",
-    response_model=list[ProductRead],
-    summary="Get products by category ID",
-    description="Retrieve all products belonging to a specific category using the category's UUID.",
-)
-async def list_by_category_id(
-    category_id: UUID,
-    product_service: ProductServiceDep,
-    page: int = Query(1, ge=1, description="Page number"),
-    page_size: int = Query(10, le=100, description="Number of products per page"),
-) -> Page[ProductRead]:
-    """Retrieve products by category ID."""
-    products, total = await product_service.list_by_category_id(
-        category_id, page=page, page_size=page_size
-    )
-    return build_page(items=products, total=total, page=page, size=page_size)  # type: ignore [arg-type]
-
-
-@router.get(
-    "/category/slug/{category_slug}",
-    response_model=Page[ProductRead],
-    summary="Get products by category slug",
-    description="Retrieve all products belonging to a specific category using the category's URL-friendly slug.",
-)
-async def list_by_category_slug(
-    category_slug: str,
-    product_service: ProductServiceDep,
-    page: int = Query(1, ge=1, description="Page number"),
-    page_size: int = Query(10, le=100, description="Number of products per page"),
-) -> Page[ProductRead]:
-    """Retrieve products by category slug."""
-    product, total = await product_service.list_by_category_slug(
-        category_slug, page=page, page_size=page_size
-    )
-    return build_page(items=product, total=total, page=page, size=page_size)  # type: ignore [arg-type]
 
 
 # Single product lookup paths (by ID or slug)
