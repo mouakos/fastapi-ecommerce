@@ -31,7 +31,14 @@ class ReviewAdminSortByField(StrEnum):
     CREATED_AT = "created_at"
 
 
-class OrderAdminSortByField(StrEnum):
+class ReviewSortByField(StrEnum):
+    """Fields to sort product reviews by."""
+
+    RATING = "rating"
+    CREATED_AT = "created_at"
+
+
+class OrderSortByField(StrEnum):
     """Fields to sort orders by."""
 
     TOTAL_AMOUNT = "total_amount"

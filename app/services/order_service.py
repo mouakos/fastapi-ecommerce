@@ -93,7 +93,13 @@ class OrderService:
         return order
 
     async def list_all(
-        self, user_id: UUID, page: int = 1, page_size: int = 10
+        self,
+        user_id: UUID,
+        page: int = 1,
+        page_size: int = 10,
+        status: OrderStatus | None = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
     ) -> tuple[list[Order], int]:
         """List all orders for a user.
 
@@ -101,11 +107,21 @@ class OrderService:
             user_id (UUID): The ID of the user.
             page (int, optional): Page number. Defaults to 1.
             page_size (int, optional): Number of orders per page. Defaults to 10.
+            status (OrderStatus | None, optional): Filter by order status. Defaults to None.
+            sort_by (str, optional): Field to sort by. Defaults to "created_at".
+            sort_order (str, optional): Sort order ("asc" or "desc"). Defaults to "desc".
 
         Returns:
             tuple[list[Order], int]: List of orders for the user and total count.
         """
-        return await self.uow.orders.paginate(user_id=user_id, page=page, page_size=page_size)
+        return await self.uow.orders.paginate(
+            user_id=user_id,
+            page=page,
+            page_size=page_size,
+            status=status,
+            sort_by=sort_by,
+            sort_order=sort_order,
+        )
 
     def _order_number(self) -> str:
         return f"ORD-{ulid.new().str}"

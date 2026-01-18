@@ -15,7 +15,7 @@ from app.schemas.order import OrderAdminRead, OrderStatusUpdate
 from app.schemas.product import ProductRead
 from app.schemas.review import ReviewAdminRead
 from app.schemas.search import (
-    OrderAdminSortByField,
+    OrderSortByField,
     ReviewAdminSortByField,
     SortOrder,
     UserAdminSortByField,
@@ -184,8 +184,8 @@ async def list_orders(
     status: Annotated[OrderStatus | None, Query(description="Filter by order status")] = None,
     user_id: Annotated[UUID | None, Query(description="Filter by user ID")] = None,
     sort_by: Annotated[
-        OrderAdminSortByField, Query(description="Field to sort by")
-    ] = OrderAdminSortByField.CREATED_AT,
+        OrderSortByField, Query(description="Field to sort by")
+    ] = OrderSortByField.CREATED_AT,
     sort_order: Annotated[
         SortOrder, Query(description="Sort order: 'asc' or 'desc'")
     ] = SortOrder.DESC,

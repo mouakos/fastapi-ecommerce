@@ -47,7 +47,13 @@ class ReviewService:
         return await self.uow.reviews.add(new_review)
 
     async def list_paginated(
-        self, product_id: UUID, page: int = 1, page_size: int = 10
+        self,
+        product_id: UUID,
+        page: int = 1,
+        page_size: int = 10,
+        rating: int | None = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
     ) -> tuple[list[Review], int]:
         """List reviews for a specific product.
 
@@ -55,6 +61,9 @@ class ReviewService:
             product_id (UUID): The ID of the product.
             page (int, optional): Page number. Defaults to 1.
             page_size (int, optional): Number of reviews per page. Defaults to 10.
+            rating (int | None, optional): Filter reviews by rating. Defaults to None.
+            sort_by (str, optional): Field to sort by. Defaults to "created_at".
+            sort_order (str, optional): Sort order ("asc" or "desc"). Defaults to "desc".
 
         Returns:
             tuple[list[Review], int]: List of reviews and total count for the product.
@@ -67,7 +76,13 @@ class ReviewService:
             raise HTTPException(status_code=404, detail="Product not found.")
 
         total, reviews = await self.uow.reviews.paginate(
-            page=page, page_size=page_size, status=ReviewStatus.APPROVED, product_id=product_id
+            page=page,
+            page_size=page_size,
+            status=ReviewStatus.APPROVED,
+            product_id=product_id,
+            rating=rating,
+            sort_by=sort_by,
+            sort_order=sort_order,
         )
         return total, reviews
 

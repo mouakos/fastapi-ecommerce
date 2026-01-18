@@ -1,13 +1,16 @@
 """Order management API routes for checkout and order history."""
 
 # mypy: disable-error-code=return-value
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from app.api.v1.dependencies import CurrentUserDep, OrderServiceDep
+from app.models.order import OrderStatus
 from app.schemas.common import Page
 from app.schemas.order import OrderCreate, OrderRead
+from app.schemas.search import OrderSortByField, SortOrder
 from app.utils.pagination import build_page
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
@@ -21,10 +24,27 @@ router = APIRouter(prefix="/orders", tags=["Orders"])
     description="Retrieve all orders for the authenticated user, sorted by creation date (newest first).",
 )
 async def list_all(
-    current_user: CurrentUserDep, order_service: OrderServiceDep, page: int = 1, page_size: int = 10
+    current_user: CurrentUserDep,
+    order_service: OrderServiceDep,
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, ge=1, le=100, description="Items per page"),
+    status: Annotated[OrderStatus | None, Query(description="Filter by order status")] = None,
+    sort_by: Annotated[
+        OrderSortByField, Query(description="Field to sort by")
+    ] = OrderSortByField.CREATED_AT,
+    sort_order: Annotated[
+        SortOrder, Query(description="Sort order: 'asc' or 'desc'")
+    ] = SortOrder.DESC,
 ) -> Page[OrderRead]:
     """List all orders for the current user."""
-    orders, total = await order_service.list_all(current_user.id)
+    orders, total = await order_service.list_all(
+        current_user.id,
+        page=page,
+        page_size=page_size,
+        status=status,
+        sort_by=sort_by.value,
+        sort_order=sort_order.value,
+    )
     return build_page(items=orders, page=page, size=page_size, total=total)  # type: ignore [arg-type]
 
 

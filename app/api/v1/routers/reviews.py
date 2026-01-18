@@ -1,6 +1,7 @@
 """Product review API routes for creating, updating, and moderating customer reviews."""
 
 # mypy: disable-error-code=return-value
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Query, status
@@ -8,6 +9,7 @@ from fastapi import APIRouter, Query, status
 from app.api.v1.dependencies import CurrentUserDep, ReviewServiceDep
 from app.schemas.common import Page
 from app.schemas.review import ReviewCreate, ReviewRead, ReviewUpdate
+from app.schemas.search import ReviewSortByField, SortOrder
 from app.utils.pagination import build_page
 
 router = APIRouter(prefix="/reviews", tags=["Reviews"])
@@ -40,9 +42,23 @@ async def list_all(
     review_service: ReviewServiceDep,
     page: int = Query(1, description="Page number"),
     page_size: int = Query(10, description="Number of reviews per page"),
+    rating: int | None = Query(None, ge=1, le=5, description="Filter reviews by rating"),
+    sort_by: Annotated[
+        ReviewSortByField, Query(description="Field to sort by")
+    ] = ReviewSortByField.CREATED_AT,
+    sort_order: Annotated[
+        SortOrder, Query(description="Sort order: 'asc' or 'desc'")
+    ] = SortOrder.DESC,
 ) -> Page[ReviewRead]:
     """Get all reviews for a specific product."""
-    total, items = await review_service.list_paginated(product_id, page=page, page_size=page_size)
+    total, items = await review_service.list_paginated(
+        product_id,
+        page=page,
+        page_size=page_size,
+        rating=rating,
+        sort_by=sort_by.value,
+        sort_order=sort_order.value,
+    )
     return build_page(items=items, page=page, size=page_size, total=total)  # type: ignore [arg-type]
 
 
