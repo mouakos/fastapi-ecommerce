@@ -101,15 +101,15 @@ class CartService:
         Raises:
             HTTPException: If product is not found in cart, out of stock, or not available.
         """
+        product = await self.uow.products.find_by_id(product_id)
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found.")
+
         cart = await self._get_or_create(user_id, session_id)
 
         item = await self.uow.carts.find_cart_item(cart.id, product_id)
         if not item:
             raise HTTPException(status_code=404, detail="Product not found in cart.")
-
-        product = await self.uow.products.find_by_id(item.product_id)
-        if not product:
-            raise HTTPException(status_code=404, detail="Product not found.")
 
         if not product.is_active:
             raise HTTPException(status_code=400, detail="Product is not available.")

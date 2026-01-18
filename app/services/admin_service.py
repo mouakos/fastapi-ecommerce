@@ -313,7 +313,15 @@ class AdminService:
 
         Returns:
             tuple[list[Review], int]: List of reviews and total count.
+
+        Raises:
+            HTTPException: If the product is not found.
         """
+        if product_id:
+            product = await self.uow.products.find_by_id(product_id)
+            if not product:
+                raise HTTPException(status_code=404, detail="Product not found.")
+
         reviews, total = await self.uow.reviews.paginate(
             page=page,
             page_size=page_size,

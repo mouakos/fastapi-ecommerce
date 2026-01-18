@@ -50,7 +50,20 @@ class ProductService:
 
         Returns:
             tuple[list[Product], int]: A list of products and the total number of items.
+
+        Raises:
+            HTTPException: If the category does not exist.
         """
+        if category_id:
+            category = await self.uow.categories.find_by_id(category_id)
+            if not category:
+                raise HTTPException(status_code=404, detail="Category not found.")
+
+        if category_slug:
+            category = await self.uow.categories.find_by_slug(category_slug)
+            if not category:
+                raise HTTPException(status_code=404, detail="Category not found.")
+
         products, total = await self.uow.products.paginate(
             page=page,
             per_page=per_page,
