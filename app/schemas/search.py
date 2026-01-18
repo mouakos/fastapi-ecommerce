@@ -23,7 +23,7 @@ class SortByField(StrEnum):
     CREATED_AT = "created_at"
 
 
-class ReviewSortByField(StrEnum):
+class ReviewAdminSortByField(StrEnum):
     """Fields to sort product reviews by."""
 
     RATING = "rating"
@@ -31,7 +31,7 @@ class ReviewSortByField(StrEnum):
     CREATED_AT = "created_at"
 
 
-class OrderSortByField(StrEnum):
+class OrderAdminSortByField(StrEnum):
     """Fields to sort orders by."""
 
     TOTAL_AMOUNT = "total_amount"
@@ -39,7 +39,7 @@ class OrderSortByField(StrEnum):
     CREATED_AT = "created_at"
 
 
-class UserSortByField(StrEnum):
+class UserAdminSortByField(StrEnum):
     """Fields to sort users by."""
 
     EMAIL = "email"

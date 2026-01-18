@@ -14,7 +14,12 @@ from app.schemas.common import Page
 from app.schemas.order import OrderAdminRead, OrderStatusUpdate
 from app.schemas.product import ProductRead
 from app.schemas.review import ReviewAdminRead
-from app.schemas.search import OrderSortByField, ReviewSortByField, SortOrder, UserSortByField
+from app.schemas.search import (
+    OrderAdminSortByField,
+    ReviewAdminSortByField,
+    SortOrder,
+    UserAdminSortByField,
+)
 from app.schemas.statistics import (
     AdminDashboard,
     ProductStatistics,
@@ -111,9 +116,9 @@ async def list_users(
         UserRole | None, Query(description="Filter by role: 'customer' or 'admin'")
     ] = None,
     sort_by: Annotated[
-        UserSortByField,
+        UserAdminSortByField,
         Query(description="Field to sort by"),
-    ] = UserSortByField.CREATED_AT,
+    ] = UserAdminSortByField.CREATED_AT,
     sort_order: Annotated[
         SortOrder, Query(description="Sort order: 'asc' or 'desc'")
     ] = SortOrder.DESC,
@@ -179,8 +184,8 @@ async def list_orders(
     status: Annotated[OrderStatus | None, Query(description="Filter by order status")] = None,
     user_id: Annotated[UUID | None, Query(description="Filter by user ID")] = None,
     sort_by: Annotated[
-        OrderSortByField, Query(description="Field to sort by")
-    ] = OrderSortByField.CREATED_AT,
+        OrderAdminSortByField, Query(description="Field to sort by")
+    ] = OrderAdminSortByField.CREATED_AT,
     sort_order: Annotated[
         SortOrder, Query(description="Sort order: 'asc' or 'desc'")
     ] = SortOrder.DESC,
@@ -246,8 +251,8 @@ async def list_reviews(
     product_id: Annotated[UUID | None, Query(description="Filter by product ID")] = None,
     rating: int | None = Query(None, ge=1, le=5, description="Filter by rating"),
     sort_by: Annotated[
-        ReviewSortByField, Query(description="Field to sort by")
-    ] = ReviewSortByField.CREATED_AT,
+        ReviewAdminSortByField, Query(description="Field to sort by")
+    ] = ReviewAdminSortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
 ) -> Page[ReviewAdminRead]:
     """Get all reviews."""
