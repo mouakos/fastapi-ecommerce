@@ -405,6 +405,6 @@ class AdminService:
         Returns:
             tuple[list[Product], int]: List of low stock products and total count.
         """
-        return await self.uow.products.list_low_stock(
+        return await self.uow.products.paginate_low_stock(
             threshold=threshold, page=page, page_size=page_size
         )

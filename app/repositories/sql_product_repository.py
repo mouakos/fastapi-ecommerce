@@ -256,10 +256,10 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         result = await self._session.exec(stmt)
         return result.first() or 0
 
-    async def list_low_stock(
+    async def paginate_low_stock(
         self, threshold: int = 10, page: int = 1, page_size: int = 10
     ) -> tuple[list[Product], int]:
-        """Retrieve products that are low in stock.
+        """Paginate products that are low in stock.
 
         Args:
             threshold (int): Stock threshold.

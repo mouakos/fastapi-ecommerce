@@ -120,10 +120,10 @@ class ProductRepository(GenericRepository[Product], ABC):
         ...
 
     @abstractmethod
-    async def list_low_stock(
+    async def paginate_low_stock(
         self, threshold: int = 10, page: int = 1, page_size: int = 10
     ) -> tuple[list[Product], int]:
-        """List products that are low in stock.
+        """Paginate products that are low in stock.
 
         Args:
             threshold (int): Stock threshold.

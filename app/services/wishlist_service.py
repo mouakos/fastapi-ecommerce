@@ -45,7 +45,7 @@ class WishlistService:
         Returns:
             tuple[list[WishlistItem], int]: Wishlist items and total count.
         """
-        return await self.uow.wishlists.list_by_user_id(user_id, page, page_size)
+        return await self.uow.wishlists.paginate(user_id, page, page_size)
 
     async def remove_item(self, user_id: UUID, product_id: UUID) -> None:
         """Remove a product from the user's wishlist.

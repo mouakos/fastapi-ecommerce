@@ -11,10 +11,10 @@ class WishlistRepository(GenericRepository[WishlistItem], ABC):
     """Interface for Wishlist repository."""
 
     @abstractmethod
-    async def list_by_user_id(
+    async def paginate(
         self, user_id: UUID, page: int, page_size: int
     ) -> tuple[list[WishlistItem], int]:
-        """List all wishlist items by user ID.
+        """Paginate wishlist items by user ID.
 
         Args:
             user_id (UUID): User ID.
