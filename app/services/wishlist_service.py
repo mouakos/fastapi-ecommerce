@@ -32,16 +32,20 @@ class WishlistService:
             new_wishlist_item = WishlistItem(user_id=user_id, product_id=product_id)
             await self.uow.wishlists.add(new_wishlist_item)
 
-    async def list_items(self, user_id: UUID) -> list[WishlistItem]:
+    async def list_items(
+        self, user_id: UUID, page: int, page_size: int
+    ) -> tuple[list[WishlistItem], int]:
         """List all wishlist items for a user.
 
         Args:
             user_id (UUID): User ID.
+            page (int): Page number.
+            page_size (int): Number of items per page.
 
         Returns:
-            list[WishlistItem]: Wishlist items.
+            tuple[list[WishlistItem], int]: Wishlist items and total count.
         """
-        return await self.uow.wishlists.list_by_user_id(user_id)
+        return await self.uow.wishlists.list_by_user_id(user_id, page, page_size)
 
     async def remove_item(self, user_id: UUID, product_id: UUID) -> None:
         """Remove a product from the user's wishlist.

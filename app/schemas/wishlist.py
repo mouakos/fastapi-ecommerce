@@ -32,15 +32,6 @@ class WishlistItemRead(UUIDMixin):
     model_config = ConfigDict(frozen=True)
 
 
-class WishlistRead(BaseModel):
-    """Schema for reading wishlist items."""
-
-    items: list[WishlistItemRead]
-    total_items: int
-
-    model_config = ConfigDict(frozen=True)
-
-
 class WishlistStatsRead(BaseModel):
     """Schema for reading wishlist statistics."""
 

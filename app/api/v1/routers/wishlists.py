@@ -2,15 +2,16 @@
 
 from uuid import UUID
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Query, status
 
 from app.api.v1.dependencies import CurrentUserDep, WishlistServiceDep
+from app.schemas.common import Page
 from app.schemas.wishlist import (
     WishlistCreate,
     WishlistItemRead,
-    WishlistRead,
     WishlistStatsRead,
 )
+from app.utils.pagination import build_page
 
 router = APIRouter(prefix="/wishlist", tags=["Wishlist"])
 
@@ -34,14 +35,18 @@ async def count(
     "",
     summary="Get user's wishlist",
     description="Retrieve all items in the current user's wishlist.",
-    response_model=WishlistRead,
+    response_model=Page[WishlistItemRead],
 )
-async def get(
+async def list_all(
     current_user: CurrentUserDep,
     wishlist_service: WishlistServiceDep,
-) -> WishlistRead:
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, ge=1, le=100, description="Number of items per page"),
+) -> Page[WishlistItemRead]:
     """Get the wishlist items for the current user."""
-    wishlist_items = await wishlist_service.list_items(user_id=current_user.id)
+    wishlist_items, total = await wishlist_service.list_items(
+        user_id=current_user.id, page=page, page_size=page_size
+    )
     items = []
     if wishlist_items:
         for item in wishlist_items:
@@ -59,7 +64,7 @@ async def get(
                 )
             )
 
-    return WishlistRead(items=items, total_items=len(items))
+    return build_page(items=items, page=page, size=page_size, total=total)
 
 
 @router.post(
