@@ -7,7 +7,7 @@ from app.api.v1.dependencies import (
     CurrentUserDep,
     UserServiceDep,
 )
-from app.schemas.user import UserRead, UserUpdate
+from app.schemas.user import UserPasswordUpdate, UserRead, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -39,6 +39,21 @@ async def update(
 ) -> UserRead:
     """Update the profile of the currently authenticated user."""
     return await user_service.update(current_user.id, data)
+
+
+@router.patch(
+    "/me/password",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Change current user password",
+    description="Update the password of the currently authenticated user. Requires the old password for verification.",
+)
+async def change_password(
+    data: UserPasswordUpdate,
+    current_user: CurrentUserDep,
+    user_service: UserServiceDep,
+) -> None:
+    """Change the password of the currently authenticated user."""
+    await user_service.update_password(current_user.id, data.old_password, data.new_password)
 
 
 @router.delete(

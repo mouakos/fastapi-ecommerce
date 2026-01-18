@@ -81,6 +81,29 @@ class UserService:
         token = create_access_token({"sub": str(user.id)})
         return Token(access_token=token), user
 
+    async def update_password(self, user_id: UUID, old_password: str, new_password: str) -> None:
+        """Update user password.
+
+        Args:
+            user_id (UUID): User ID.
+            old_password (str): Current password.
+            new_password (str): New password.
+
+        Raises:
+            HTTPException: If the user does not exist or the old password is incorrect.
+        """
+        user = await self.uow.users.find_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+
+        if not verify_password(old_password, user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Password mismatch."
+            )
+
+        user.hashed_password = hash_password(new_password)
+        await self.uow.users.update(user)
+
     async def update(self, user_id: UUID, data: UserUpdate) -> User:
         """Update mutable profile fields (first/last name, phone number).
 

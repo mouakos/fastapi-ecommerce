@@ -75,6 +75,15 @@ class UserRoleUpdate(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
+class UserPasswordUpdate(BaseModel):
+    """Schema for updating user password."""
+
+    old_password: str = Field(..., min_length=6, max_length=255)
+    new_password: str = Field(..., min_length=6, max_length=255)
+
+    model_config = ConfigDict(frozen=True)
+
+
 class Login(BaseModel):
     """Schema for user login."""
 
