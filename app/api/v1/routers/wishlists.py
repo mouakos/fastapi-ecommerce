@@ -21,7 +21,7 @@ router = APIRouter(prefix="/wishlist", tags=["Wishlist"])
     description="Retrieve the total number of items currently in wishlist.",
     response_model=WishlistStatsRead,
 )
-async def count_items(
+async def count(
     current_user: CurrentUserDep,
     wishlist_service: WishlistServiceDep,
 ) -> WishlistStatsRead:
@@ -36,7 +36,7 @@ async def count_items(
     description="Retrieve all items in the current user's wishlist.",
     response_model=WishlistRead,
 )
-async def get_wishlist(
+async def get(
     current_user: CurrentUserDep,
     wishlist_service: WishlistServiceDep,
 ) -> WishlistRead:

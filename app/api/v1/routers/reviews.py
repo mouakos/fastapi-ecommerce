@@ -20,7 +20,7 @@ router = APIRouter(prefix="/reviews", tags=["Reviews"])
     summary="Add product review",
     description="Submit a new review for a product.",
 )
-async def add_review(
+async def create(
     data: ReviewCreate,
     review_service: ReviewServiceDep,
     current_user: CurrentUserDep,
@@ -35,7 +35,7 @@ async def add_review(
     summary="Get product reviews",
     description="Retrieve all approved reviews for a specific product with pagination support.",
 )
-async def list(
+async def list_all(
     product_id: UUID,
     review_service: ReviewServiceDep,
     page: int = Query(1, description="Page number"),
