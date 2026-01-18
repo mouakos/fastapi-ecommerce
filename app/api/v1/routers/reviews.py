@@ -46,9 +46,7 @@ async def list_all(
     sort_by: Annotated[
         ReviewSortByField, Query(description="Field to sort by")
     ] = ReviewSortByField.CREATED_AT,
-    sort_order: Annotated[
-        SortOrder, Query(description="Sort order: 'asc' or 'desc'")
-    ] = SortOrder.DESC,
+    sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
 ) -> Page[ReviewRead]:
     """Get all reviews for a specific product."""
     total, items = await review_service.list_paginated(

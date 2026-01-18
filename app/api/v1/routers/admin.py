@@ -186,9 +186,7 @@ async def list_orders(
     sort_by: Annotated[
         OrderSortByField, Query(description="Field to sort by")
     ] = OrderSortByField.CREATED_AT,
-    sort_order: Annotated[
-        SortOrder, Query(description="Sort order: 'asc' or 'desc'")
-    ] = SortOrder.DESC,
+    sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
 ) -> Page[OrderAdminRead]:
     """List all orders with pagination and filters."""
     orders, total = await admin_service.list_orders(
