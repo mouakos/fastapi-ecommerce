@@ -11,7 +11,7 @@ from app.models.order import OrderStatus
 from app.models.review import ReviewStatus
 from app.models.user import UserRole
 from app.schemas.common import Page
-from app.schemas.order import OrderAdminRead, OrderAdminStatusUpdate
+from app.schemas.order import OrderAdminRead, OrderStatusUpdate
 from app.schemas.product import ProductRead
 from app.schemas.review import ReviewAdminRead
 from app.schemas.statistics import (
@@ -21,7 +21,7 @@ from app.schemas.statistics import (
     SalesStatistics,
     UserStatistics,
 )
-from app.schemas.user import UserAdminRead, UserAdminRoleUpdate
+from app.schemas.user import UserAdminRead, UserRoleUpdate
 from app.utils.pagination import build_page
 
 router = APIRouter(prefix="/admin", tags=["Admin"], dependencies=[AdminRoleDep])
@@ -142,7 +142,7 @@ async def list_users(
 )
 async def update_user_role(
     user_id: UUID,
-    role_update: UserAdminRoleUpdate,
+    role_update: UserRoleUpdate,
     admin_service: AdminServiceDep,
     current_user: CurrentUserDep,
 ) -> None:
@@ -199,7 +199,7 @@ async def list_orders(
 )
 async def update_order_status(
     order_id: UUID,
-    status_update: OrderAdminStatusUpdate,
+    status_update: OrderStatusUpdate,
     admin_service: AdminServiceDep,
 ) -> None:
     """Update an order's status."""

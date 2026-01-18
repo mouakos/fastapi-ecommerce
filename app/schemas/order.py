@@ -65,7 +65,7 @@ class OrderAdminRead(UUIDMixin):
     model_config = ConfigDict(frozen=True)
 
 
-class OrderAdminStatusUpdate(BaseModel):
+class OrderStatusUpdate(BaseModel):
     """Schema for updating an order's status."""
 
     status: OrderStatus = Field(

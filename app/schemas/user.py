@@ -67,7 +67,7 @@ class UserAdminRead(UserRead):
     model_config = ConfigDict(frozen=True)
 
 
-class UserAdminRoleUpdate(BaseModel):
+class UserRoleUpdate(BaseModel):
     """Schema for updating a user's role."""
 
     role: UserRole = Field(..., description="New role: 'user' or 'admin'")
