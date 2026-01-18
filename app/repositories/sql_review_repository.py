@@ -3,7 +3,7 @@
 from uuid import UUID
 
 from sqlalchemy import func
-from sqlmodel import desc, select
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.interfaces.review_repository import ReviewRepository
@@ -65,6 +65,8 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         status: ReviewStatus | None = None,
         user_id: UUID | None = None,
         rating: int | None = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
     ) -> tuple[list[Review], int]:
         """Get all reviews with pagination and optional filters.
 
@@ -75,6 +77,8 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
             status (ReviewStatus | None, optional): Filter by review status. Defaults to None.
             user_id (UUID | None, optional): Filter by user ID. Defaults to None.
             rating (int | None, optional): Filter by rating. Defaults to None.
+            sort_by (str, optional): Field to sort by. Defaults to "created_at".
+            sort_order (str, optional): Sort order. Defaults to "desc".
 
         Returns:
             tuple[list[Review], int]: List of reviews and total count.
@@ -101,8 +105,17 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         offset = (page - 1) * page_size
         stmt = stmt.offset(offset).limit(page_size)
 
-        # Execute query
-        result = await self._session.exec(stmt.order_by(desc(Review.created_at)))
+        # Apply sorting
+        sort_columns = {
+            "created_at": Review.created_at,
+            "rating": Review.rating,
+            "status": Review.status,
+        }.get(sort_by, Review.created_at)
+
+        sort_column = sort_columns.desc() if sort_order == "desc" else sort_columns.asc()  # type: ignore [attr-defined]
+        stmt = stmt.order_by(sort_column)
+
+        result = await self._session.exec(stmt)
         reviews = list(result.all())
 
         return reviews, total

@@ -73,7 +73,7 @@ async def list_all(
     availability: Annotated[
         AvailabilityFilter, Query(description="Stock availability")
     ] = AvailabilityFilter.ALL,
-    sort_by: Annotated[SortByField, Query(description="Sort by field")] = SortByField.ID,
+    sort_by: Annotated[SortByField, Query(description="Sort by field")] = SortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.ASC,
 ) -> Page[ProductRead]:
     """List all products with optional filters, sorting, and pagination."""
@@ -86,9 +86,9 @@ async def list_all(
         min_price=min_price,
         max_price=max_price,
         min_rating=min_rating,
-        availability=availability,
-        sort_by=sort_by,
-        sort_order=sort_order,
+        availability=availability.value,
+        sort_by=sort_by.value,
+        sort_order=sort_order.value,
     )
     return build_page(items=products, total=total, page=page, size=per_page)  # type: ignore [arg-type]
 

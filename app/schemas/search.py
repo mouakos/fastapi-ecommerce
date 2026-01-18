@@ -16,11 +16,34 @@ class AvailabilityFilter(StrEnum):
 class SortByField(StrEnum):
     """Fields to sort products by."""
 
-    ID = "id"
     NAME = "name"
     PRICE = "price"
     RATING = "rating"
     POPULARITY = "popularity"
+    CREATED_AT = "created_at"
+
+
+class ReviewSortByField(StrEnum):
+    """Fields to sort product reviews by."""
+
+    RATING = "rating"
+    STATUS = "status"
+    CREATED_AT = "created_at"
+
+
+class OrderSortByField(StrEnum):
+    """Fields to sort orders by."""
+
+    TOTAL_AMOUNT = "total_amount"
+    STATUS = "status"
+    CREATED_AT = "created_at"
+
+
+class UserSortByField(StrEnum):
+    """Fields to sort users by."""
+
+    EMAIL = "email"
+    ROLE = "role"
     CREATED_AT = "created_at"
 
 

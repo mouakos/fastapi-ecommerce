@@ -51,6 +51,8 @@ class OrderRepository(GenericRepository[Order], ABC):
         page_size: int = 10,
         status: OrderStatus | None = None,
         user_id: UUID | None = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
     ) -> tuple[list[Order], int]:
         """Paginate orders with optional filters.
 
@@ -59,6 +61,8 @@ class OrderRepository(GenericRepository[Order], ABC):
             page_size (int, optional): Number of records per page. Defaults to 10.
             status (OrderStatus | None, optional): Filter by order status. Defaults to None.
             user_id (UUID | None, optional): Filter by user ID. Defaults to None.
+            sort_by (str, optional): Field to sort by. Defaults to "created_at".
+            sort_order (str, optional): Sort order, either "asc" or "desc". Defaults to "desc".
 
         Returns:
             tuple[list[Order], int]: List of orders and total count.

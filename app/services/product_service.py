@@ -8,11 +8,6 @@ from pydantic import HttpUrl
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.product import Product
 from app.schemas.product import ProductCreate, ProductUpdate
-from app.schemas.search import (
-    AvailabilityFilter,
-    SortByField,
-    SortOrder,
-)
 from app.utils.sku import generate_sku
 
 
@@ -34,9 +29,9 @@ class ProductService:
         min_price: float | None = None,
         max_price: float | None = None,
         min_rating: float | None = None,
-        availability: AvailabilityFilter = AvailabilityFilter.ALL,
-        sort_by: SortByField = SortByField.ID,
-        sort_order: SortOrder = SortOrder.ASC,
+        availability: str = "all",
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
     ) -> tuple[list[Product], int]:
         """List all products with optional filters, sorting, and pagination.
 
@@ -49,9 +44,9 @@ class ProductService:
             min_price (float | None): Minimum price to filter products.
             max_price (float | None): Maximum price to filter products.
             min_rating (float | None): Minimum average rating to filter products.
-            availability (AvailabilityFilter, optional): Stock availability filter ("in_stock", "out_of_stock", "all").
-            sort_by (SortByField, optional): Field to sort by (e.g., "price", "name", "rating").
-            sort_order (SortOrder, optional): Sort order ("asc" or "desc").
+            availability (str, optional): Stock availability filter ("in_stock", "out_of_stock", "all").
+            sort_by (str, optional): Field to sort by (e.g., "price", "name", "rating").
+            sort_order (str, optional): Sort order ("asc" or "desc").
 
         Returns:
             tuple[list[Product], int]: A list of products and the total number of items.
@@ -65,9 +60,9 @@ class ProductService:
             min_price=min_price,
             max_price=max_price,
             min_rating=min_rating,
-            availability=availability.value,
-            sort_by=sort_by.value,
-            sort_order=sort_order.value,
+            availability=availability,
+            sort_by=sort_by,
+            sort_order=sort_order,
         )
         return products, total
 

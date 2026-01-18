@@ -154,6 +154,8 @@ class AdminService:
         page_size: int = 10,
         status: OrderStatus | None = None,
         user_id: UUID | None = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
     ) -> tuple[list[Order], int]:
         """List all orders with pagination and optional filters.
 
@@ -162,12 +164,19 @@ class AdminService:
             page_size (int, optional): Number of records per page. Defaults to 10.
             status (OrderStatus | None, optional): Filter by order status. Defaults to None.
             user_id (UUID | None, optional): Filter by user ID. Defaults to None.
+            sort_by (str, optional): Field to sort by. Defaults to "created_at".
+            sort_order (str, optional): Sort order, either "asc" or "desc".
 
         Returns:
             tuple[list[Order], int]: List of orders and total count.
         """
         orders, total = await self.uow.orders.paginate(
-            page=page, page_size=page_size, status=status, user_id=user_id
+            page=page,
+            page_size=page_size,
+            status=status,
+            user_id=user_id,
+            sort_by=sort_by,
+            sort_order=sort_order,
         )
 
         return orders, total
@@ -213,8 +222,18 @@ class AdminService:
         page_size: int = 10,
         role: UserRole | None = None,
         search: str | None = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
     ) -> tuple[list[User], int]:
         """List all users in the system.
+
+        Args:
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of records per page. Defaults to 10.
+            role (UserRole | None, optional): Filter by user role. Defaults to None.
+            search (str | None, optional): Search query for name or email. Defaults to None.
+            sort_by (str, optional): Field to sort by. Defaults to "created_at".
+            sort_order (str, optional): Sort order, either "asc" or "desc". Defaults to "desc".
 
         Returns:
             tuple[list[User], int]: List of users and total number of users.
@@ -224,6 +243,8 @@ class AdminService:
             page_size=page_size,
             role=role,
             search=search,
+            sort_by=sort_by,
+            sort_order=sort_order,
         )
         return users, total
 
@@ -275,11 +296,23 @@ class AdminService:
         status: ReviewStatus | None = None,
         user_id: UUID | None = None,
         rating: int | None = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
     ) -> tuple[list[Review], int]:
         """List all product reviews with pagination and optional product filter.
 
+        Args:
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of records per page. Defaults to 10.
+            product_id (UUID | None, optional): Filter by product ID. Defaults to None.
+            status (ReviewStatus | None, optional): Filter by review status. Defaults to None.
+            user_id (UUID | None, optional): Filter by user ID. Defaults to None.
+            rating (int | None, optional): Filter by rating. Defaults to None.
+            sort_by (str, optional): Field to sort by. Defaults to "created_at".
+            sort_order (str, optional): Sort order. Defaults to "desc".
+
         Returns:
-            list[Review]: List of all product reviews.
+            tuple[list[Review], int]: List of reviews and total count.
         """
         reviews, total = await self.uow.reviews.paginate(
             page=page,
@@ -288,6 +321,8 @@ class AdminService:
             status=status,
             user_id=user_id,
             rating=rating,
+            sort_by=sort_by,
+            sort_order=sort_order,
         )
         return reviews, total
 

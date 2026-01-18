@@ -1,14 +1,10 @@
 """Interface for Product repository."""
 
 from abc import ABC, abstractmethod
-from typing import Literal
 from uuid import UUID
 
 from app.interfaces.generic_repository import GenericRepository
 from app.models.product import Product
-
-allowed_sort_order = Literal["asc", "desc"]
-allowed_sort_by = Literal["id", "price", "name", "created_at", "rating", "popularity"]
 
 
 class ProductRepository(GenericRepository[Product], ABC):
@@ -27,8 +23,8 @@ class ProductRepository(GenericRepository[Product], ABC):
         max_price: float | None = None,
         min_rating: float | None = None,
         availability: str = "all",
-        sort_by: allowed_sort_by = "id",
-        sort_order: allowed_sort_order = "asc",
+        sort_by: str = "id",
+        sort_order: str = "asc",
     ) -> tuple[list[Product], int]:
         """List all products with pagination and optional filters.
 
@@ -42,8 +38,8 @@ class ProductRepository(GenericRepository[Product], ABC):
             max_price (float | None): Maximum price to filter products.
             min_rating (float | None): Minimum average rating to filter products.
             availability (str | None): Stock availability filter ("in_stock", "out_of_stock", "all").
-            sort_by (allowed_sort_by, optional): Field to sort by (e.g., "price", "name", "rating").
-            sort_order (allowed_sort_order, optional): Sort order ("asc" or "desc").
+            sort_by (str, optional): Field to sort by (e.g., "price", "name", "rating").
+            sort_order (str, optional): Sort order ("asc" or "desc").
 
         Returns:
             tuple[list[Product], int]: A tuple containing a list of products and the total number of products.

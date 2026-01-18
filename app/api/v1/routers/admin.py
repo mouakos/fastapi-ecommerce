@@ -14,6 +14,7 @@ from app.schemas.common import Page
 from app.schemas.order import OrderAdminRead, OrderStatusUpdate
 from app.schemas.product import ProductRead
 from app.schemas.review import ReviewAdminRead
+from app.schemas.search import OrderSortByField, ReviewSortByField, SortOrder, UserSortByField
 from app.schemas.statistics import (
     AdminDashboard,
     ProductStatistics,
@@ -105,14 +106,26 @@ async def list_users(
     admin_service: AdminServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
-    search: str | None = Query(None, description="Search by name or email"),
+    search: str | None = Query(None, description="Search by last name, first name or email"),
     role: Annotated[
         UserRole | None, Query(description="Filter by role: 'customer' or 'admin'")
     ] = None,
+    sort_by: Annotated[
+        UserSortByField,
+        Query(description="Field to sort by"),
+    ] = UserSortByField.CREATED_AT,
+    sort_order: Annotated[
+        SortOrder, Query(description="Sort order: 'asc' or 'desc'")
+    ] = SortOrder.DESC,
 ) -> Page[UserAdminRead]:
     """List all users with pagination and filters."""
     users, total = await admin_service.list_users(
-        page=page, page_size=page_size, search=search, role=role
+        page=page,
+        page_size=page_size,
+        search=search,
+        role=role,
+        sort_by=sort_by.value,
+        sort_order=sort_order.value,
     )
     users_dto = [
         UserAdminRead(
@@ -165,10 +178,21 @@ async def list_orders(
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
     status: Annotated[OrderStatus | None, Query(description="Filter by order status")] = None,
     user_id: Annotated[UUID | None, Query(description="Filter by user ID")] = None,
+    sort_by: Annotated[
+        OrderSortByField, Query(description="Field to sort by")
+    ] = OrderSortByField.CREATED_AT,
+    sort_order: Annotated[
+        SortOrder, Query(description="Sort order: 'asc' or 'desc'")
+    ] = SortOrder.DESC,
 ) -> Page[OrderAdminRead]:
     """List all orders with pagination and filters."""
     orders, total = await admin_service.list_orders(
-        page=page, page_size=page_size, status=status, user_id=user_id
+        page=page,
+        page_size=page_size,
+        status=status,
+        user_id=user_id,
+        sort_by=sort_by.value,
+        sort_order=sort_order.value,
     )
     orders_dto = [
         OrderAdminRead(
@@ -221,6 +245,10 @@ async def list_reviews(
     user_id: Annotated[UUID | None, Query(description="Filter by user ID")] = None,
     product_id: Annotated[UUID | None, Query(description="Filter by product ID")] = None,
     rating: int | None = Query(None, ge=1, le=5, description="Filter by rating"),
+    sort_by: Annotated[
+        ReviewSortByField, Query(description="Field to sort by")
+    ] = ReviewSortByField.CREATED_AT,
+    sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
 ) -> Page[ReviewAdminRead]:
     """Get all reviews."""
     reviews, total = await admin_service.list_reviews(
@@ -230,6 +258,8 @@ async def list_reviews(
         product_id=product_id,
         user_id=user_id,
         rating=rating,
+        sort_by=sort_by.value,
+        sort_order=sort_order.value,
     )
     # Manually construct DTOs with relationship data
     review_items = [

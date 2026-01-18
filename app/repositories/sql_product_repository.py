@@ -7,7 +7,7 @@ from slugify import slugify
 from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.interfaces.product_repository import ProductRepository, allowed_sort_by, allowed_sort_order
+from app.interfaces.product_repository import ProductRepository
 from app.models.category import Category
 from app.models.order import Order, OrderItem, OrderStatus
 from app.models.product import Product
@@ -35,8 +35,8 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         max_price: float | None = None,
         min_rating: float | None = None,
         availability: str = "all",
-        sort_by: allowed_sort_by = "id",
-        sort_order: allowed_sort_order = "asc",
+        sort_by: str = "id",
+        sort_order: str = "asc",
     ) -> tuple[list[Product], int]:
         """Gets a list of products with optional filters, sorting, and pagination.
 
@@ -50,8 +50,8 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
             max_price (float | None): Maximum price to filter products.
             min_rating (float | None): Minimum average rating to filter products.
             availability (str | None): Stock availability filter ("in_stock", "out_of_stock", "all").
-            sort_by (allowed_sort_by, optional): Field to sort by (e.g., "price", "name", "rating").
-            sort_order (allowed_sort_order, optional): Sort order ("asc" or "desc").
+            sort_by (str, optional): Field to sort by (e.g., "price", "name", "rating").
+            sort_order (str, optional): Sort order ("asc" or "desc").
 
         Returns:
             tuple[list[Product], int]: A tuple containing a list of products and the total number of items.
@@ -96,7 +96,6 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
 
         # Apply sorting
         sort_column = {
-            "id": Product.id,
             "price": Product.price,
             "name": Product.name,
             "created_at": Product.created_at,
@@ -115,7 +114,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
                 .scalar_subquery(),
                 0,
             ),
-        }.get(sort_by, Product.id)
+        }.get(sort_by, Product.created_at)
         sort_column = sort_column.desc() if sort_order == "desc" else sort_column.asc()  # type: ignore [attr-defined]
         stmt = stmt.order_by(sort_column)
 

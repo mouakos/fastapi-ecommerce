@@ -52,6 +52,8 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
         page_size: int = 10,
         role: UserRole | None = None,
         search: str | None = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
     ) -> tuple[list[User], int]:
         """Get all users with pagination and optional filters.
 
@@ -59,7 +61,9 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
             page (int, optional): Page number. Defaults to 1.
             page_size (int, optional): Number of records per page. Defaults to 10.
             role (UserRole | None, optional): Filter by user role. Defaults to None.
-            search (str | None, optional): Search query for name or email. Defaults to None.
+            search (str | None, optional): Search query for email. Defaults to None.
+            sort_by (str, optional): Field to sort by. Defaults to "created_at".
+            sort_order (str, optional): Sort order, either "asc" or "desc". Defaults to "desc".
 
         Returns:
             tuple[list[User], int]: List of users and total count.
@@ -73,9 +77,16 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
         # Apply search filter
         if search:
             search_pattern = f"%{search}%"
-            stmt = stmt.where(
-                (User.name.ilike(search_pattern)) | (User.email.ilike(search_pattern))  # type: ignore [attr-defined]
-            )
+            stmt = stmt.where(User.email.ilike(search_pattern))  # type: ignore [attr-defined]
+
+        # Apply sorting
+        sort_columns = {
+            "created_at": User.created_at,
+            "email": User.email,
+            "role": User.role,
+        }.get(sort_by, User.created_at)
+        sort_column = sort_columns.desc() if sort_order == "desc" else sort_columns.asc()  # type: ignore [attr-defined]
+        stmt = stmt.order_by(sort_column)
 
         # Get total count
         count_result = await self._session.exec(stmt)

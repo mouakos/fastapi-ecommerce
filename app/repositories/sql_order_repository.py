@@ -65,6 +65,8 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
         page_size: int = 10,
         status: OrderStatus | None = None,
         user_id: UUID | None = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
     ) -> tuple[list[Order], int]:
         """Get all orders with pagination and optional filters.
 
@@ -73,6 +75,8 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
             page_size (int, optional): Number of records per page. Defaults to 10.
             status (OrderStatus | None, optional): Filter by order status. Defaults to None.
             user_id (UUID | None, optional): Filter by user ID. Defaults to None.
+            sort_by (str, optional): Field to sort by. Defaults to "created_at".
+            sort_order (str, optional): Sort order, either "asc" or "desc". Defaults to "desc".
 
         Returns:
             tuple[list[Order], int]: List of orders and total count.
@@ -86,6 +90,15 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
 
         if user_id is not None:
             stmt = stmt.where(Order.user_id == user_id)
+
+        # Apply sorting
+        sort_column = {
+            "created_at": Order.created_at,
+            "total_amount": Order.total_amount,
+            "status": Order.status,
+        }.get(sort_by, Order.created_at)
+        sort_column = sort_column.desc() if sort_order == "desc" else sort_column.asc()  # type: ignore [attr-defined]
+        stmt = stmt.order_by(sort_column)
 
         # Get total count
         count_stmt = select(func.count()).select_from(stmt.subquery())

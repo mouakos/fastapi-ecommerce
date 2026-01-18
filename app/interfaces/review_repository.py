@@ -54,6 +54,8 @@ class ReviewRepository(GenericRepository[Review], ABC):
         status: ReviewStatus | None = None,
         user_id: UUID | None = None,
         rating: int | None = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
     ) -> tuple[list[Review], int]:
         """Paginate reviews with optional filters.
 
@@ -64,6 +66,8 @@ class ReviewRepository(GenericRepository[Review], ABC):
             status (ReviewStatus | None, optional): Filter by review status. Defaults to None.
             user_id (UUID | None, optional): Filter by user ID. Defaults to None.
             rating (int | None, optional): Filter by rating. Defaults to None.
+            sort_by (str, optional): Field to sort by. Defaults to "created_at".
+            sort_order (str, optional): Sort order. Defaults to "desc".
 
         Returns:
             tuple[list[Review], int]: List of reviews and total count.
