@@ -8,18 +8,15 @@ from uuid import UUID
 from fastapi import APIRouter, Query, status
 
 from app.api.v1.dependencies import AdminRoleDep, ProductServiceDep
-from app.schemas.common import Page
+from app.schemas.common import Page, SortOrder
 from app.schemas.product import (
     ProductAutocompleteResponse,
+    ProductAvailabilityFilter,
     ProductCreate,
     ProductDetailRead,
     ProductRead,
-    ProductUpdate,
-)
-from app.schemas.search import (
-    ProductAvailabilityFilter,
     ProductSortByField,
-    SortOrder,
+    ProductUpdate,
 )
 from app.utils.pagination import build_page
 

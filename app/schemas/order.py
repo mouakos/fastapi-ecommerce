@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from decimal import Decimal
+from enum import StrEnum
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
@@ -74,3 +75,11 @@ class OrderStatusUpdate(BaseModel):
     )
 
     model_config = ConfigDict(frozen=True)
+
+
+class OrderSortByField(StrEnum):
+    """Fields to sort orders by."""
+
+    TOTAL_AMOUNT = "total_amount"
+    STATUS = "status"
+    CREATED_AT = "created_at"

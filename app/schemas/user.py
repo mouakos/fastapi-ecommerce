@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from decimal import Decimal
+from enum import StrEnum
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -108,3 +109,11 @@ class TokenData(BaseModel):
     user_id: UUID
 
     model_config = ConfigDict(frozen=True)
+
+
+class UserSortByField(StrEnum):
+    """Fields to sort users by."""
+
+    EMAIL = "email"
+    ROLE = "role"
+    CREATED_AT = "created_at"

@@ -1,6 +1,7 @@
 """Schemas for review operations."""
 
 from datetime import datetime
+from enum import StrEnum
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -63,3 +64,18 @@ class ReviewAdminRead(ReviewRead):
     updated_at: datetime
 
     model_config = ConfigDict(frozen=True)
+
+
+class ReviewAdminSortByField(StrEnum):
+    """Fields to sort product reviews by."""
+
+    RATING = "rating"
+    STATUS = "status"
+    CREATED_AT = "created_at"
+
+
+class ReviewSortByField(StrEnum):
+    """Fields to sort product reviews by."""
+
+    RATING = "rating"
+    CREATED_AT = "created_at"

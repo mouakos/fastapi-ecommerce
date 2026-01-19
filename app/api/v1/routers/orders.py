@@ -8,9 +8,8 @@ from fastapi import APIRouter, Query
 
 from app.api.v1.dependencies import CurrentUserDep, OrderServiceDep
 from app.models.order import OrderStatus
-from app.schemas.common import Page
-from app.schemas.order import OrderCreate, OrderRead
-from app.schemas.search import OrderSortByField, SortOrder
+from app.schemas.common import Page, SortOrder
+from app.schemas.order import OrderCreate, OrderRead, OrderSortByField
 from app.utils.pagination import build_page
 
 router = APIRouter(prefix="/orders", tags=["Orders"])

@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from decimal import Decimal
+from enum import StrEnum
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
@@ -105,3 +106,21 @@ class ProductAutocompleteResponse(BaseModel):
             ]
         },
     )
+
+
+class ProductAvailabilityFilter(StrEnum):
+    """Filters for product availability."""
+
+    ALL = "all"
+    IN_STOCK = "in_stock"
+    OUT_OF_STOCK = "out_of_stock"
+
+
+class ProductSortByField(StrEnum):
+    """Fields to sort products by."""
+
+    NAME = "name"
+    PRICE = "price"
+    RATING = "rating"
+    POPULARITY = "popularity"
+    CREATED_AT = "created_at"

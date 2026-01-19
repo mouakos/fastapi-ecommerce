@@ -11,18 +11,15 @@ from app.api.v1.dependencies import AdminRoleDep, AdminServiceDep, CurrentUserDe
 from app.models.order import OrderStatus
 from app.models.review import ReviewStatus
 from app.models.user import UserRole
-from app.schemas.common import Page
-from app.schemas.order import OrderAdminRead, OrderStatusUpdate
-from app.schemas.product import ProductAdminRead, ProductRead
-from app.schemas.review import ReviewAdminRead
-from app.schemas.search import (
-    OrderSortByField,
+from app.schemas.common import Page, SortOrder
+from app.schemas.order import OrderAdminRead, OrderSortByField, OrderStatusUpdate
+from app.schemas.product import (
+    ProductAdminRead,
     ProductAvailabilityFilter,
+    ProductRead,
     ProductSortByField,
-    ReviewAdminSortByField,
-    SortOrder,
-    UserAdminSortByField,
 )
+from app.schemas.review import ReviewAdminRead, ReviewAdminSortByField
 from app.schemas.statistics import (
     AdminDashboard,
     ProductStatistics,
@@ -30,7 +27,7 @@ from app.schemas.statistics import (
     SalesStatistics,
     UserStatistics,
 )
-from app.schemas.user import UserAdminRead, UserRoleUpdate
+from app.schemas.user import UserAdminRead, UserRoleUpdate, UserSortByField
 from app.utils.pagination import build_page
 
 router = APIRouter(prefix="/admin", tags=["Admin"], dependencies=[AdminRoleDep])
@@ -119,9 +116,9 @@ async def list_users(
         UserRole | None, Query(description="Filter by role: 'customer' or 'admin'")
     ] = None,
     sort_by: Annotated[
-        UserAdminSortByField,
+        UserSortByField,
         Query(description="Field to sort by"),
-    ] = UserAdminSortByField.CREATED_AT,
+    ] = UserSortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
 ) -> Page[UserAdminRead]:
     """List all users with pagination and filters."""

@@ -1,5 +1,6 @@
 """Common Pydantic Schemas."""
 
+from enum import StrEnum
 from typing import TypeVar
 from uuid import UUID
 
@@ -95,3 +96,10 @@ class Page[T](BaseModel):
     pages: int
 
     model_config = ConfigDict(frozen=True)
+
+
+class SortOrder(StrEnum):
+    """Sorting order."""
+
+    ASC = "asc"
+    DESC = "desc"
