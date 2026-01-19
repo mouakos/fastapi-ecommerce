@@ -3,7 +3,7 @@
 from enum import StrEnum
 
 
-class AvailabilityFilter(StrEnum):
+class ProductAvailabilityFilter(StrEnum):
     """Filters for product availability."""
 
     ALL = "all"
@@ -11,7 +11,7 @@ class AvailabilityFilter(StrEnum):
     OUT_OF_STOCK = "out_of_stock"
 
 
-class SortByField(StrEnum):
+class ProductSortByField(StrEnum):
     """Fields to sort products by."""
 
     NAME = "name"

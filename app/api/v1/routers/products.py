@@ -17,8 +17,8 @@ from app.schemas.product import (
     ProductUpdate,
 )
 from app.schemas.search import (
-    AvailabilityFilter,
-    SortByField,
+    ProductAvailabilityFilter,
+    ProductSortByField,
     SortOrder,
 )
 from app.utils.pagination import build_page
@@ -77,9 +77,11 @@ async def list_all(
         int | None, Query(ge=1, le=5, description="Minimum average rating (1-5)")
     ] = None,
     availability: Annotated[
-        AvailabilityFilter, Query(description="Stock availability")
-    ] = AvailabilityFilter.ALL,
-    sort_by: Annotated[SortByField, Query(description="Sort by field")] = SortByField.CREATED_AT,
+        ProductAvailabilityFilter, Query(description="Stock availability")
+    ] = ProductAvailabilityFilter.ALL,
+    sort_by: Annotated[
+        ProductSortByField, Query(description="Sort by field")
+    ] = ProductSortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.ASC,
 ) -> Page[ProductRead]:
     """List all products with optional filters, sorting, and pagination."""

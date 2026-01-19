@@ -16,10 +16,10 @@ from app.schemas.order import OrderAdminRead, OrderStatusUpdate
 from app.schemas.product import ProductAdminRead, ProductRead
 from app.schemas.review import ReviewAdminRead
 from app.schemas.search import (
-    AvailabilityFilter,
     OrderSortByField,
+    ProductAvailabilityFilter,
+    ProductSortByField,
     ReviewAdminSortByField,
-    SortByField,
     SortOrder,
     UserAdminSortByField,
 )
@@ -387,12 +387,14 @@ async def list_products(
         int | None, Query(ge=1, le=5, description="Minimum average rating (1-5)")
     ] = None,
     availability: Annotated[
-        AvailabilityFilter, Query(description="Stock availability")
-    ] = AvailabilityFilter.ALL,
+        ProductAvailabilityFilter, Query(description="Stock availability")
+    ] = ProductAvailabilityFilter.ALL,
     is_active: Annotated[
         bool | None, Query(description="Filter by active status: true, false, or omit for all")
     ] = None,
-    sort_by: Annotated[SortByField, Query(description="Sort by field")] = SortByField.CREATED_AT,
+    sort_by: Annotated[
+        ProductSortByField, Query(description="Sort by field")
+    ] = ProductSortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.ASC,
 ) -> Page[ProductAdminRead]:
     """List all products with pagination and filters."""
