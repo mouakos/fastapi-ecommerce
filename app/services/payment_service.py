@@ -36,9 +36,15 @@ class PaymentService:
         Returns:
             str: The URL of the created checkout session.
         """
-        order = await self.uow.orders.find_pending_user_order(order_id, user_id)
+        order = await self.uow.orders.find_user_order(order_id, user_id)
         if not order:
             raise HTTPException(status_code=404, detail="Order not found.")
+
+        if order.status != OrderStatus.PENDING:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot create checkout session for order with status: {order.status}",
+            )
 
         # Create a checkout session with Stripe
         try:
@@ -125,9 +131,19 @@ class PaymentService:
         if payment.status == PaymentStatus.SUCCESS:
             return  # Already processed
 
-        order = await self.uow.orders.find_pending_user_order(order_id, user_id)
+        # Get order and verify ownership
+        order = await self.uow.orders.find_user_order(order_id, user_id)
         if not order:
             raise HTTPException(status_code=404, detail="Order not found.")
+
+        if order.status == OrderStatus.PAID:
+            return  # Idempotent handling
+
+        if order.status != OrderStatus.PENDING:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot process payment for order with status: {order.status}",
+            )
 
         order.status = OrderStatus.PAID
         order.paid_at = utcnow()

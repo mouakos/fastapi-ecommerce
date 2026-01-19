@@ -71,6 +71,7 @@ async def get(
     order_id: UUID,
     _: CurrentUserDep,
     order_service: OrderServiceDep,
+    current_user: CurrentUserDep,
 ) -> OrderRead:
     """Retrieve an order by its ID for the current user."""
-    return await order_service.find_by_id(order_id)
+    return await order_service.find_by_id(order_id, current_user.id)

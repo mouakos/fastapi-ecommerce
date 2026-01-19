@@ -75,11 +75,12 @@ class OrderService:
 
         return await self.uow.orders.update(created_order)
 
-    async def find_by_id(self, order_id: UUID) -> Order:
+    async def find_by_id(self, order_id: UUID, user_id: UUID) -> Order:
         """Find an order by its ID.
 
         Args:
             order_id (UUID): The ID of the order.
+            user_id (UUID): The ID of the user.
 
         Returns:
             Order: The order data.
@@ -87,7 +88,7 @@ class OrderService:
         Raises:
             HTTPException: If the order is not found.
         """
-        order = await self.uow.orders.find_by_id(order_id)
+        order = await self.uow.orders.find_user_order(order_id, user_id)
         if not order:
             raise HTTPException(status_code=404, detail="Order not found.")
         return order
