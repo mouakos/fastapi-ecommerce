@@ -83,3 +83,25 @@ class ProductUpdate(BaseModel):
     is_active: bool | None = None
 
     model_config = ConfigDict(frozen=True)
+
+
+class ProductAutocompleteResponse(BaseModel):
+    """Schema for product name autocomplete suggestions."""
+
+    suggestions: list[str] = Field(..., description="List of product name suggestions (max 10)")
+
+    model_config = ConfigDict(
+        frozen=True,
+        json_schema_extra={
+            "examples": [
+                {
+                    "suggestions": [
+                        "iPhone 16 Pro",
+                        "iPhone 16",
+                        "iPhone 15 Pro Max",
+                        "iPhone 14",
+                    ]
+                }
+            ]
+        },
+    )

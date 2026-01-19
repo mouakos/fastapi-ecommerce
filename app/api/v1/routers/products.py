@@ -9,10 +9,15 @@ from fastapi import APIRouter, Query, status
 
 from app.api.v1.dependencies import AdminRoleDep, ProductServiceDep
 from app.schemas.common import Page
-from app.schemas.product import ProductCreate, ProductDetailRead, ProductRead, ProductUpdate
+from app.schemas.product import (
+    ProductAutocompleteResponse,
+    ProductCreate,
+    ProductDetailRead,
+    ProductRead,
+    ProductUpdate,
+)
 from app.schemas.search import (
     AvailabilityFilter,
-    ProductAutocompleteRead,
     SortByField,
     SortOrder,
 )
@@ -24,7 +29,7 @@ router = APIRouter(prefix="/products", tags=["Products"])
 # Static utility paths first
 @router.get(
     "/autocomplete",
-    response_model=ProductAutocompleteRead,
+    response_model=ProductAutocompleteResponse,
     summary="Get product name suggestions",
     description="Retrieve autocomplete suggestions for product names based on search query. Returns up to 10 matching product names.",
 )
@@ -39,10 +44,10 @@ async def autocomplete(
         ),
     ],
     limit: Annotated[int, Query(ge=1, le=10, description="Maximum number of suggestions")] = 10,
-) -> ProductAutocompleteRead:
+) -> ProductAutocompleteResponse:
     """List autocomplete suggestions for product names based on a search query."""
     suggestions = await product_service.list_autocomplete_suggestions(query, limit)
-    return ProductAutocompleteRead(suggestions=suggestions)
+    return ProductAutocompleteResponse(suggestions=suggestions)
 
 
 # Collection paths
