@@ -1,6 +1,5 @@
 """Service for handling payment operations."""
 
-from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -10,9 +9,8 @@ from fastapi import HTTPException
 from app.core.config import settings
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import OrderStatus
-from app.models.payment import Currency, Payment, PaymentMethod, PaymentStatus
-from app.schemas.payment import PaymentCheckoutSessionRead
-from app.utils.order import is_valid_order_status_transition, is_valid_payment_status_transition
+from app.models.payment import Payment, PaymentStatus
+from app.utils.stripe_utils import generate_idempotency_key
 from app.utils.utc_time import utcnow
 
 
@@ -22,25 +20,25 @@ class PaymentService:
     def __init__(self, uow: UnitOfWork) -> None:
         """Initialize the service with a unit of work."""
         self.uow = uow
+        stripe.api_key = settings.stripe_api_key
 
     async def create_checkout_session(
-        self, user_id: UUID, order_id: UUID
-    ) -> PaymentCheckoutSessionRead:
-        """Create a checkout session for the given order ID.
+        self, user_id: UUID, order_id: UUID, success_url: str, cancel_url: str
+    ) -> str:
+        """Create a Stripe checkout session for the specified order.
 
         Args:
             user_id (UUID): The ID of the user making the payment.
             order_id (UUID): The ID of the order for which to create the checkout session.
+            success_url (str): URL to redirect to upon successful payment.
+            cancel_url (str): URL to redirect to if the payment is canceled.
 
         Returns:
             str: The URL of the created checkout session.
         """
-        order = await self.uow.orders.find_by_id(order_id)
-        if not order or order.user_id != user_id:
+        order = await self.uow.orders.find_pending_user_order(order_id, user_id)
+        if not order:
             raise HTTPException(status_code=404, detail="Order not found.")
-
-        if order.status != OrderStatus.PENDING:
-            raise HTTPException(status_code=400, detail="Order is already paid.")
 
         # Create a checkout session with Stripe
         try:
@@ -60,34 +58,28 @@ class PaymentService:
                     for item in order.items
                 ],
                 mode="payment",
-                success_url=settings.domain + "/success?session_id={CHECKOUT_SESSION_ID}",
-                cancel_url=settings.domain + "/cancelled",
+                success_url=success_url,
+                cancel_url=cancel_url,
                 metadata={"order_id": str(order_id), "user_id": str(user_id)},
                 expires_at=int(
                     (utcnow().timestamp()) + settings.checkout_session_expire_minutes * 60
                 ),
+                idempotency_key=generate_idempotency_key(user_id, order_id),
             )
         except stripe.error.StripeError as e:
             raise HTTPException(status_code=500, detail=f"Stripe error: {str(e)}") from e
 
-        new_payment = Payment(
+        # Create payment record BEFORE user completes payment
+        payment = Payment(
             order_id=order_id,
-            currency=Currency.USD,
             amount=order.total_amount,
-            payment_method=PaymentMethod.CARD,
-            status=PaymentStatus.PENDING,
+            currency="usd",
+            payment_method="card",
             session_id=session.id,
         )
-        await self.uow.payments.add(new_payment)
+        await self.uow.payments.add(payment)
 
-        return PaymentCheckoutSessionRead(
-            checkout_url=str(session.url),
-            session_id=session.id,
-            amount=order.total_amount,
-            currency=Currency.USD,
-            expires_at=datetime.fromtimestamp(session.expires_at),
-            order_id=order_id,
-        )
+        return str(session.url)
 
     async def process_stripe_webhook(self, payload: bytes, stripe_signature: str) -> None:
         """Process  Stripe webhook events.
@@ -113,73 +105,55 @@ class PaymentService:
             session = event["data"]["object"]
             await self._handle_failed_payment(session)
 
-    async def _process_payment_webhook(
+    async def _handle_successful_payment(
         self,
         session: dict[str, Any],
-        target_payment_status: PaymentStatus,
-        target_order_status: OrderStatus,
     ) -> None:
-        """Process payment webhook and update payment and order status.
-
-        Args:
-            session (dict[str, Any]): The webhook session data.
-            target_payment_status (PaymentStatus): The status to set for the payment.
-            target_order_status (OrderStatus): The status to set for the order.
-        """
+        # Update Order Status
+        order_id = UUID(session["metadata"]["order_id"])
+        user_id = UUID(session["metadata"]["user_id"])
         session_id = session["id"]
-        payment = await self.uow.payments.find_by_session_id(session_id)
 
+        # Find existing payment record (created during checkout)
+        payment = await self.uow.payments.find_by_session_id(session_id)
         if not payment:
             raise HTTPException(
                 status_code=500,
-                detail="Payment record not found for this checkout session.",
+                detail="Payment not found for this session.",
             )
 
-        is_valid_payment_transition = is_valid_payment_status_transition(
-            payment.status, target_payment_status
-        )
-        if not is_valid_payment_transition:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid payment status transition from {payment.status} to {target_payment_status}.",
-            )
+        # Prevent duplicate processing
+        if payment.status == PaymentStatus.SUCCESS:
+            return  # Already processed
 
-        # Update payment status
-        payment.status = target_payment_status
-        await self.uow.payments.update(payment)
-
-        # Update Order Status
-        order = await self.uow.orders.find_by_id(payment.order_id)
+        order = await self.uow.orders.find_pending_user_order(order_id, user_id)
         if not order:
-            raise HTTPException(
-                status_code=500,
-                detail="Order not found for payment - data inconsistency.",
-            )
+            raise HTTPException(status_code=404, detail="Order not found.")
 
-        order.payment_status = target_payment_status
-        is_valid_transition = is_valid_order_status_transition(order.status, target_order_status)
-        if not is_valid_transition:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid order status transition from {order.status} to {target_order_status}.",
-            )
-        order.status = target_order_status
-        if target_order_status == OrderStatus.PAID:
-            order.paid_at = utcnow()
+        order.status = OrderStatus.PAID
+        order.paid_at = utcnow()
         await self.uow.orders.update(order)
 
-    async def _handle_successful_payment(self, session: dict[str, Any]) -> None:
-        """Handle successful payment processing.
+        # Update payment record to success
+        payment.status = PaymentStatus.SUCCESS
+        payment.payment_intent_id = session.get("payment_intent")
+        await self.uow.payments.update(payment)
+        await self.uow.commit()
 
-        Args:
-            session (dict[str, Any]): The successful payment session data.
-        """
-        await self._process_payment_webhook(session, PaymentStatus.SUCCESS, OrderStatus.PAID)
+    async def _handle_failed_payment(
+        self,
+        session: dict[str, Any],
+    ) -> None:
+        """Handle failed/expired payment."""
+        session_id = session["id"]
 
-    async def _handle_failed_payment(self, session: dict[str, Any]) -> None:
-        """Handle failed payment processing.
+        # Find existing payment record
+        payment = await self.uow.payments.find_by_session_id(session_id)
+        if not payment:
+            return  # No payment record, nothing to update
 
-        Args:
-            session (dict[str, Any]): The data of the failed payment session.
-        """
-        await self._process_payment_webhook(session, PaymentStatus.FAILED, OrderStatus.PENDING)
+        # Update payment status to failed
+        if payment.status == PaymentStatus.PENDING:
+            payment.status = PaymentStatus.FAILED
+            await self.uow.payments.update(payment)
+            await self.uow.commit()

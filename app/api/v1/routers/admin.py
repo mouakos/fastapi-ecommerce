@@ -204,7 +204,6 @@ async def list_orders(
             created_at=order.created_at,
             updated_at=order.updated_at,
             order_number=order.order_number,
-            payment_status=order.payment_status,
             user_email=order.user.email,
             shipped_at=order.shipped_at,
             delivered_at=order.delivered_at,

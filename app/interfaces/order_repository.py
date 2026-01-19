@@ -21,6 +21,19 @@ class OrderRepository(GenericRepository[Order], ABC):
         ...
 
     @abstractmethod
+    async def find_pending_user_order(self, order_id: UUID, user_id: UUID) -> Order | None:
+        """Find a pending order by ID for a specific user.
+
+        Args:
+            order_id (UUID): Order ID.
+            user_id (UUID): User ID.
+
+        Returns:
+            Order | None: Order or none.
+        """
+        ...
+
+    @abstractmethod
     async def calculate_recent_sales(self, days: int) -> Decimal:
         """Calculate total sales amount over the last specified number of days.
 

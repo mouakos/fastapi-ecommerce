@@ -10,7 +10,6 @@ from sqlalchemy import Enum as SQLEnum
 from sqlmodel import Field, Relationship
 
 from app.models.common import ModelBase, TimestampMixin
-from app.models.payment import PaymentStatus
 
 if TYPE_CHECKING:
     from app.models.address import Address
@@ -50,21 +49,6 @@ class Order(ModelBase, TimestampMixin, table=True):
                 length=50,
                 validate_strings=True,
                 name="order_status",
-            ),
-            nullable=False,
-            index=True,
-        ),
-    )
-    payment_status: PaymentStatus = Field(
-        sa_column=Column(
-            SQLEnum(
-                PaymentStatus,
-                values_callable=lambda x: [e.value for e in x],
-                native_enum=False,
-                create_constraint=True,
-                length=50,
-                validate_strings=True,
-                name="payment_status",
             ),
             nullable=False,
             index=True,

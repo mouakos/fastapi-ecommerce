@@ -8,7 +8,6 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 from app.models.order import OrderStatus
-from app.models.payment import PaymentStatus
 from app.schemas.common import UUIDMixin
 
 
@@ -56,7 +55,6 @@ class OrderAdminRead(UUIDMixin):
     total_amount: Decimal = Field(..., max_digits=10, decimal_places=2)
     status: OrderStatus
     created_at: datetime
-    payment_status: PaymentStatus
     updated_at: datetime
     shipped_at: datetime | None
     paid_at: datetime | None

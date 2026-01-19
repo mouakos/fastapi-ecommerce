@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import Order, OrderItem, OrderStatus
 from app.schemas.order import OrderCreate
-from app.utils.order import generate_order_number
+from app.utils.order_utils import generate_order_number
 
 
 class OrderService:

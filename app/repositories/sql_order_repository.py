@@ -28,6 +28,24 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
         result = await self._session.exec(stmt)
         return result.first() or Decimal("0.00")
 
+    async def find_pending_user_order(self, order_id: UUID, user_id: UUID) -> Order | None:
+        """Find a pending order by ID for a specific user.
+
+        Args:
+            order_id (UUID): Order ID.
+            user_id (UUID): User ID.
+
+        Returns:
+            Order | None: Order or none.
+        """
+        stmt = select(Order).where(
+            Order.id == order_id,
+            Order.user_id == user_id,
+            Order.status == OrderStatus.PENDING,
+        )
+        result = await self._session.exec(stmt)
+        return result.first()
+
     async def calculate_recent_sales(self, days: int) -> Decimal:
         """Calculate total sales amount over the last specified number of days.
 

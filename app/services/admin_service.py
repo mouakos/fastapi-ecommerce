@@ -17,7 +17,7 @@ from app.schemas.statistics import (
     SalesStatistics,
     UserStatistics,
 )
-from app.utils.order import is_valid_order_status_transition
+from app.utils.order_utils import is_valid_order_status_transition
 from app.utils.utc_time import utcnow
 
 
