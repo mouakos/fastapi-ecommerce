@@ -22,8 +22,9 @@ async def create_checkout_session(
     current_user: CurrentUserDep,
 ) -> CheckoutResponse:
     """Create a checkout session for the specified order ID."""
-    cancel_url = settings.domain + "/cancel"
-    success_url = settings.domain + "/success?session_id={CHECKOUT_SESSION_ID}"
+    # These URLs point to API endpoints (for testing without frontend)
+    cancel_url = settings.domain + "/api/v1/payments/cancel"
+    success_url = settings.domain + "/api/v1/payments/success?session_id={CHECKOUT_SESSION_ID}"
     checkout_url = await payment_service.create_checkout_session(
         current_user.id, data.order_id, success_url, cancel_url
     )

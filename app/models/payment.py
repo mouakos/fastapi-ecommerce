@@ -47,7 +47,7 @@ class Payment(ModelBase, TimestampMixin, table=True):
         ),
     )
     session_id: str = Field(index=True, unique=True, max_length=100)
-    payment_intent_id: str | None = Field(default=None, max_length=100)  # For refunds
+    payment_intent_id: str | None = Field(default=None, max_length=100)
 
     # Relationships
     order: "Order" = Relationship(

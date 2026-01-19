@@ -73,7 +73,7 @@ class PaymentService:
         payment = Payment(
             order_id=order_id,
             amount=order.total_amount,
-            currency="usd",
+            currency=session.currency,
             payment_method="card",
             session_id=session.id,
         )
@@ -118,7 +118,7 @@ class PaymentService:
         payment = await self.uow.payments.find_by_session_id(session_id)
         if not payment:
             raise HTTPException(
-                status_code=500,
+                status_code=404,
                 detail="Payment not found for this session.",
             )
 
@@ -136,7 +136,7 @@ class PaymentService:
 
         # Update payment record to success
         payment.status = PaymentStatus.SUCCESS
-        payment.payment_intent_id = session.get("payment_intent")
+        payment.payment_intent_id = session["payment_intent"]
         await self.uow.payments.update(payment)
         await self.uow.commit()
 
@@ -156,4 +156,3 @@ class PaymentService:
         if payment.status == PaymentStatus.PENDING:
             payment.status = PaymentStatus.FAILED
             await self.uow.payments.update(payment)
-            await self.uow.commit()
