@@ -18,11 +18,12 @@ class ProductBase(BaseModel):
     category_id: UUID | None = None
     description: str | None = Field(None, max_length=2000)
     image_url: HttpUrl | None = Field(None, max_length=500)
-    is_active: bool = True
 
 
 class ProductCreate(ProductBase):
     """Schema for creating a Product."""
+
+    is_active: bool = True
 
     model_config = ConfigDict(
         frozen=True,
@@ -46,6 +47,14 @@ class ProductRead(ProductBase, UUIDMixin):
     slug: str = Field(..., max_length=100)
     sku: str = Field(..., max_length=100)
     created_at: datetime
+
+    model_config = ConfigDict(frozen=True)
+
+
+class ProductAdminRead(ProductRead):
+    """Schema for reading a Product in admin context."""
+
+    updated_at: datetime
 
     model_config = ConfigDict(frozen=True)
 

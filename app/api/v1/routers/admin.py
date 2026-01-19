@@ -13,7 +13,7 @@ from app.models.review import ReviewStatus
 from app.models.user import UserRole
 from app.schemas.common import Page
 from app.schemas.order import OrderAdminRead, OrderStatusUpdate
-from app.schemas.product import ProductRead
+from app.schemas.product import ProductAdminRead, ProductRead
 from app.schemas.review import ReviewAdminRead
 from app.schemas.search import (
     AvailabilityFilter,
@@ -363,7 +363,7 @@ async def delete_review(
 
 @router.get(
     "/products",
-    response_model=Page[ProductRead],
+    response_model=Page[ProductAdminRead],
     summary="List products",
     description="Retrieve paginated list of all products with optional filtering by stock levels and active status.",
 )
@@ -394,7 +394,7 @@ async def list_products(
     ] = None,
     sort_by: Annotated[SortByField, Query(description="Sort by field")] = SortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.ASC,
-) -> Page[ProductRead]:
+) -> Page[ProductAdminRead]:
     """List all products with pagination and filters."""
     products, total = await admin_service.list_products(
         page=page,
