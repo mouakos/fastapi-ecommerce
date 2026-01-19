@@ -30,11 +30,11 @@ async def create_checkout_session(
     summary="Handle Stripe webhooks",
     description="Process Stripe webhook events for payment confirmations and status updates. This endpoint is called by Stripe, not by clients.",
 )
-async def webhook(
+async def stripe_webhook(
     request: Request,
     payment_service: PaymentServiceDep,
 ) -> None:
-    """Process webhook."""
+    """Process Stripe webhook."""
     stripe_signature = request.headers.get("stripe-signature")
 
     if not stripe_signature:
@@ -42,4 +42,4 @@ async def webhook(
 
     payload = await request.body()
 
-    await payment_service.process_webhook(payload, stripe_signature)
+    await payment_service.process_stripe_webhook(payload, stripe_signature)

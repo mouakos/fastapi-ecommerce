@@ -12,6 +12,7 @@ from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import OrderStatus
 from app.models.payment import Currency, Payment, PaymentMethod, PaymentStatus
 from app.schemas.payment import PaymentCheckoutSessionRead
+from app.utils.order import is_valid_order_status_transition, is_valid_payment_status_transition
 from app.utils.utc_time import utcnow
 
 
@@ -38,7 +39,7 @@ class PaymentService:
         if not order or order.user_id != user_id:
             raise HTTPException(status_code=404, detail="Order not found.")
 
-        if order.status == OrderStatus.PAID:
+        if order.status != OrderStatus.PENDING:
             raise HTTPException(status_code=400, detail="Order is already paid.")
 
         # Create a checkout session with Stripe
@@ -50,17 +51,21 @@ class PaymentService:
                         "price_data": {
                             "currency": "usd",
                             "product_data": {
-                                "name": f"Order {order_id}",
+                                "name": f"{item.product_name}",
                             },
-                            "unit_amount": int(order.total_amount * 100),  # amount in cents
+                            "unit_amount": int(item.unit_price * 100),  # amount in cents
                         },
-                        "quantity": 1,
+                        "quantity": item.quantity,
                     }
+                    for item in order.items
                 ],
                 mode="payment",
-                success_url=settings.domain + "/payment-success?session_id={CHECKOUT_SESSION_ID}",
-                cancel_url=settings.domain + "/payment-cancelled",
+                success_url=settings.domain + "/success?session_id={CHECKOUT_SESSION_ID}",
+                cancel_url=settings.domain + "/cancelled",
                 metadata={"order_id": str(order_id), "user_id": str(user_id)},
+                expires_at=int(
+                    (utcnow().timestamp()) + settings.checkout_session_expire_minutes * 60
+                ),
             )
         except stripe.error.StripeError as e:
             raise HTTPException(status_code=500, detail=f"Stripe error: {str(e)}") from e
@@ -84,8 +89,8 @@ class PaymentService:
             order_id=order_id,
         )
 
-    async def process_webhook(self, payload: bytes, stripe_signature: str) -> None:
-        """Process webhook events.
+    async def process_stripe_webhook(self, payload: bytes, stripe_signature: str) -> None:
+        """Process  Stripe webhook events.
 
         Args:
             payload (bytes): The data from the webhook event.
@@ -130,9 +135,14 @@ class PaymentService:
                 detail="Payment record not found for this checkout session.",
             )
 
-        # Idempotency check: if payment is already processed, skip
-        if payment.status == target_payment_status:
-            return
+        is_valid_payment_transition = is_valid_payment_status_transition(
+            payment.status, target_payment_status
+        )
+        if not is_valid_payment_transition:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid payment status transition from {payment.status} to {target_payment_status}.",
+            )
 
         # Update payment status
         payment.status = target_payment_status
@@ -147,6 +157,12 @@ class PaymentService:
             )
 
         order.payment_status = target_payment_status
+        is_valid_transition = is_valid_order_status_transition(order.status, target_order_status)
+        if not is_valid_transition:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid order status transition from {order.status} to {target_order_status}.",
+            )
         order.status = target_order_status
         if target_order_status == OrderStatus.PAID:
             order.paid_at = utcnow()

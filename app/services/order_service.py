@@ -2,12 +2,12 @@
 
 from uuid import UUID
 
-import ulid
 from fastapi import HTTPException
 
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import Order, OrderItem, OrderStatus
 from app.schemas.order import OrderCreate
+from app.utils.order import generate_order_number
 
 
 class OrderService:
@@ -50,7 +50,7 @@ class OrderService:
             total_amount=total_amount,
             status=OrderStatus.PENDING,
             payment_status=OrderStatus.PENDING,
-            order_number=self._order_number(),
+            order_number=generate_order_number(),
         )
         created_order = await self.uow.orders.add(new_order)
 
@@ -122,6 +122,3 @@ class OrderService:
             sort_by=sort_by,
             sort_order=sort_order,
         )
-
-    def _order_number(self) -> str:
-        return f"ORD-{ulid.new().str}"

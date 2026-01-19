@@ -17,6 +17,7 @@ from app.schemas.statistics import (
     SalesStatistics,
     UserStatistics,
 )
+from app.utils.order import is_valid_order_status_transition
 from app.utils.utc_time import utcnow
 
 
@@ -26,14 +27,6 @@ class AdminService:
     def __init__(self, uow: UnitOfWork) -> None:
         """Initialize the service with a unit of work."""
         self.uow = uow
-
-    _ALLOWED_ORDER_STATUS_TRANSITIONS = {
-        OrderStatus.PENDING: {OrderStatus.PAID, OrderStatus.CANCELED},
-        OrderStatus.PAID: {OrderStatus.SHIPPED, OrderStatus.CANCELED},
-        OrderStatus.SHIPPED: {OrderStatus.DELIVERED},
-        OrderStatus.DELIVERED: set(),
-        OrderStatus.CANCELED: set(),
-    }
 
     # ----------------------------- Statistics Related Admin Services ----------------------------- #
     async def get_sales_statistics(self) -> SalesStatistics:
@@ -193,11 +186,11 @@ class AdminService:
             raise HTTPException(status_code=404, detail="Order not found.")
 
         # validate status transition
-        allowed_transitions = self._ALLOWED_ORDER_STATUS_TRANSITIONS.get(order.status, set())
-        if new_status not in allowed_transitions:
+        is_valid_transition = is_valid_order_status_transition(order.status, new_status)
+        if not is_valid_transition:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid status transition from {order.status} to {new_status}.",
+                detail=f"Invalid order status transition from {order.status} to {new_status}.",
             )
 
         # perform status update

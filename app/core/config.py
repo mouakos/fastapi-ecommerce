@@ -37,6 +37,11 @@ class Settings(BaseSettings):
     superuser_password: str = Field(
         ..., description="Superuser password", alias="SUPERUSER_PASSWORD"
     )
+    checkout_session_expire_minutes: int = Field(
+        default=30,
+        description="Checkout session expiration time in minutes",
+        alias="CHECKOUT_SESSION_EXPIRE_MINUTES",
+    )
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
