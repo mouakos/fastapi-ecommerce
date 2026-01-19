@@ -32,9 +32,7 @@ async def list_all(
     sort_by: Annotated[
         OrderSortByField, Query(description="Field to sort by")
     ] = OrderSortByField.CREATED_AT,
-    sort_order: Annotated[
-        SortOrder, Query(description="Sort order: 'asc' or 'desc'")
-    ] = SortOrder.DESC,
+    sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
 ) -> Page[OrderRead]:
     """List all orders for the current user."""
     orders, total = await order_service.list_all(

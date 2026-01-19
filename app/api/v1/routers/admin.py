@@ -119,9 +119,7 @@ async def list_users(
         UserAdminSortByField,
         Query(description="Field to sort by"),
     ] = UserAdminSortByField.CREATED_AT,
-    sort_order: Annotated[
-        SortOrder, Query(description="Sort order: 'asc' or 'desc'")
-    ] = SortOrder.DESC,
+    sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
 ) -> Page[UserAdminRead]:
     """List all users with pagination and filters."""
     users, total = await admin_service.list_users(
