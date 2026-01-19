@@ -19,7 +19,6 @@ class PaymentStatus(StrEnum):
 
     PENDING = "pending"
     SUCCESS = "success"
-    FAILED = "failed"
 
 
 class Payment(ModelBase, TimestampMixin, table=True):

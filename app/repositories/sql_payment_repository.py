@@ -1,5 +1,6 @@
 """SQL Payment repository implementation."""
 
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.interfaces.payment_repository import PaymentRepository
@@ -23,8 +24,6 @@ class SqlPaymentRepository(SqlGenericRepository[Payment], PaymentRepository):
         Returns:
             Payment | None: Payment record or None.
         """
-        from sqlmodel import select
-
         stmt = select(Payment).where(Payment.session_id == session_id)
         result = await self._session.exec(stmt)
         return result.first()

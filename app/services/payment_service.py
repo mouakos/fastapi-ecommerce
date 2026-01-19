@@ -98,12 +98,11 @@ class PaymentService:
         except stripe.error.SignatureVerificationError as e:
             raise HTTPException(status_code=400, detail="Invalid signature") from e
 
-        if event["type"] == "checkout.session.completed":
+        event_type = event["type"]
+
+        if event_type == "checkout.session.completed":
             session = event["data"]["object"]
             await self._handle_successful_payment(session)
-        elif event["type"] == "checkout.session.expired":
-            session = event["data"]["object"]
-            await self._handle_failed_payment(session)
 
     async def _handle_successful_payment(
         self,
@@ -138,21 +137,3 @@ class PaymentService:
         payment.status = PaymentStatus.SUCCESS
         payment.payment_intent_id = session["payment_intent"]
         await self.uow.payments.update(payment)
-        await self.uow.commit()
-
-    async def _handle_failed_payment(
-        self,
-        session: dict[str, Any],
-    ) -> None:
-        """Handle failed/expired payment."""
-        session_id = session["id"]
-
-        # Find existing payment record
-        payment = await self.uow.payments.find_by_session_id(session_id)
-        if not payment:
-            return  # No payment record, nothing to update
-
-        # Update payment status to failed
-        if payment.status == PaymentStatus.PENDING:
-            payment.status = PaymentStatus.FAILED
-            await self.uow.payments.update(payment)
