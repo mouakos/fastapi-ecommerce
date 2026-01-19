@@ -1,6 +1,7 @@
 """Product catalog API routes with advanced filtering, search, and CRUD operations."""
 # mypy: disable-error-code=return-value
 
+from decimal import Decimal
 from typing import Annotated
 from uuid import UUID
 
@@ -54,7 +55,7 @@ async def autocomplete(
 async def list_all(
     product_service: ProductServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
-    per_page: int = Query(10, ge=1, le=100, description="Number of items per page"),
+    page_size: int = Query(10, ge=1, le=100, description="Number of items per page"),
     search: Annotated[
         str | None,
         Query(
@@ -65,8 +66,8 @@ async def list_all(
     ] = None,
     category_id: Annotated[UUID | None, Query(description="Filter by category ID")] = None,
     category_slug: Annotated[str | None, Query(description="Filter by category slug")] = None,
-    min_price: Annotated[float | None, Query(ge=0, description="Minimum price")] = None,
-    max_price: Annotated[float | None, Query(ge=0, description="Maximum price")] = None,
+    min_price: Annotated[Decimal | None, Query(ge=0, description="Minimum price")] = None,
+    max_price: Annotated[Decimal | None, Query(ge=0, description="Maximum price")] = None,
     min_rating: Annotated[
         int | None, Query(ge=1, le=5, description="Minimum average rating (1-5)")
     ] = None,
@@ -79,7 +80,7 @@ async def list_all(
     """List all products with optional filters, sorting, and pagination."""
     products, total = await product_service.list_all(
         page=page,
-        per_page=per_page,
+        page_size=page_size,
         search=search,
         category_id=category_id,
         category_slug=category_slug,
@@ -90,7 +91,7 @@ async def list_all(
         sort_by=sort_by.value,
         sort_order=sort_order.value,
     )
-    return build_page(items=products, total=total, page=page, size=per_page)  # type: ignore [arg-type]
+    return build_page(items=products, total=total, page=page, size=page_size)  # type: ignore [arg-type]
 
 
 @router.post(

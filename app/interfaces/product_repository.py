@@ -1,6 +1,7 @@
 """Interface for Product repository."""
 
 from abc import ABC, abstractmethod
+from decimal import Decimal
 from uuid import UUID
 
 from app.interfaces.generic_repository import GenericRepository
@@ -15,13 +16,14 @@ class ProductRepository(GenericRepository[Product], ABC):
         self,
         *,
         page: int = 1,
-        per_page: int = 10,
+        page_size: int = 10,
         search: str | None = None,
         category_id: UUID | None = None,
         category_slug: str | None = None,
-        min_price: float | None = None,
-        max_price: float | None = None,
+        min_price: Decimal | None = None,
+        max_price: Decimal | None = None,
         min_rating: float | None = None,
+        is_active: bool | None = None,
         availability: str = "all",
         sort_by: str = "id",
         sort_order: str = "asc",
@@ -30,13 +32,14 @@ class ProductRepository(GenericRepository[Product], ABC):
 
         Args:
             page (int, optional): Page number for pagination.
-            per_page (int, optional): Number of items per page for pagination.
+            page_size (int, optional): Number of items per page for pagination.
             search (str | None): Search query to filter products by name or description.
             category_id (UUID | None): Category ID to filter products.
             category_slug (str | None): Category slug to filter products.
-            min_price (float | None): Minimum price to filter products.
-            max_price (float | None): Maximum price to filter products.
+            min_price (Decimal | None): Minimum price to filter products.
+            max_price (Decimal | None): Maximum price to filter products.
             min_rating (float | None): Minimum average rating to filter products.
+            is_active (bool | None): Filter by active status.
             availability (str | None): Stock availability filter ("in_stock", "out_of_stock", "all").
             sort_by (str, optional): Field to sort by (e.g., "price", "name", "rating").
             sort_order (str, optional): Sort order ("asc" or "desc").
@@ -47,14 +50,26 @@ class ProductRepository(GenericRepository[Product], ABC):
         ...
 
     @abstractmethod
-    async def find_by_slug(self, slug: str) -> Product | None:
-        """Find a single product by slug.
+    async def find_active_by_slug(self, slug: str) -> Product | None:
+        """Find a single active product by slug.
 
         Args:
             slug (str): Product slug.
 
         Returns:
-            Product | None: Product or none.
+            Product | None: Active product or none.
+        """
+        ...
+
+    @abstractmethod
+    async def find_active_by_id(self, product_id: UUID) -> Product | None:
+        """Find a single active product by ID.
+
+        Args:
+            product_id (UUID): Product ID.
+
+        Returns:
+            Product | None: Active product or none.
         """
         ...
 
@@ -100,7 +115,7 @@ class ProductRepository(GenericRepository[Product], ABC):
 
         Args:
             query (str): Search query.
-            limit (int, optional): Maximum number of suggestions to return. Defaults to 5.
+            limit (int, optional): Maximum number of suggestions to return. Defaults to 10.
 
         Returns:
             list[str]: List of suggested product names.
@@ -121,7 +136,7 @@ class ProductRepository(GenericRepository[Product], ABC):
 
     @abstractmethod
     async def paginate_low_stock(
-        self, threshold: int = 10, page: int = 1, page_size: int = 10
+        self, threshold: int = 10, is_active: bool | None = None, page: int = 1, page_size: int = 10
     ) -> tuple[list[Product], int]:
         """Paginate products that are low in stock.
 
@@ -129,6 +144,7 @@ class ProductRepository(GenericRepository[Product], ABC):
             threshold (int): Stock threshold.
             page (int, optional): Page number. Defaults to 1.
             page_size (int, optional): Number of products per page. Defaults to 10.
+            is_active (bool | None, optional): Filter by active status. Defaults to None.
 
         Returns:
             tuple[list[Product], int]: List of low stock products and total count.

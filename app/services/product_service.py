@@ -1,5 +1,6 @@
 """Service layer for product-related operations."""
 
+from decimal import Decimal
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -22,12 +23,12 @@ class ProductService:
         self,
         *,
         page: int = 1,
-        per_page: int = 10,
+        page_size: int = 10,
         search: str | None = None,
         category_id: UUID | None = None,
         category_slug: str | None = None,
-        min_price: float | None = None,
-        max_price: float | None = None,
+        min_price: Decimal | None = None,
+        max_price: Decimal | None = None,
         min_rating: float | None = None,
         availability: str = "all",
         sort_by: str = "created_at",
@@ -37,12 +38,12 @@ class ProductService:
 
         Args:
             page (int, optional): Page number for pagination.
-            per_page (int, optional): Number of items per page for pagination.
+            page_size (int, optional): Number of items per page for pagination.
             search (str | None): Search query to filter products by name or description.
             category_id (UUID | None): Category ID to filter products.
             category_slug (str | None): Category slug to filter products.
-            min_price (float | None): Minimum price to filter products.
-            max_price (float | None): Maximum price to filter products.
+            min_price (Decimal | None): Minimum price to filter products.
+            max_price (Decimal | None): Maximum price to filter products.
             min_rating (float | None): Minimum average rating to filter products.
             availability (str, optional): Stock availability filter ("in_stock", "out_of_stock", "all").
             sort_by (str, optional): Field to sort by (e.g., "price", "name", "rating").
@@ -66,13 +67,14 @@ class ProductService:
 
         products, total = await self.uow.products.paginate(
             page=page,
-            per_page=per_page,
+            page_size=page_size,
             search=search,
             category_id=category_id,
             category_slug=category_slug,
             min_price=min_price,
             max_price=max_price,
             min_rating=min_rating,
+            is_active=True,
             availability=availability,
             sort_by=sort_by,
             sort_order=sort_order,
@@ -111,7 +113,7 @@ class ProductService:
         Raises:
             HTTPException: If the product is not found.
         """
-        product = await self.uow.products.find_by_id(product_id)
+        product = await self.uow.products.find_active_by_id(product_id)
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
         return product
@@ -153,7 +155,7 @@ class ProductService:
         Raises:
             HTTPException: If the product is not found.
         """
-        product = await self.uow.products.find_by_slug(slug)
+        product = await self.uow.products.find_active_by_slug(slug)
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
         return product

@@ -1,6 +1,7 @@
 """Admin dashboard and management API routes for statistics, users, orders, reviews, and inventory."""
 
 # mypy: disable-error-code=return-value
+from decimal import Decimal
 from typing import Annotated
 from uuid import UUID
 
@@ -15,8 +16,10 @@ from app.schemas.order import OrderAdminRead, OrderStatusUpdate
 from app.schemas.product import ProductRead
 from app.schemas.review import ReviewAdminRead
 from app.schemas.search import (
+    AvailabilityFilter,
     OrderSortByField,
     ReviewAdminSortByField,
+    SortByField,
     SortOrder,
     UserAdminSortByField,
 )
@@ -356,8 +359,62 @@ async def delete_review(
 
 
 # ------------------------ Product management ------------------------ #
+
+
 @router.get(
-    "/inventory/low-stock",
+    "/products",
+    response_model=Page[ProductRead],
+    summary="List products",
+    description="Retrieve paginated list of all products with optional filtering by stock levels and active status.",
+)
+async def list_products(
+    admin_service: AdminServiceDep,
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, ge=1, le=100, description="Number of items per page"),
+    search: Annotated[
+        str | None,
+        Query(
+            min_length=1,
+            max_length=255,
+            description="Search query for product name or description (case-insensitive)",
+        ),
+    ] = None,
+    category_id: Annotated[UUID | None, Query(description="Filter by category ID")] = None,
+    category_slug: Annotated[str | None, Query(description="Filter by category slug")] = None,
+    min_price: Annotated[Decimal | None, Query(ge=0, description="Minimum price")] = None,
+    max_price: Annotated[Decimal | None, Query(ge=0, description="Maximum price")] = None,
+    min_rating: Annotated[
+        int | None, Query(ge=1, le=5, description="Minimum average rating (1-5)")
+    ] = None,
+    availability: Annotated[
+        AvailabilityFilter, Query(description="Stock availability")
+    ] = AvailabilityFilter.ALL,
+    is_active: Annotated[
+        bool | None, Query(description="Filter by active status: true, false, or omit for all")
+    ] = None,
+    sort_by: Annotated[SortByField, Query(description="Sort by field")] = SortByField.CREATED_AT,
+    sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.ASC,
+) -> Page[ProductRead]:
+    """List all products with pagination and filters."""
+    products, total = await admin_service.list_products(
+        page=page,
+        page_size=page_size,
+        search=search,
+        category_id=category_id,
+        category_slug=category_slug,
+        min_price=min_price,
+        max_price=max_price,
+        min_rating=min_rating,
+        availability=availability,
+        is_active=is_active,
+        sort_by=sort_by,
+        sort_order=sort_order.value,
+    )
+    return build_page(items=products, page=page, size=page_size, total=total)  # type: ignore [arg-type]
+
+
+@router.get(
+    "/products/low-stock",
     response_model=Page[ProductRead],
     summary="Get low stock products",
     description="Retrieve products with stock levels below the specified threshold for inventory monitoring and restocking alerts.",
@@ -367,16 +424,19 @@ async def list_low_stock(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=100, description="Items per page"),
     threshold: int = Query(10, ge=0, description="Stock threshold for alerts"),
+    is_active: Annotated[
+        bool | None, Query(description="Filter by active status: true, false, or omit for all")
+    ] = None,
 ) -> Page[ProductRead]:
     """Get low stock product alerts."""
     products, total = await admin_service.list_low_stock_products(
-        threshold=threshold, page=page, page_size=page_size
+        threshold=threshold, is_active=is_active, page=page, page_size=page_size
     )
     return build_page(items=products, page=page, size=page_size, total=total)  # type: ignore [arg-type]
 
 
 @router.get(
-    "/inventory/top-moving",
+    "/products/top-moving",
     response_model=list[ProductRead],
     summary="Get top-moving products",
     description="Retrieve top-selling products within a specified time frame to identify bestsellers and trends.",

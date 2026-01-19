@@ -388,6 +388,56 @@ class AdminService:
         await self.uow.reviews.delete(review)
 
     # ---------------- Product Related Admin Services ---------------- #
+
+    async def list_products(
+        self,
+        page: int = 1,
+        page_size: int = 10,
+        search: str | None = None,
+        category_id: UUID | None = None,
+        category_slug: str | None = None,
+        min_price: Decimal | None = None,
+        max_price: Decimal | None = None,
+        min_rating: float | None = None,
+        availability: str = "all",
+        is_active: bool | None = None,
+        sort_by: str = "created_at",
+        sort_order: str = "asc",
+    ) -> tuple[list[Product], int]:
+        """List all products with pagination and optional filters.
+
+        Args:
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of records per page. Defaults to 10.
+            search (str | None, optional): Search query to filter products by name or description. Defaults to None.
+            category_id (UUID | None, optional): Category ID to filter products. Defaults to None.
+            category_slug (str | None, optional): Category slug to filter products. Defaults to None.
+            min_price (Decimal | None, optional): Minimum price to filter products. Defaults to None.
+            max_price (Decimal | None, optional): Maximum price to filter products. Defaults to None.
+            min_rating (float | None, optional): Minimum average rating to filter products. Defaults to None.
+            availability (str, optional): Stock availability filter ("in_stock", "out_of_stock", "all"). Defaults to "all".
+            is_active (bool | None, optional): Filter by active status. Defaults to None.
+            sort_by (str, optional): Field to sort by. Defaults to "created_at".
+            sort_order (str, optional): Sort order ("asc" or "desc"). Defaults to "asc".
+
+        Returns:
+            tuple[list[Product], int]: List of products and total count.
+        """
+        return await self.uow.products.paginate(
+            page=page,
+            page_size=page_size,
+            search=search,
+            category_id=category_id,
+            category_slug=category_slug,
+            min_price=min_price,
+            max_price=max_price,
+            min_rating=min_rating,
+            is_active=is_active,
+            availability=availability,
+            sort_by=sort_by,
+            sort_order=sort_order,
+        )
+
     async def list_top_selling_products(self, limit: int = 10, days: int = 30) -> list[Product]:
         """Retrieve top selling products.
 
@@ -401,12 +451,13 @@ class AdminService:
         return await self.uow.products.list_top_selling(limit=limit, days=days)
 
     async def list_low_stock_products(
-        self, threshold: int = 10, page: int = 1, page_size: int = 10
+        self, threshold: int = 10, is_active: bool | None = None, page: int = 1, page_size: int = 10
     ) -> tuple[list[Product], int]:
         """Retrieve products that are low in stock.
 
         Args:
-            threshold (int): Stock threshold.
+            threshold (int, optional): Stock threshold. Defaults to 10.
+            is_active (bool | None, optional): Filter by active status. Defaults to None.
             page (int, optional): Page number. Defaults to 1.
             page_size (int, optional): Number of products per page. Defaults to 10.
 
@@ -414,5 +465,5 @@ class AdminService:
             tuple[list[Product], int]: List of low stock products and total count.
         """
         return await self.uow.products.paginate_low_stock(
-            threshold=threshold, page=page, page_size=page_size
+            threshold=threshold, is_active=is_active, page=page, page_size=page_size
         )

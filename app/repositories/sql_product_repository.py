@@ -1,6 +1,7 @@
 """SQL Product repository implementation."""
 
 from datetime import timedelta
+from decimal import Decimal
 from uuid import UUID
 
 from slugify import slugify
@@ -27,13 +28,14 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         self,
         *,
         page: int = 1,
-        per_page: int = 10,
+        page_size: int = 10,
         search: str | None = None,
         category_id: UUID | None = None,
         category_slug: str | None = None,
-        min_price: float | None = None,
-        max_price: float | None = None,
+        min_price: Decimal | None = None,
+        max_price: Decimal | None = None,
         min_rating: float | None = None,
+        is_active: bool | None = None,
         availability: str = "all",
         sort_by: str = "id",
         sort_order: str = "asc",
@@ -42,12 +44,13 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
 
         Args:
             page (int, optional): Page number for pagination.
-            per_page (int, optional): Number of items per page for pagination.
+            page_size (int, optional): Number of items per page for pagination.
             search (str | None): Search query to filter products by name or description.
             category_id (UUID | None): Category ID to filter products.
             category_slug (str | None): Category slug to filter products.
-            min_price (float | None): Minimum price to filter products.
-            max_price (float | None): Maximum price to filter products.
+            min_price (Decimal | None): Minimum price to filter products.
+            max_price (Decimal | None): Maximum price to filter products.
+            is_active (bool | None, optional): Filter by active status.
             min_rating (float | None): Minimum average rating to filter products.
             availability (str | None): Stock availability filter ("in_stock", "out_of_stock", "all").
             sort_by (str, optional): Field to sort by (e.g., "price", "name", "rating").
@@ -56,13 +59,13 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         Returns:
             tuple[list[Product], int]: A tuple containing a list of products and the total number of items.
         """
-        page = max(page, 1)
-        per_page = max(min(per_page, 100), 1)
-
         # Base query
-        stmt = select(Product).where(Product.is_active)
+        stmt = select(Product)
 
         # Apply filters
+        if is_active is not None:
+            stmt = stmt.where(Product.is_active == is_active)
+
         if search:
             search_term = f"%{search.lower()}%"
             stmt = stmt.where(
@@ -123,22 +126,35 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         total = (await self._session.exec(count_stmt)).first() or 0
 
         # Apply pagination
-        stmt = stmt.offset((page - 1) * per_page).limit(per_page)
+        stmt = stmt.offset((page - 1) * page_size).limit(page_size)
         result = await self._session.exec(stmt)
         products = list(result.all())
 
         return products, total
 
-    async def find_by_slug(self, slug: str) -> Product | None:
-        """Find a single product by slug.
+    async def find_active_by_slug(self, slug: str) -> Product | None:
+        """Find a single active product by slug.
 
         Args:
             slug (str): Product slug.
 
         Returns:
-            Product | None: Product or none.
+            Product | None: Active product or none.
         """
-        stmt = select(Product).where(Product.slug == slug)
+        stmt = select(Product).where((Product.slug == slug) & (Product.is_active))
+        result = await self._session.exec(stmt)
+        return result.first()
+
+    async def find_active_by_id(self, product_id: UUID) -> Product | None:
+        """Find a single active product by ID.
+
+        Args:
+            product_id (UUID): Product ID.
+
+        Returns:
+            Product | None: Active product or none.
+        """
+        stmt = select(Product).where((Product.id == product_id) & (Product.is_active))
         result = await self._session.exec(stmt)
         return result.first()
 
@@ -257,12 +273,13 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         return result.first() or 0
 
     async def paginate_low_stock(
-        self, threshold: int = 10, page: int = 1, page_size: int = 10
+        self, threshold: int = 10, is_active: bool | None = None, page: int = 1, page_size: int = 10
     ) -> tuple[list[Product], int]:
         """Paginate products that are low in stock.
 
         Args:
             threshold (int): Stock threshold.
+            is_active (bool | None, optional): Filter by active status. Defaults to None.
             page (int, optional): Page number. Defaults to 1.
             page_size (int, optional): Number of products per page. Defaults to 10.
 
@@ -270,11 +287,12 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
             tuple[list[Product], int]: List of low stock products and total count.
         """
         stmt = (
-            select(Product)
-            .where(Product.stock <= threshold)
-            .where(Product.is_active)
-            .order_by(Product.stock.asc())  # type: ignore [attr-defined]
+            select(Product).where(Product.stock <= threshold).order_by(Product.stock.asc())  # type: ignore [attr-defined]
         )
+
+        # Apply is_active filter
+        if is_active is not None:
+            stmt = stmt.where(Product.is_active == is_active)
 
         # total items matching filters
         count_stmt = select(func.count()).select_from(stmt.subquery())
@@ -302,6 +320,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
                 Product,
                 func.sum(OrderItem.quantity).label("total_sold"),
             )
+            .where(Product.is_active)
             .join(OrderItem, OrderItem.product_id == Product.id)  # type: ignore [arg-type]
             .join(
                 Order,
