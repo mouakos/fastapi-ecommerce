@@ -59,6 +59,7 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
 
     async def paginate(
         self,
+        *,
         page: int = 1,
         page_size: int = 10,
         product_id: UUID | None = None,

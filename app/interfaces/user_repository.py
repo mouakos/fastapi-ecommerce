@@ -36,6 +36,7 @@ class UserRepository(GenericRepository[User], ABC):
     @abstractmethod
     async def paginate(
         self,
+        *,
         page: int = 1,
         page_size: int = 10,
         role: UserRole | None = None,

@@ -61,6 +61,7 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
 
     async def paginate(
         self,
+        *,
         page: int = 1,
         page_size: int = 10,
         status: OrderStatus | None = None,

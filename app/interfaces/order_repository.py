@@ -47,6 +47,7 @@ class OrderRepository(GenericRepository[Order], ABC):
     @abstractmethod
     async def paginate(
         self,
+        *,
         page: int = 1,
         page_size: int = 10,
         status: OrderStatus | None = None,

@@ -273,15 +273,20 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         return result.first() or 0
 
     async def paginate_low_stock(
-        self, threshold: int = 10, is_active: bool | None = None, page: int = 1, page_size: int = 10
+        self,
+        *,
+        page: int = 1,
+        page_size: int = 10,
+        threshold: int = 10,
+        is_active: bool | None = None,
     ) -> tuple[list[Product], int]:
         """Paginate products that are low in stock.
 
         Args:
-            threshold (int): Stock threshold.
-            is_active (bool | None, optional): Filter by active status. Defaults to None.
             page (int, optional): Page number. Defaults to 1.
             page_size (int, optional): Number of products per page. Defaults to 10.
+            threshold (int): Stock threshold.
+            is_active (bool | None, optional): Filter by active status. Defaults to None.
 
         Returns:
             tuple[list[Product], int]: List of low stock products and total count.

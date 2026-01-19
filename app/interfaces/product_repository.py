@@ -25,7 +25,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         min_rating: float | None = None,
         is_active: bool | None = None,
         availability: str = "all",
-        sort_by: str = "id",
+        sort_by: str = "created_at",
         sort_order: str = "asc",
     ) -> tuple[list[Product], int]:
         """List all products with pagination and optional filters.
@@ -33,16 +33,16 @@ class ProductRepository(GenericRepository[Product], ABC):
         Args:
             page (int, optional): Page number for pagination.
             page_size (int, optional): Number of items per page for pagination.
-            search (str | None): Search query to filter products by name or description.
-            category_id (UUID | None): Category ID to filter products.
-            category_slug (str | None): Category slug to filter products.
-            min_price (Decimal | None): Minimum price to filter products.
-            max_price (Decimal | None): Maximum price to filter products.
-            min_rating (float | None): Minimum average rating to filter products.
-            is_active (bool | None): Filter by active status.
-            availability (str | None): Stock availability filter ("in_stock", "out_of_stock", "all").
-            sort_by (str, optional): Field to sort by (e.g., "price", "name", "rating").
-            sort_order (str, optional): Sort order ("asc" or "desc").
+            search (str | None, optional): Search query to filter products by name or description. Default is None.
+            category_id (UUID | None, optional): Category ID to filter products. Default is None.
+            category_slug (str | None, optional): Category slug to filter products. Default is None.
+            min_price (Decimal | None, optional): Minimum price to filter products. Default is None.
+            max_price (Decimal | None, optional): Maximum price to filter products. Default is None.
+            min_rating (float | None, optional): Minimum average rating to filter products. Default is None.
+            is_active (bool | None, optional): Filter by active status. Default is None.
+            availability (str, optional): Stock availability filter ("in_stock", "out_of_stock", "all"). Default is "all".
+            sort_by (str, optional): Field to sort by (e.g., "price", "name", "rating"). Default is "created_at".
+            sort_order (str, optional): Sort order ("asc" or "desc"). Default is "asc".
 
         Returns:
             tuple[list[Product], int]: A tuple containing a list of products and the total number of products.
@@ -136,14 +136,19 @@ class ProductRepository(GenericRepository[Product], ABC):
 
     @abstractmethod
     async def paginate_low_stock(
-        self, threshold: int = 10, is_active: bool | None = None, page: int = 1, page_size: int = 10
+        self,
+        *,
+        page: int = 1,
+        page_size: int = 10,
+        threshold: int = 10,
+        is_active: bool | None = None,
     ) -> tuple[list[Product], int]:
         """Paginate products that are low in stock.
 
         Args:
-            threshold (int): Stock threshold.
             page (int, optional): Page number. Defaults to 1.
             page_size (int, optional): Number of products per page. Defaults to 10.
+            threshold (int): Stock threshold.
             is_active (bool | None, optional): Filter by active status. Defaults to None.
 
         Returns:
