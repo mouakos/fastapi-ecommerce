@@ -46,18 +46,18 @@ async def list_all(
 
 
 @router.post(
-    "/checkout",
+    "/place-order",
     response_model=OrderRead,
-    summary="Checkout and create order",
+    summary="Create a new order",
     description="Create a new order from the user's cart and specified shipping/billing addresses. The cart will be emptied after successful order creation.",
 )
-async def checkout(
+async def create(
     data: OrderCreate,
     current_user: CurrentUserDep,
     order_service: OrderServiceDep,
 ) -> OrderRead:
-    """Checkout and create a new order for the current user."""
-    return await order_service.checkout(current_user.id, data)
+    """Create a new order for the current user."""
+    return await order_service.create(current_user.id, data)
 
 
 # Single order paths

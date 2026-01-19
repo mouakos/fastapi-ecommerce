@@ -26,7 +26,7 @@ async def create_checkout_session(
 
 # Webhook endpoints
 @router.post(
-    "/webhooks/stripe",
+    "/stripe-webhook",
     summary="Handle Stripe webhooks",
     description="Process Stripe webhook events for payment confirmations and status updates. This endpoint is called by Stripe, not by clients.",
 )

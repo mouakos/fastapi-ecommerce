@@ -17,7 +17,7 @@ class OrderService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def checkout(self, user_id: UUID, data: OrderCreate) -> Order:
+    async def create(self, user_id: UUID, data: OrderCreate) -> Order:
         """Create a new order for the user."""
         # Validate addresses
         billing_address = await self.uow.addresses.find_by_id(data.billing_address_id)
