@@ -4,6 +4,7 @@ from uuid import UUID
 
 from fastapi import HTTPException, status
 
+from app.core.logging import logger
 from app.core.security import create_access_token, hash_password, verify_password
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.user import User
@@ -57,6 +58,8 @@ class UserService:
         user_data = data.model_dump(exclude={"password"})
 
         new_user = User(hashed_password=hashed_password, **user_data)
+
+        logger.info(f"Creating new user with email: {data.email}")
 
         return await self.uow.users.add(new_user)
 

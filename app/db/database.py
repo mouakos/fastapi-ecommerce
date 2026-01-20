@@ -12,7 +12,7 @@ from app.models.user import User, UserRole
 
 async_engine = create_async_engine(
     url=settings.database_url,
-    echo=True,
+    echo=False,
     pool_pre_ping=True,  # Verify connections before using them
 )
 

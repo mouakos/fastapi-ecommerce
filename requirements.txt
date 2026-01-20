@@ -13,3 +13,4 @@ pwdlib[argon2]
 stripe
 pycountry
 phonenumbers
+loguru
