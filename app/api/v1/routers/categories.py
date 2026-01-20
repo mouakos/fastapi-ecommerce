@@ -14,13 +14,13 @@ router = APIRouter(prefix="/categories", tags=["Categories"])
 @router.get(
     "",
     response_model=list[CategoryRead],
-    summary="List categories",
+    summary="Get all categories",
     description="Retrieve all product categories with their hierarchy information.",
 )
 async def get_categories(
     category_service: CategoryServiceDep,
 ) -> list[CategoryRead]:
-    """List all categories."""
+    """Get all categories."""
     return await category_service.get_categories()
 
 
@@ -48,7 +48,7 @@ async def create_category(
 async def get_category_by_id(
     category_id: UUID, category_service: CategoryServiceDep
 ) -> CategoryRead:
-    """Retrieve a category by its ID."""
+    """Get a category by its ID."""
     return await category_service.get_category_by_id(category_id)
 
 
@@ -59,7 +59,7 @@ async def get_category_by_id(
     description="Retrieve a specific category using its URL-friendly slug.",
 )
 async def get_category_by_slug(slug: str, category_service: CategoryServiceDep) -> CategoryRead:
-    """Retrieve a category by its slug."""
+    """Get a category by its slug."""
     return await category_service.get_category_by_slug(slug)
 
 

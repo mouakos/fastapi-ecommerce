@@ -140,7 +140,7 @@ class AdminService:
         )
 
     # ----------------------------- Order Related Admin Services ----------------------------- #
-    async def list_orders(
+    async def get_orders(
         self,
         status: OrderStatus | None = None,
         user_id: UUID | None = None,
@@ -149,7 +149,7 @@ class AdminService:
         page: int = 1,
         page_size: int = 10,
     ) -> tuple[list[Order], int]:
-        """List all orders with pagination and optional filters.
+        """Get all orders with pagination and optional filters, sorting and pagination.
 
         Args:
             status (OrderStatus | None, optional): Filter by order status. Defaults to None.
@@ -208,7 +208,7 @@ class AdminService:
         await self.uow.orders.update(order)
 
     # ----------------------------- User Related Admin Services ----------------------------- #
-    async def list_users(
+    async def get_users(
         self,
         role: UserRole | None = None,
         search: str | None = None,
@@ -217,7 +217,7 @@ class AdminService:
         page: int = 1,
         page_size: int = 10,
     ) -> tuple[list[User], int]:
-        """List all users in the system.
+        """Get all users in the system with optional filters, sorting, and pagination.
 
         Args:
             role (UserRole | None, optional): Filter by user role. Defaults to None.
@@ -281,7 +281,7 @@ class AdminService:
         await self.uow.users.update(user)
 
     # ----------------------------- Review Related Admin Services ----------------------------- #
-    async def list_reviews(
+    async def get_reviews(
         self,
         product_id: UUID | None = None,
         status: ReviewStatus | None = None,
@@ -292,7 +292,7 @@ class AdminService:
         page: int = 1,
         page_size: int = 10,
     ) -> tuple[list[Review], int]:
-        """List all product reviews with pagination and optional product filter.
+        """Get all product reviews with optional filters, sorting, and pagination.
 
         Args:
             page (int, optional): Page number. Defaults to 1.
@@ -384,7 +384,7 @@ class AdminService:
 
     # ---------------- Product Related Admin Services ---------------- #
 
-    async def list_products(
+    async def get_products(
         self,
         search: str | None = None,
         category_id: UUID | None = None,
@@ -399,7 +399,7 @@ class AdminService:
         page: int = 1,
         page_size: int = 10,
     ) -> tuple[list[Product], int]:
-        """List all products with pagination and optional filters.
+        """Get all products with optional filters, sorting, and pagination.
 
         Args:
             search (str | None, optional): Search query to filter products by name or description. Defaults to None.
@@ -433,8 +433,8 @@ class AdminService:
             sort_order=sort_order,
         )
 
-    async def list_top_selling_products(self, limit: int = 10, days: int = 30) -> list[Product]:
-        """Retrieve top selling products.
+    async def get_top_selling_products(self, limit: int = 10, days: int = 30) -> list[Product]:
+        """Get top selling products.
 
         Args:
             limit (int): Number of top products to retrieve.
@@ -445,10 +445,10 @@ class AdminService:
         """
         return await self.uow.products.list_top_selling(limit=limit, days=days)
 
-    async def list_low_stock_products(
+    async def get_low_stock_products(
         self, threshold: int = 10, is_active: bool | None = None, page: int = 1, page_size: int = 10
     ) -> tuple[list[Product], int]:
-        """Retrieve products that are low in stock.
+        """Get products that are low in stock.
 
         Args:
             threshold (int, optional): Stock threshold. Defaults to 10.

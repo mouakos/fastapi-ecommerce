@@ -29,7 +29,7 @@ router = APIRouter(prefix="/products", tags=["Products"])
     summary="Get product name suggestions",
     description="Retrieve autocomplete suggestions for product names based on search query. Returns up to 10 matching product names.",
 )
-async def get_products_autocomplete_suggestions(
+async def get_autocomplete_suggestions(
     product_service: ProductServiceDep,
     query: Annotated[
         str,
@@ -42,17 +42,17 @@ async def get_products_autocomplete_suggestions(
     limit: Annotated[int, Query(ge=1, le=10, description="Maximum number of suggestions")] = 10,
 ) -> ProductAutocompleteResponse:
     """List autocomplete suggestions for product names based on a search query."""
-    suggestions = await product_service.get_products_autocomplete_suggestions(query, limit)
+    suggestions = await product_service.get_autocomplete_suggestions(query, limit)
     return ProductAutocompleteResponse(suggestions=suggestions)
 
 
 @router.get(
     "",
     response_model=Page[ProductRead],
-    summary="List products",
+    summary="Get all products",
     description="Retrieve paginated list of products with advanced filtering by category, price range, rating, and availability. Supports search and sorting.",
 )
-async def get_all_products(
+async def get_products(
     product_service: ProductServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=100, description="Number of items per page"),
@@ -79,7 +79,7 @@ async def get_all_products(
     ] = ProductSortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.ASC,
 ) -> Page[ProductRead]:
-    """List all products with optional filters, sorting, and pagination."""
+    """Get all products with optional filters, sorting, and pagination."""
     products, total = await product_service.get_products(
         page=page,
         page_size=page_size,

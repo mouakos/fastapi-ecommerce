@@ -18,10 +18,10 @@ router = APIRouter(prefix="/orders", tags=["Orders"])
 @router.get(
     "",
     response_model=Page[OrderRead],
-    summary="List orders",
+    summary="Get all orders",
     description="Retrieve all orders for the authenticated user, sorted by creation date (newest first).",
 )
-async def list_all(
+async def get_orders(
     current_user: CurrentUserDep,
     order_service: OrderServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
@@ -32,7 +32,7 @@ async def list_all(
     ] = OrderSortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
 ) -> Page[OrderRead]:
-    """List all orders for the current user."""
+    """Get all orders for the current user."""
     orders, total = await order_service.get_orders(
         user_id=current_user.id,
         page=page,
@@ -50,7 +50,7 @@ async def list_all(
     summary="Create a new order",
     description="Create a new order from the user's cart and specified shipping/billing addresses. The cart will be emptied after successful order creation.",
 )
-async def create(
+async def create_order(
     data: OrderCreate,
     current_user: CurrentUserDep,
     order_service: OrderServiceDep,
@@ -65,11 +65,11 @@ async def create(
     summary="Get order by ID",
     description="Retrieve detailed information about a specific order. Only the order owner can access this endpoint.",
 )
-async def get(
+async def get_order(
     order_id: UUID,
     _: CurrentUserDep,
     order_service: OrderServiceDep,
     current_user: CurrentUserDep,
 ) -> OrderRead:
-    """Retrieve an order by its ID for the current user."""
+    """Get an order by its ID for the current user."""
     return await order_service.get_order(order_id, current_user.id)

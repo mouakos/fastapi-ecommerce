@@ -81,7 +81,7 @@ class ProductService:
         )
         return products, total
 
-    async def get_products_autocomplete_suggestions(self, query: str, limit: int = 10) -> list[str]:
+    async def get_autocomplete_suggestions(self, query: str, limit: int = 10) -> list[str]:
         """Get autocomplete suggestions for product names based on a search query.
 
         Args:

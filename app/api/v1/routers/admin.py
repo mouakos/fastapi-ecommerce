@@ -49,7 +49,7 @@ async def get_dashboard(
 
 # ------------------------ Statistics Endpoints ------------------------ #
 @router.get(
-    "/statistics/sales",
+    "/analytics/sales",
     response_model=SalesAnalytics,
     summary="Get sales analytics",
     description="Retrieve detailed sales metrics including total revenue, order counts, and trends over time.",
@@ -62,7 +62,7 @@ async def get_sales_analytics(
 
 
 @router.get(
-    "/statistics/users",
+    "/analytics/users",
     response_model=UserAnalytics,
     summary="Get user analytics",
     description="Retrieve user metrics including total registrations, growth rates, and active user statistics.",
@@ -75,7 +75,7 @@ async def get_user_analytics(
 
 
 @router.get(
-    "/statistics/products",
+    "/analytics/products",
     response_model=ProductAnalytics,
     summary="Get product analytics",
     description="Retrieve product metrics including inventory levels, stock status, and catalog analytics.",
@@ -88,7 +88,7 @@ async def get_product_analytics(
 
 
 @router.get(
-    "/statistics/reviews",
+    "/analytics/reviews",
     response_model=ReviewAnalytics,
     summary="Get review analytics",
     description="Retrieve review metrics including approval rates, average ratings, and pending review counts.",
@@ -104,10 +104,10 @@ async def get_review_analytics(
 @router.get(
     "/users",
     response_model=Page[UserAdminRead],
-    summary="List users",
+    summary="Get all users",
     description="Retrieve paginated list of all users with optional filtering by name, email, or role.",
 )
-async def list_users(
+async def get_users(
     admin_service: AdminServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
@@ -121,8 +121,8 @@ async def list_users(
     ] = UserSortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
 ) -> Page[UserAdminRead]:
-    """List all users with pagination and filters."""
-    users, total = await admin_service.list_users(
+    """Get all users with optional filters, sorting, and pagination."""
+    users, total = await admin_service.get_users(
         page=page,
         page_size=page_size,
         search=search,
@@ -172,10 +172,10 @@ async def update_user_role(
 @router.get(
     "/orders",
     response_model=Page[OrderAdminRead],
-    summary="List orders",
-    description="Retrieve paginated list of all orders with optional filtering by status or user.",
+    summary="Get all orders",
+    description="Get all orders with optional filters, sorting, and pagination.",
 )
-async def list_orders(
+async def get_orders(
     admin_service: AdminServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
@@ -186,8 +186,8 @@ async def list_orders(
     ] = OrderSortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
 ) -> Page[OrderAdminRead]:
-    """List all orders with pagination and filters."""
-    orders, total = await admin_service.list_orders(
+    """Get all orders with optional filters, sorting, and pagination."""
+    orders, total = await admin_service.get_orders(
         page=page,
         page_size=page_size,
         status=status,
@@ -234,10 +234,10 @@ async def update_order_status(
 @router.get(
     "/reviews",
     response_model=Page[ReviewAdminRead],
-    summary="List reviews",
-    description="Retrieve paginated list of all reviews with optional filtering by status, user, product, or rating.",
+    summary="Get all reviews",
+    description="Get all reviews with optional filters, sorting, and pagination.",
 )
-async def list_reviews(
+async def get_reviews(
     admin_service: AdminServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
@@ -250,8 +250,8 @@ async def list_reviews(
     ] = ReviewAdminSortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
 ) -> Page[ReviewAdminRead]:
-    """Get all reviews."""
-    reviews, total = await admin_service.list_reviews(
+    """Get all reviews with optional filters, sorting, and pagination."""
+    reviews, total = await admin_service.get_reviews(
         page=page,
         page_size=page_size,
         status=status,
@@ -360,10 +360,10 @@ async def delete_review(
 @router.get(
     "/products",
     response_model=Page[ProductAdminRead],
-    summary="List products",
+    summary="Get all products",
     description="Retrieve paginated list of all products with optional filtering by stock levels and active status.",
 )
-async def list_products(
+async def get_products(
     admin_service: AdminServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=100, description="Number of items per page"),
@@ -393,8 +393,8 @@ async def list_products(
     ] = ProductSortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.ASC,
 ) -> Page[ProductAdminRead]:
-    """List all products with pagination and filters."""
-    products, total = await admin_service.list_products(
+    """Get all products with optional filters, sorting, and pagination."""
+    products, total = await admin_service.get_products(
         page=page,
         page_size=page_size,
         search=search,
@@ -417,7 +417,7 @@ async def list_products(
     summary="Get low stock products",
     description="Retrieve products with stock levels below the specified threshold for inventory monitoring and restocking alerts.",
 )
-async def list_low_stock(
+async def get_low_stock_products(
     admin_service: AdminServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=100, description="Items per page"),
@@ -427,7 +427,7 @@ async def list_low_stock(
     ] = None,
 ) -> Page[ProductRead]:
     """Get low stock product alerts."""
-    products, total = await admin_service.list_low_stock_products(
+    products, total = await admin_service.get_low_stock_products(
         threshold=threshold, is_active=is_active, page=page, page_size=page_size
     )
     return build_page(items=products, page=page, size=page_size, total=total)  # type: ignore [arg-type]
@@ -439,10 +439,10 @@ async def list_low_stock(
     summary="Get top-moving products",
     description="Retrieve top-selling products within a specified time frame to identify bestsellers and trends.",
 )
-async def list_top_moving(
+async def get_top_moving_products(
     admin_service: AdminServiceDep,
     limit: int = Query(10, ge=1, description="Number of top products to retrieve"),
     days: int = Query(30, ge=1, le=365, description="Time frame in days to consider for top sales"),
 ) -> list[ProductRead]:
     """Get top-moving products."""
-    return await admin_service.list_top_selling_products(limit=limit, days=days)
+    return await admin_service.get_top_selling_products(limit=limit, days=days)
