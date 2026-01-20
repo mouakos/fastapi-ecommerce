@@ -9,7 +9,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.interfaces.user_repository import UserRepository
 from app.models.user import User, UserRole
 from app.repositories.sql_generic_repository import SqlGenericRepository
-from app.utils.utc_time import utcnow
+from app.utils.datetime import utcnow
 
 
 class SqlUserRepository(SqlGenericRepository[User], UserRepository):

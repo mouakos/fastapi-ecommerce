@@ -10,8 +10,8 @@ from app.core.config import settings
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import OrderStatus
 from app.models.payment import Payment, PaymentStatus
-from app.utils.stripe_utils import generate_idempotency_key
-from app.utils.utc_time import utcnow
+from app.utils.datetime import utcnow
+from app.utils.stripe import generate_idempotency_key
 
 
 class PaymentService:

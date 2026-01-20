@@ -17,8 +17,8 @@ from app.schemas.analytics import (
     SalesAnalytics,
     UserAnalytics,
 )
-from app.utils.order_utils import is_valid_order_status_transition
-from app.utils.utc_time import utcnow
+from app.utils.datetime import utcnow
+from app.utils.order import is_valid_order_status_transition
 
 
 class AdminService:

@@ -14,7 +14,7 @@ from app.models.order import Order, OrderItem, OrderStatus
 from app.models.product import Product
 from app.models.review import Review
 from app.repositories.sql_generic_repository import SqlGenericRepository
-from app.utils.utc_time import utcnow
+from app.utils.datetime import utcnow
 
 
 class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):

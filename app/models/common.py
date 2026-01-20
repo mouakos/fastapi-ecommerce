@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 
 from sqlmodel import DateTime, Field, SQLModel, func
 
-from app.utils.utc_time import utcnow
+from app.utils.datetime import utcnow
 
 
 class TimestampMixin(SQLModel):

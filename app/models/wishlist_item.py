@@ -7,7 +7,7 @@ from uuid import UUID
 from sqlmodel import Field, Relationship, UniqueConstraint
 
 from app.models.common import ModelBase
-from app.utils.utc_time import utcnow
+from app.utils.datetime import utcnow
 
 if TYPE_CHECKING:
     from app.models.product import Product

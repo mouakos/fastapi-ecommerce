@@ -9,7 +9,7 @@ from sqlalchemy import Column
 from sqlmodel import DateTime, Field, Relationship, UniqueConstraint
 
 from app.models.common import ModelBase, TimestampMixin
-from app.utils.utc_time import utcnow
+from app.utils.datetime import utcnow
 
 if TYPE_CHECKING:
     from app.models.product import Product
