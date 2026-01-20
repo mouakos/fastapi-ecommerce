@@ -269,16 +269,25 @@ class AdminService:
         """
         return await self.uow.orders.calculate_user_sales(user_id)
 
-    async def update_user_role(self, user_id: UUID, new_role: UserRole) -> None:
-        """Update the role of a user.
+    async def update_user_role(
+        self, current_user_id: UUID, user_id: UUID, new_role: UserRole
+    ) -> None:
+        """Update a user's role.
 
         Args:
+            current_user_id (UUID): ID of the user making the request.
             user_id (UUID): ID of the user to update.
             new_role (UserRole): New role to set for the user.
+
+        Raises:
+            HTTPException: If the user is not found or if trying to change own role.
         """
         user = await self.uow.users.find_by_id(user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found.")
+
+        if user_id == current_user_id:
+            raise HTTPException(status_code=400, detail="You cannot change your own role.")
 
         if user.role == new_role:
             return

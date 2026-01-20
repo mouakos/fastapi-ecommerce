@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Query, status
 
 from app.api.v1.dependencies import AdminRoleDep, AdminServiceDep, CurrentUserDep
 from app.models.order import OrderStatus
@@ -163,9 +163,9 @@ async def update_user_role(
     current_user: CurrentUserDep,
 ) -> None:
     """Update a user's role."""
-    if user_id == current_user.id:
-        raise HTTPException(status_code=400, detail="You cannot change your own role.")
-    await admin_service.update_user_role(user_id=user_id, new_role=role_update.role)
+    await admin_service.update_user_role(
+        current_user_id=current_user.id, user_id=user_id, new_role=role_update.role
+    )
 
 
 # ------------------------ Order management ------------------------ #
