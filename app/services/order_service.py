@@ -116,7 +116,7 @@ class OrderService:
         Returns:
             tuple[list[Order], int]: List of orders for the user and total count.
         """
-        return await self.uow.orders.paginate(
+        return await self.uow.orders.find_all(
             user_id=user_id,
             page=page,
             page_size=page_size,

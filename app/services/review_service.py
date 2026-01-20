@@ -76,7 +76,7 @@ class ReviewService:
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
 
-        total, reviews = await self.uow.reviews.paginate(
+        total, reviews = await self.uow.reviews.find_all(
             page=page,
             page_size=page_size,
             status=ReviewStatus.APPROVED,

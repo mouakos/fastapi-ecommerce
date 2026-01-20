@@ -162,7 +162,7 @@ class AdminService:
         Returns:
             tuple[list[Order], int]: List of orders and total count.
         """
-        orders, total = await self.uow.orders.paginate(
+        orders, total = await self.uow.orders.find_all(
             page=page,
             page_size=page_size,
             status=status,
@@ -231,7 +231,7 @@ class AdminService:
         Returns:
             tuple[list[User], int]: List of users and total number of users.
         """
-        users, total = await self.uow.users.paginate(
+        users, total = await self.uow.users.find_all(
             page=page,
             page_size=page_size,
             role=role,
@@ -317,7 +317,7 @@ class AdminService:
             if not product:
                 raise HTTPException(status_code=404, detail="Product not found.")
 
-        reviews, total = await self.uow.reviews.paginate(
+        reviews, total = await self.uow.reviews.find_all(
             page=page,
             page_size=page_size,
             product_id=product_id,
@@ -418,7 +418,7 @@ class AdminService:
         Returns:
             tuple[list[Product], int]: List of products and total count.
         """
-        return await self.uow.products.paginate(
+        return await self.uow.products.find_all(
             page=page,
             page_size=page_size,
             search=search,
@@ -459,6 +459,6 @@ class AdminService:
         Returns:
             tuple[list[Product], int]: List of low stock products and total count.
         """
-        return await self.uow.products.paginate_low_stock(
+        return await self.uow.products.list_low_stock(
             threshold=threshold, is_active=is_active, page=page, page_size=page_size
         )

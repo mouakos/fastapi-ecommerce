@@ -57,7 +57,7 @@ class OrderRepository(GenericRepository[Order], ABC):
         ...
 
     @abstractmethod
-    async def paginate(
+    async def find_all(
         self,
         *,
         status: OrderStatus | None = None,
@@ -67,7 +67,7 @@ class OrderRepository(GenericRepository[Order], ABC):
         page: int = 1,
         page_size: int = 10,
     ) -> tuple[list[Order], int]:
-        """Paginate orders with optional filters.
+        """Find all orders with optional filters, sorting, and pagination.
 
         Args:
             status (OrderStatus | None, optional): Filter by order status. Defaults to None.

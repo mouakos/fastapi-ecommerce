@@ -46,7 +46,7 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
         result = await self._session.exec(stmt)
         return result.first() or 0
 
-    async def paginate(
+    async def find_all(
         self,
         *,
         role: UserRole | None = None,
@@ -56,7 +56,7 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
         page: int = 1,
         page_size: int = 10,
     ) -> tuple[list[User], int]:
-        """Get all users with pagination and optional filters.
+        """Find all users with optional filters, sorting, and pagination.
 
         Args:
             role (UserRole | None, optional): Filter by user role. Defaults to None.

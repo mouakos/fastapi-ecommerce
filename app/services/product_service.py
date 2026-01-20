@@ -65,7 +65,7 @@ class ProductService:
             if not category:
                 raise HTTPException(status_code=404, detail="Category not found.")
 
-        products, total = await self.uow.products.paginate(
+        products, total = await self.uow.products.find_all(
             page=page,
             page_size=page_size,
             search=search,

@@ -12,7 +12,7 @@ class ProductRepository(GenericRepository[Product], ABC):
     """Interface for Product repository."""
 
     @abstractmethod
-    async def paginate(
+    async def find_all(
         self,
         *,
         page: int = 1,
@@ -28,7 +28,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         sort_by: str = "created_at",
         sort_order: str = "asc",
     ) -> tuple[list[Product], int]:
-        """List all products with pagination and optional filters.
+        """Find all products with optional filters, sorting, and pagination.
 
         Args:
             page (int, optional): Page number for pagination.
@@ -135,7 +135,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         ...
 
     @abstractmethod
-    async def paginate_low_stock(
+    async def list_low_stock(
         self,
         *,
         threshold: int = 10,
@@ -143,7 +143,7 @@ class ProductRepository(GenericRepository[Product], ABC):
         page: int = 1,
         page_size: int = 10,
     ) -> tuple[list[Product], int]:
-        """Paginate products that are low in stock.
+        """Find all products that are low in stock.
 
         Args:
             threshold (int): Stock threshold.

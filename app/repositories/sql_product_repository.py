@@ -24,7 +24,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         """Initialize the repository with a database session."""
         super().__init__(session, Product)
 
-    async def paginate(
+    async def find_all(
         self,
         *,
         page: int = 1,
@@ -40,7 +40,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         sort_by: str = "id",
         sort_order: str = "asc",
     ) -> tuple[list[Product], int]:
-        """Gets a list of products with optional filters, sorting, and pagination.
+        """Find all products with optional filters, sorting, and pagination.
 
         Args:
             page (int, optional): Page number for pagination.
@@ -272,7 +272,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         result = await self._session.exec(stmt)
         return result.first() or 0
 
-    async def paginate_low_stock(
+    async def list_low_stock(
         self,
         *,
         threshold: int = 10,
@@ -280,7 +280,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         page: int = 1,
         page_size: int = 10,
     ) -> tuple[list[Product], int]:
-        """Paginate products that are low in stock.
+        """List products that are low in stock.
 
         Args:
             threshold (int): Stock threshold.

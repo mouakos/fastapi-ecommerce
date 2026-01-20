@@ -94,7 +94,7 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
         result = await self._session.exec(stmt)
         return result.first() or Decimal("0.00")
 
-    async def paginate(
+    async def find_all(
         self,
         *,
         status: OrderStatus | None = None,
@@ -104,7 +104,7 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
         page: int = 1,
         page_size: int = 10,
     ) -> tuple[list[Order], int]:
-        """Get all orders with pagination and optional filters.
+        """Find all orders with optional filters, sorting, and pagination.
 
         Args:
             status (OrderStatus | None, optional): Filter by order status. Defaults to None.

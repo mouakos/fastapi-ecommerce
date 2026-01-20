@@ -34,7 +34,7 @@ class UserRepository(GenericRepository[User], ABC):
         ...
 
     @abstractmethod
-    async def paginate(
+    async def find_all(
         self,
         *,
         role: UserRole | None = None,
@@ -44,7 +44,7 @@ class UserRepository(GenericRepository[User], ABC):
         page: int = 1,
         page_size: int = 10,
     ) -> tuple[list[User], int]:
-        """Paginate users with optional filters.
+        """Find all users with optional filters, sorting, and pagination.
 
         Args:
             role (UserRole | None, optional): Filter by user role. Defaults to None.

@@ -57,7 +57,7 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         average = result.first()
         return float(average) if average is not None else 0
 
-    async def paginate(
+    async def find_all(
         self,
         *,
         product_id: UUID | None = None,
@@ -69,7 +69,7 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
         page: int = 1,
         page_size: int = 10,
     ) -> tuple[list[Review], int]:
-        """Get all reviews with pagination and optional filters.
+        """Find all reviews with optional filters, sorting, and pagination.
 
         Args:
             product_id (UUID | None, optional): Filter by product ID. Defaults to None.
