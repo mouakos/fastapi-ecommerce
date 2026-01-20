@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.api.v1.routers import router
+from app.core.config import settings
 from app.db.database import async_engine, init_db
 
 
@@ -110,7 +111,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cross_origin_urls.split(",") if settings.cross_origin_urls else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

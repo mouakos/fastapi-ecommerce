@@ -42,6 +42,11 @@ class Settings(BaseSettings):
         description="Checkout session expiration time in minutes",
         alias="CHECKOUT_SESSION_EXPIRE_MINUTES",
     )
+    cross_origin_urls: str | None = Field(
+        default=None,
+        description="Comma-separated list of allowed CORS origins",
+        alias="CORS_ORIGINS",
+    )
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
