@@ -22,15 +22,16 @@ class OrderRepository(GenericRepository[Order], ABC):
 
     @abstractmethod
     async def find_user_order(self, order_id: UUID, user_id: UUID) -> Order | None:
-        """Find an order by ID for a specific user.
+        """Find an order by ID for a specific user with ownership validation.
 
         Args:
             order_id (UUID): Order ID.
-            user_id (UUID): User ID.
+            user_id (UUID): User ID for ownership validation.
 
         Returns:
-            Order | None: Order record or None.
+            Order | None: Order record if found and owned by user, otherwise None.
         """
+        ...
 
     @abstractmethod
     async def calculate_recent_sales(self, days: int) -> Decimal:

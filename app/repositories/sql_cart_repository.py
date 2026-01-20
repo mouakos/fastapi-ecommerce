@@ -60,14 +60,17 @@ class SqlCartRepository(SqlGenericRepository[Cart], CartRepository):
         return result.first()
 
     async def get_or_create(self, user_id: UUID | None, session_id: str | None) -> Cart:
-        """Get or create a cart for a user.
+        """Get existing cart or create a new one for user or guest session.
+
+        For authenticated users (user_id provided), finds or creates user cart.
+        For guests (session_id provided), finds or creates session-based cart.
 
         Args:
-            user_id (UUID | None): User ID.
-            session_id (str | None): Session ID.
+            user_id (UUID | None): User ID for authenticated users.
+            session_id (str | None): Session ID for guest users.
 
         Returns:
-            Cart: Existing or new cart.
+            Cart: Existing or newly created cart.
 
         Raises:
             ValueError: If session_id is not provided for guest cart.

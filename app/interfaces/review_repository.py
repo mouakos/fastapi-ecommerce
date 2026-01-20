@@ -38,10 +38,10 @@ class ReviewRepository(GenericRepository[Review], ABC):
 
     @abstractmethod
     async def calculate_average_rating(self) -> float:
-        """Calculate the average rating of all reviews.
+        """Calculate the average rating across all reviews in the system.
 
         Returns:
-            float: Average rating.
+            float: Average rating or 0.0 if no reviews exist.
         """
         ...
 

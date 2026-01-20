@@ -33,13 +33,13 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
         return result.first()
 
     async def count_recent(self, days: int) -> int:
-        """Get number of users registered in the last N days.
+        """Count users registered in the last N days.
 
         Args:
-            days (int): Number of days to look back from today.
+            days (int): Number of days to look back from current date.
 
         Returns:
-            int: Number of users registered in the last N days.
+            int: Number of users registered within the specified period.
         """
         cutoff_date = utcnow() - timedelta(days=days)
         stmt = select(func.count()).select_from(User).where(User.created_at >= cutoff_date)

@@ -124,13 +124,13 @@ class ProductRepository(GenericRepository[Product], ABC):
 
     @abstractmethod
     async def count_low_stock(self, threshold: int = 10) -> int:
-        """Count number of products that are low in stock.
+        """Count products with stock below specified threshold.
 
         Args:
-            threshold (int): Stock threshold.
+            threshold (int): Stock quantity threshold for low stock. Defaults to 10.
 
         Returns:
-            int: Number of products that are low in stock.
+            int: Number of products with stock below threshold.
         """
         ...
 
@@ -143,14 +143,13 @@ class ProductRepository(GenericRepository[Product], ABC):
         page: int = 1,
         page_size: int = 10,
     ) -> tuple[list[Product], int]:
-        """Find all products that are low in stock.
+        """Find products with stock below specified threshold with pagination.
 
         Args:
-            threshold (int): Stock threshold.
-            is_active (bool | None, optional): Filter by active status. Defaults to None.
-            page (int, optional): Page number. Defaults to 1.
-            page_size (int, optional): Number of products per page. Defaults to 10.
-
+            threshold (int): Stock quantity threshold. Defaults to 10.
+            is_active (bool | None): Filter by active status (True, False, or None for all). Defaults to None.
+            page (int): Page number for pagination. Defaults to 1.
+            page_size (int): Items per page. Defaults to 10.
 
         Returns:
             tuple[list[Product], int]: List of low stock products and total count.
@@ -159,13 +158,13 @@ class ProductRepository(GenericRepository[Product], ABC):
 
     @abstractmethod
     async def list_top_selling(self, limit: int = 10, days: int = 30) -> list[Product]:
-        """List top selling products within a specified time frame.
+        """List top-selling products within specified time frame based on order quantity.
 
         Args:
-            limit (int): Number of top selling products to retrieve.
-            days (int): Number of days to consider for sales data.
+            limit (int): Maximum number of products to return. Defaults to 10.
+            days (int): Number of days to analyze for sales data. Defaults to 30.
 
         Returns:
-            list[Product]: List of top selling products.
+            list[Product]: List of top-selling products ordered by sales volume.
         """
         ...

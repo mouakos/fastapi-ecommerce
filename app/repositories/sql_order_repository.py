@@ -47,14 +47,14 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
         return result.first()
 
     async def find_user_order(self, order_id: UUID, user_id: UUID) -> Order | None:
-        """Find an order by ID for a specific user.
+        """Find an order by ID for a specific user with ownership validation.
 
         Args:
             order_id (UUID): Order ID.
-            user_id (UUID): User ID.
+            user_id (UUID): User ID for ownership validation.
 
         Returns:
-            Order | None: Order record or None.
+            Order | None: Order record if found and owned by user, otherwise None.
         """
         stmt = select(Order).where(
             Order.id == order_id,

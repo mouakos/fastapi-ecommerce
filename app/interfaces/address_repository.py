@@ -30,13 +30,13 @@ class AddressRepository(GenericRepository[Address], ABC):
 
     @abstractmethod
     async def find_user_address(self, address_id: UUID, user_id: UUID) -> Address | None:
-        """Find a user address by address ID and user ID.
+        """Find an address by ID with user ownership validation.
 
         Args:
             address_id (UUID): Address ID.
-            user_id (UUID): ID of the user owning the address.
+            user_id (UUID): User ID for ownership validation.
 
         Returns:
-            Address | None: The address if found, otherwise None.
+            Address | None: The address if found and owned by user, otherwise None.
         """
         ...
