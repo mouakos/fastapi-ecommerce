@@ -3,8 +3,13 @@
 from decimal import Decimal
 from uuid import UUID
 
-from fastapi import HTTPException
-
+from app.core.exceptions import (
+    InvalidTransitionError,
+    OrderNotFoundError,
+    ReviewNotFoundError,
+    SelfModificationError,
+    UserNotFoundError,
+)
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import Order, OrderStatus
 from app.models.product import Product
@@ -184,18 +189,17 @@ class AdminService:
             new_status (OrderStatus): New status (PENDING, PAID, SHIPPED, DELIVERED, CANCELED).
 
         Raises:
-            HTTPException: If order not found or status transition is invalid.
+            OrderNotFoundError: If order not found.
         """
         order = await self.uow.orders.find_by_id(order_id)
         if not order:
-            raise HTTPException(status_code=404, detail="Order not found.")
+            raise OrderNotFoundError(order_id=order_id)
 
         # validate status transition
         is_valid_transition = is_valid_order_status_transition(order.status, new_status)
         if not is_valid_transition:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid order status transition from {order.status} to {new_status}.",
+            raise InvalidTransitionError(
+                entity="Order", from_state=order.status, to_state=new_status
             )
 
         # perform status update
@@ -209,7 +213,9 @@ class AdminService:
         elif new_status == OrderStatus.DELIVERED:
             order.delivered_at = utcnow()
         else:
-            raise HTTPException(status_code=400, detail="Invalid order status.")
+            raise InvalidTransitionError(
+                entity="Order", from_state=order.status, to_state=new_status
+            )
         order.status = new_status
         await self.uow.orders.update(order)
 
@@ -280,14 +286,15 @@ class AdminService:
             new_role (UserRole): New role to set for the user.
 
         Raises:
-            HTTPException: If the user is not found or if trying to change own role.
+            UserNotFoundError: If the user is not found.
+            SelfModificationError: If trying to change own role.
         """
         user = await self.uow.users.find_by_id(user_id)
         if not user:
-            raise HTTPException(status_code=404, detail="User not found.")
+            raise UserNotFoundError(user_id=user_id)
 
         if user_id == current_user_id:
-            raise HTTPException(status_code=400, detail="You cannot change your own role.")
+            raise SelfModificationError(action="changing your own role")
 
         if user.role == new_role:
             return
@@ -323,15 +330,7 @@ class AdminService:
 
         Returns:
             tuple[list[Review], int]: List of reviews and total count.
-
-        Raises:
-            HTTPException: If the product is not found.
         """
-        if product_id:
-            product = await self.uow.products.find_by_id(product_id)
-            if not product:
-                raise HTTPException(status_code=404, detail="Product not found.")
-
         reviews, total = await self.uow.reviews.find_all(
             page=page,
             page_size=page_size,
@@ -357,11 +356,11 @@ class AdminService:
             Review: The approved review with updated moderation metadata.
 
         Raises:
-            HTTPException: If review is not found.
+            ReviewNotFoundError: If review is not found.
         """
         review = await self.uow.reviews.find_by_id(review_id)
         if not review:
-            raise HTTPException(status_code=404, detail="Review not found.")
+            raise ReviewNotFoundError(review_id=review_id)
 
         # Approve the review
         review.status = ReviewStatus.APPROVED
@@ -382,7 +381,7 @@ class AdminService:
         """
         review = await self.uow.reviews.find_by_id(review_id)
         if not review:
-            raise HTTPException(status_code=404, detail="Review not found.")
+            raise ReviewNotFoundError(review_id=review_id)
 
         # Reject the review
         review.status = ReviewStatus.REJECTED
@@ -396,10 +395,13 @@ class AdminService:
 
         Args:
             review_id (UUID): ID of the review to delete.
+
+        Raises:
+            ReviewNotFoundError: If review is not found.
         """
         review = await self.uow.reviews.find_by_id(review_id)
         if not review:
-            raise HTTPException(status_code=404, detail="Review not found.")
+            raise ReviewNotFoundError(review_id=review_id)
         await self.uow.reviews.delete(review)
 
     # ---------------- Product Related Admin Services ---------------- #

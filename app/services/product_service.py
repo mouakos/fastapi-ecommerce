@@ -3,9 +3,9 @@
 from decimal import Decimal
 from uuid import UUID
 
-from fastapi import HTTPException
 from pydantic import HttpUrl
 
+from app.core.exceptions import CategoryNotFoundError, ProductNotFoundError
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.product import Product
 from app.schemas.product import ProductCreate, ProductUpdate
@@ -51,20 +51,7 @@ class ProductService:
 
         Returns:
             tuple[list[Product], int]: List of active products and total count.
-
-        Raises:
-            HTTPException: If the specified category does not exist.
         """
-        if category_id:
-            category = await self.uow.categories.find_by_id(category_id)
-            if not category:
-                raise HTTPException(status_code=404, detail="Category not found.")
-
-        if category_slug:
-            category = await self.uow.categories.find_by_slug(category_slug)
-            if not category:
-                raise HTTPException(status_code=404, detail="Category not found.")
-
         products, total = await self.uow.products.find_all(
             page=page,
             page_size=page_size,
@@ -90,12 +77,7 @@ class ProductService:
 
         Returns:
             list[str]: Autocomplete suggestions for product names.
-
-        Raises:
-            HTTPException: If the query is less than 2 characters long.
         """
-        if not query or len(query) < 2:
-            raise HTTPException(status_code=400, detail="Query must be at least 2 characters long.")
         return await self.uow.products.list_autocomplete_suggestions(query, limit)
 
     async def get_product_by_id(
@@ -111,11 +93,11 @@ class ProductService:
             Product: The product with the specified ID.
 
         Raises:
-            HTTPException: If the product is not found.
+            ProductNotFoundError: If the product is not found.
         """
         product = await self.uow.products.find_active_by_id(product_id)
         if not product:
-            raise HTTPException(status_code=404, detail="Product not found.")
+            raise ProductNotFoundError(product_id=product_id)
         return product
 
     async def get_product_average_rating(self, product_id: UUID) -> float | None:
@@ -153,11 +135,12 @@ class ProductService:
             Product: The product with the specified slug.
 
         Raises:
-            HTTPException: If the product is not found.
+            ProductNotFoundError: If the product is not found.
         """
         product = await self.uow.products.find_active_by_slug(slug)
         if not product:
-            raise HTTPException(status_code=404, detail="Product not found.")
+            raise ProductNotFoundError(slug=slug)
+
         return product
 
     async def create_product(
@@ -173,13 +156,13 @@ class ProductService:
             Product: The created product.
 
         Raises:
-            HTTPException: If the specified category does not exist.
+            CategoryNotFoundError: If the specified category does not exist.
         """
         # Validate category existence if category_id is provided
         if data.category_id:
             category = await self.uow.categories.find_by_id(data.category_id)
             if not category:
-                raise HTTPException(status_code=404, detail="Category not found.")
+                raise CategoryNotFoundError(category_id=data.category_id)
 
         slug = await self.uow.products.generate_slug(data.name)
         sku = generate_sku(data.name)
@@ -207,7 +190,8 @@ class ProductService:
             Product: The updated product.
 
         Raises:
-            HTTPException: If the product or category does not exist.
+            ProductNotFoundError: If the product is not found.
+            CategoryNotFoundError: If the specified category does not exist.
         """
         product = await self.get_product_by_id(product_id)
 
@@ -215,7 +199,7 @@ class ProductService:
         if data.category_id:
             category = await self.uow.categories.find_by_id(data.category_id)
             if not category:
-                raise HTTPException(status_code=404, detail="Category not found.")
+                raise CategoryNotFoundError(category_id=data.category_id)
 
         product_data = data.model_dump(exclude_unset=True)
         if isinstance(product_data.get("image_url"), HttpUrl):
@@ -236,7 +220,7 @@ class ProductService:
             product_id (UUID): The ID of the product to delete.
 
         Raises:
-            HTTPException: If the product does not exist.
+            ProductNotFoundError: If the product is not found.
         """
         product = await self.get_product_by_id(product_id)
         await self.uow.products.delete(product)

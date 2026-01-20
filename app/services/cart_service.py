@@ -3,8 +3,13 @@
 # mypy: disable-error-code=return-value
 from uuid import UUID
 
-from fastapi import HTTPException
-
+from app.core.exceptions import (
+    InsufficientStockError,
+    InvalidCartSessionError,
+    ProductInactiveError,
+    ProductNotFoundError,
+    ProductNotInCartError,
+)
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.cart import Cart, CartItem
 from app.schemas.cart import CartItemCreate, CartItemUpdate, CartRead
@@ -28,7 +33,7 @@ class CartService:
             CartRead: Existing or new cart.
 
         Raises:
-            HTTPException: If session_id is not provided for guest cart.
+            InvalidCartSessionError: If session_id is not provided for guest cart.
         """
         return await self._get_or_create_cart(user_id, session_id)
 
@@ -46,16 +51,18 @@ class CartService:
             Cart: Updated cart with added item.
 
         Raises:
-            HTTPException: If product not found, inactive, or insufficient stock.
+            ProductNotFoundError: If product does not exist.
+            ProductInactiveError: If product is not active.
+            InsufficientStockError: If insufficient stock available.
         """
         cart = await self._get_or_create_cart(user_id, session_id)
 
         product = await self.uow.products.find_by_id(data.product_id)
         if not product:
-            raise HTTPException(status_code=404, detail="Product not found.")
+            raise ProductNotFoundError(product_id=data.product_id)
 
         if not product.is_active:
-            raise HTTPException(status_code=400, detail="Product is not available.")
+            raise ProductInactiveError(product_name=product.name)
 
         item = await self.uow.carts.find_cart_item(cart.id, product.id)
 
@@ -63,7 +70,9 @@ class CartService:
         new_qty = current_qty + data.quantity
 
         if product.stock < new_qty:
-            raise HTTPException(status_code=400, detail="Product out of stock.")
+            raise InsufficientStockError(
+                product_name=product.name, requested=new_qty, available=product.stock
+            )
 
         if item:
             item.quantity += data.quantity
@@ -99,23 +108,28 @@ class CartService:
             Cart: Updated cart instance.
 
         Raises:
-            HTTPException: If product is not found in cart, out of stock, or not available.
+            ProductNotFoundError: If product does not exist.
+            ProductNotInCartError: If product is not in the cart.
+            ProductInactiveError: If product is not active.
+            InsufficientStockError: If insufficient stock available.
         """
         product = await self.uow.products.find_by_id(product_id)
         if not product:
-            raise HTTPException(status_code=404, detail="Product not found.")
+            raise ProductNotFoundError(product_id=product_id)
 
         cart = await self._get_or_create_cart(user_id, session_id)
 
         item = await self.uow.carts.find_cart_item(cart.id, product_id)
         if not item:
-            raise HTTPException(status_code=404, detail="Product not found in cart.")
+            raise ProductNotInCartError(product_id=product_id)
 
         if not product.is_active:
-            raise HTTPException(status_code=400, detail="Product is not available.")
+            raise ProductInactiveError(product_name=product.name)
 
         if product.stock < data.quantity:
-            raise HTTPException(status_code=400, detail="Product out of stock.")
+            raise InsufficientStockError(
+                product_name=product.name, requested=data.quantity, available=product.stock
+            )
 
         item.quantity = data.quantity
 
@@ -135,14 +149,14 @@ class CartService:
             Cart: Updated cart instance.
 
         Raises:
-            HTTPException: If product is not found in cart.
+            ProductNotInCartError: If product is not in the cart.
         """
         cart = await self._get_or_create_cart(user_id, session_id)
 
         item = await self.uow.carts.find_cart_item(cart.id, product_id)
 
         if not item:
-            raise HTTPException(status_code=404, detail="Product not found in cart.")
+            raise ProductNotInCartError(product_id=product_id)
 
         cart.items.remove(item)
         return await self.uow.carts.update(cart)
@@ -158,13 +172,13 @@ class CartService:
             CartRead: Existing or new cart.
 
         Raises:
-            HTTPException: If session_id is not provided for guest cart.
+            InvalidCartSessionError: If session_id is not provided for guest cart.
         """
         """Get or create cart via repository."""
         try:
             return await self.uow.carts.get_or_create(user_id, session_id)
         except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e)) from e
+            raise InvalidCartSessionError(message=str(e)) from e
 
     async def clear_cart_items(self, user_id: UUID | None, session_id: str | None) -> CartRead:
         """Clear all items from the cart.

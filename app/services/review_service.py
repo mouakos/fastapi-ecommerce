@@ -2,8 +2,11 @@
 
 from uuid import UUID
 
-from fastapi import HTTPException
-
+from app.core.exceptions import (
+    DuplicateReviewError,
+    ProductNotFoundError,
+    ReviewNotFoundError,
+)
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.review import Review, ReviewStatus
 from app.schemas.review import ReviewCreate, ReviewUpdate
@@ -27,15 +30,16 @@ class ReviewService:
             Review: The created review with PENDING status awaiting admin approval.
 
         Raises:
-            HTTPException: If product does not exist or user has already reviewed the product.
+            ProductNotFoundError: If product does not exist.
+            DuplicateReviewError: If user has already reviewed this product.
         """
         product = await self.uow.products.find_by_id(data.product_id)
         if not product:
-            raise HTTPException(status_code=404, detail="Product not found.")
+            raise ProductNotFoundError(product_id=data.product_id)
 
         existing = await self.uow.reviews.find_user_product_review(user_id, data.product_id)
         if existing:
-            raise HTTPException(status_code=400, detail="You have already reviewed this product.")
+            raise DuplicateReviewError()
 
         review_data = data.model_dump()
         new_review = Review(
@@ -69,11 +73,11 @@ class ReviewService:
             tuple[list[Review], int]: List of reviews and total count for the product.
 
         Raises:
-            HTTPException: If the product does not exist.
+            ProductNotFoundError: If the product does not exist.
         """
         product = await self.uow.products.find_by_id(product_id)
         if not product:
-            raise HTTPException(status_code=404, detail="Product not found.")
+            raise ProductNotFoundError(product_id=product_id)
 
         total, reviews = await self.uow.reviews.find_all(
             page=page,
@@ -97,11 +101,11 @@ class ReviewService:
             Review: The review with the specified ID.
 
         Raises:
-            HTTPException: If the review is not found or not approved.
+            ReviewNotFoundError: If the review is not found or not approved.
         """
         review = await self.uow.reviews.find_user_review(review_id, user_id)
         if not review:
-            raise HTTPException(status_code=404, detail="Review not found.")
+            raise ReviewNotFoundError(review_id=review_id, user_id=user_id)
 
         return review
 
@@ -117,7 +121,7 @@ class ReviewService:
             Review: The updated review with status reset to PENDING.
 
         Raises:
-            HTTPException: If the review is not found or user is not the author.
+            ReviewNotFoundError: If the review is not found or user is not the author.
         """
         review = await self.get_review(review_id, user_id)
 
@@ -140,7 +144,7 @@ class ReviewService:
             user_id (UUID): The ID of the current user.
 
         Raises:
-            HTTPException: If the review is not found.
+            ReviewNotFoundError: If the review is not found.
         """
         review = await self.get_review(review_id, user_id)
         await self.uow.reviews.delete(review)

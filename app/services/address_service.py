@@ -2,8 +2,7 @@
 
 from uuid import UUID
 
-from fastapi import HTTPException, status
-
+from app.core.exceptions import AddressNotFoundError, ResourceLimitError
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.address import Address
 from app.schemas.address import AddressCreate, AddressUpdate
@@ -41,14 +40,11 @@ class AddressService:
             Address: The address with the specified ID.
 
         Raises:
-            HTTPException: If the address does not exists.
+            AddressNotFoundError: If the address does not exists.
         """
         address = await self.uow.addresses.find_user_address(address_id, user_id)
         if not address:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Address not found.",
-            )
+            raise AddressNotFoundError(address_id=address_id, user_id=user_id)
         return address
 
     async def create_address(
@@ -66,13 +62,14 @@ class AddressService:
             Address: The created address.
 
         Raises:
-            HTTPException: If user has reached maximum address limit (10).
+            ResourceLimitError: If user has reached maximum address limit (10).
         """
         count = await self.uow.addresses.count(user_id=user_id)
         if count >= MAX_ADDRESSES_PER_USER:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"You cannot have more than {MAX_ADDRESSES_PER_USER} addresses.",
+            raise ResourceLimitError(
+                resource="addresses",
+                limit=MAX_ADDRESSES_PER_USER,
+                current=count,
             )
 
         new_address = Address(**data.model_dump(), user_id=user_id)
@@ -91,7 +88,7 @@ class AddressService:
             Address: The updated address.
 
         Raises:
-            HTTPException: If the address does not exists.
+            AddressNotFoundError: If the address does not exist.
         """
         address = await self.get_address(address_id, user_id)
 
@@ -110,7 +107,7 @@ class AddressService:
             user_id (UUID): ID of the user owning the address.
 
         Raises:
-            HTTPException: If the address does not exists.
+            AddressNotFoundError: If the address does not exist.
         """
         address = await self.get_address(address_id, user_id)
         await self.uow.addresses.delete(address)
@@ -126,7 +123,7 @@ class AddressService:
             Address: The updated address.
 
         Raises:
-            HTTPException: If the address does not exists.
+            AddressNotFoundError: If the address does not exist.
         """
         address = await self.get_address(address_id, user_id)
         await self.uow.addresses.unset_default_billing(user_id)
@@ -146,7 +143,7 @@ class AddressService:
             Address: The updated address.
 
         Raises:
-            HTTPException: If the address does not exists.
+            AddressNotFoundError: If the address does not exist.
         """
         address = await self.get_address(address_id, user_id)
         await self.uow.addresses.unset_default_shipping(user_id)

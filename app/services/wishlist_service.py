@@ -2,8 +2,12 @@
 
 from uuid import UUID
 
-from fastapi import HTTPException
-
+from app.core.exceptions import (
+    InsufficientStockError,
+    ProductInactiveError,
+    ProductNotFoundError,
+    WishlistItemNotFoundError,
+)
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.cart import Cart, CartItem
 from app.models.wishlist_item import WishlistItem
@@ -24,11 +28,11 @@ class WishlistService:
             product_id (UUID): ID of the product to add.
 
         Raises:
-            HTTPException: If the product does not exist.
+            ProductNotFoundError: If the product does not exist.
         """
         product = await self.uow.products.find_by_id(product_id)
         if not product:
-            raise HTTPException(status_code=404, detail="Product not found.")
+            raise ProductNotFoundError(product_id=product_id)
 
         wishlist_item = await self.uow.wishlists.find_item(user_id, product_id)
         if not wishlist_item:
@@ -56,10 +60,13 @@ class WishlistService:
         Args:
             user_id (UUID): User ID.
             product_id (UUID): Product ID.
+
+        Raises:
+            WishlistItemNotFoundError: If product is not in wishlist.
         """
         wishlist_item = await self.uow.wishlists.find_item(user_id, product_id)
         if not wishlist_item:
-            raise HTTPException(status_code=404, detail="Product not found in wishlist.")
+            raise WishlistItemNotFoundError(product_id=product_id, user_id=user_id)
 
         await self.uow.wishlists.delete(wishlist_item)
 
@@ -92,21 +99,28 @@ class WishlistService:
             product_id (UUID): ID of the product to move.
 
         Raises:
-            HTTPException: If product is not found, not in wishlist, inactive, or out of stock.
+            ProductNotFoundError: If product is not found.
+            WishlistItemNotFoundError: If product is not in wishlist.
+            ProductInactiveError: If product is inactive.
+            InsufficientStockError: If product is out of stock.
         """
         product = await self.uow.products.find_by_id(product_id)
         if not product:
-            raise HTTPException(status_code=404, detail="Product not found.")
+            raise ProductNotFoundError(product_id=product_id)
 
         if not product.is_active:
-            raise HTTPException(status_code=400, detail="Product is no longer available")
+            raise ProductInactiveError(product_name=product.name)
 
         if product.stock < 1:
-            raise HTTPException(status_code=400, detail="Product out of stock.")
+            raise InsufficientStockError(
+                product_name=product.name,
+                requested=1,
+                available=product.stock,
+            )
 
         wishlist_item = await self.uow.wishlists.find_item(user_id, product_id)
         if not wishlist_item:
-            raise HTTPException(status_code=404, detail="Product not found in wishlist.")
+            raise WishlistItemNotFoundError(product_id=product_id, user_id=user_id)
 
         # Add to cart
         user_cart = await self.uow.carts.find_user_cart(user_id)

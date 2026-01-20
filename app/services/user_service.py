@@ -2,8 +2,12 @@
 
 from uuid import UUID
 
-from fastapi import HTTPException, status
-
+from app.core.exceptions import (
+    DuplicateResourceError,
+    InvalidCredentialsError,
+    PasswordMismatchError,
+    UserNotFoundError,
+)
 from app.core.security import create_access_token, hash_password, verify_password
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.user import User
@@ -27,11 +31,11 @@ class UserService:
             User: The user with the specified ID.
 
         Raises:
-            HTTPException: If the user does not exist.
+            UserNotFoundError: If the user does not exist.
         """
         user = await self.uow.users.find_by_id(user_id)
         if not user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+            raise UserNotFoundError(user_id)
         return user
 
     async def create_user(self, data: UserCreate) -> User:
@@ -44,13 +48,15 @@ class UserService:
             User: The created user.
 
         Raises:
-            HTTPException: If the user already exists.
+            DuplicateResourceError: If a user with this email already exists.
         """
         user = await self.uow.users.find_by_email(data.email)
 
         if user:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="User with this email already exists."
+            raise DuplicateResourceError(
+                resource="User",
+                field="email",
+                value=data.email,
             )
 
         hashed_password = hash_password(data.password)
@@ -69,13 +75,11 @@ class UserService:
             tuple[Token, User]: JWT access token and authenticated user object.
 
         Raises:
-            HTTPException: If email or password is incorrect.
+            InvalidCredentialsError: If email or password is incorrect.
         """
         user = await self.uow.users.find_by_email(data.email)
         if not user or not verify_password(data.password, user.hashed_password):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password."
-            )
+            raise InvalidCredentialsError()
 
         token = create_access_token({"sub": str(user.id)})
         return Token(access_token=token), user
@@ -91,14 +95,13 @@ class UserService:
             new_password (str): New password to set (will be hashed).
 
         Raises:
-            HTTPException: If user not found or old password is incorrect.
+            UserNotFoundError: If user not found.
+            PasswordMismatchError: If old password is incorrect.
         """
         user = await self.get_user(user_id)
 
         if not verify_password(old_password, user.hashed_password):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Password mismatch."
-            )
+            raise PasswordMismatchError()
 
         user.hashed_password = hash_password(new_password)
         await self.uow.users.update(user)
@@ -114,7 +117,7 @@ class UserService:
             User: The updated user.
 
         Raises:
-            HTTPException: If the user does not exist.
+            UserNotFoundError: If the user does not exist.
         """
         user = await self.get_user(user_id)
 
@@ -131,7 +134,7 @@ class UserService:
             user_id (UUID): User ID.
 
         Raises:
-            HTTPException: If the user does not exist.
+            UserNotFoundError: If the user does not exist.
         """
         user = await self.get_user(user_id)
         await self.uow.users.delete(user)

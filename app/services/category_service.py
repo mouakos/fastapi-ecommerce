@@ -3,9 +3,9 @@
 # mypy: disable-error-code=return-value
 from uuid import UUID
 
-from fastapi import HTTPException
 from pydantic import HttpUrl
 
+from app.core.exceptions import CategoryNotFoundError, SelfReferenceError
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.category import Category
 from app.schemas.category import CategoryCreate, CategoryUpdate
@@ -39,11 +39,11 @@ class CategoryService:
             Category: The category with the specified ID.
 
         Raises:
-            HTTPException: If the category is not found.
+            CategoryNotFoundError: If the category is not found.
         """
         category = await self.uow.categories.find_by_id(category_id)
         if not category:
-            raise HTTPException(status_code=404, detail="Category not found.")
+            raise CategoryNotFoundError(category_id)
         return category
 
     async def get_category_by_slug(
@@ -59,11 +59,11 @@ class CategoryService:
             Category: The category with the specified slug.
 
         Raises:
-            HTTPException: If the category is not found.
+            CategoryNotFoundError: If the category is not found.
         """
         category = await self.uow.categories.find_by_slug(slug)
         if not category:
-            raise HTTPException(status_code=404, detail="Category not found.")
+            raise CategoryNotFoundError(slug=slug)
         return category
 
     async def create_category(
@@ -79,7 +79,7 @@ class CategoryService:
             Category: The newly created category.
 
         Raises:
-            HTTPException: If the parent category does not exist.
+            CategoryNotFoundError: If the parent category does not exist.
         """
         if data.parent_id:
             # Ensure the parent category exists
@@ -109,17 +109,15 @@ class CategoryService:
             Category: The updated category.
 
         Raises:
-            HTTPException: If the category or new parent category does not exist, or if trying to set itself as parent.
+            CategoryNotFoundError: If the category or new parent category does not exist.
+            SelfReferenceError: If trying to set itself as parent.
         """
         category = await self.get_category_by_id(category_id)
 
         if data.parent_id:
             # Prevent setting itself as parent
             if data.parent_id == category_id:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Category cannot be its own parent.",
-                )
+                raise SelfReferenceError(entity="Category", field="parent")
             # Ensure the new parent category exists
             _ = await self.get_category_by_id(data.parent_id)
 
@@ -143,7 +141,7 @@ class CategoryService:
             category_id (UUID): The ID of the category to delete.
 
         Raises:
-            HTTPException: If the category is not found.
+            CategoryNotFoundError: If the category is not found.
         """
         category = await self.get_category_by_id(category_id)
         await self.uow.categories.delete(category)

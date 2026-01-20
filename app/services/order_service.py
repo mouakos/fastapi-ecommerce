@@ -2,8 +2,12 @@
 
 from uuid import UUID
 
-from fastapi import HTTPException
-
+from app.core.exceptions import (
+    AddressNotFoundError,
+    EmptyCartError,
+    InsufficientStockError,
+    OrderNotFoundError,
+)
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import Order, OrderItem, OrderStatus
 from app.schemas.order import OrderCreate
@@ -28,28 +32,35 @@ class OrderService:
             Order: The created order with PENDING status.
 
         Raises:
-            HTTPException: If addresses are invalid, cart is empty, or products are out of stock.
+            AddressNotFoundError: If billing or shipping address does not exist.
+            EmptyCartError: If the cart is empty.
+            InsufficientStockError: If any product is out of stock.
         """
         # Validate addresses
-        billing_address = await self.uow.addresses.find_by_id(data.billing_address_id)
+        billing_address = await self.uow.addresses.find_user_address(
+            data.billing_address_id, user_id
+        )
         if not billing_address or billing_address.user_id != user_id:
-            raise HTTPException(status_code=400, detail="Invalid billing address.")
+            raise AddressNotFoundError(address_id=data.billing_address_id, user_id=user_id)
 
-        shipping_address = await self.uow.addresses.find_by_id(data.shipping_address_id)
+        shipping_address = await self.uow.addresses.find_user_address(
+            data.shipping_address_id, user_id
+        )
         if not shipping_address or shipping_address.user_id != user_id:
-            raise HTTPException(status_code=400, detail="Invalid shipping address.")
+            raise AddressNotFoundError(address_id=data.shipping_address_id, user_id=user_id)
 
         # Validate cart
         cart = await self.uow.carts.find_user_cart(user_id)
         if not cart or not cart.items:
-            raise HTTPException(status_code=400, detail="Cart is empty.")
+            raise EmptyCartError()
 
         # Validate stock
         for item in cart.items:
             if item.quantity > item.product.stock:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"{item.product_name} out of stock.",
+                raise InsufficientStockError(
+                    product_name=item.product_name,
+                    requested=item.quantity,
+                    available=item.product.stock,
                 )
 
         total_amount = sum(item.unit_price * item.quantity for item in cart.items)
@@ -59,8 +70,6 @@ class OrderService:
             billing_address_id=data.billing_address_id,
             shipping_address_id=data.shipping_address_id,
             total_amount=total_amount,
-            status=OrderStatus.PENDING,
-            payment_status=OrderStatus.PENDING,
             order_number=generate_order_number(),
         )
         created_order = await self.uow.orders.add(new_order)
@@ -97,11 +106,11 @@ class OrderService:
             Order: The order data.
 
         Raises:
-            HTTPException: If the order is not found.
+            OrderNotFoundError: If the order is not found.
         """
         order = await self.uow.orders.find_user_order(order_id, user_id)
         if not order:
-            raise HTTPException(status_code=404, detail="Order not found.")
+            raise OrderNotFoundError(order_id=order_id, user_id=user_id)
         return order
 
     async def get_orders(

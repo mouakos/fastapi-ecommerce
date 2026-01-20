@@ -4,9 +4,15 @@ from typing import Any
 from uuid import UUID
 
 import stripe
-from fastapi import HTTPException
 
 from app.core.config import settings
+from app.core.exceptions import (
+    InvalidTransitionError,
+    OrderNotFoundError,
+    PaymentGatewayError,
+    PaymentNotFoundError,
+    WebhookValidationError,
+)
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import OrderStatus
 from app.models.payment import Payment, PaymentStatus
@@ -37,16 +43,19 @@ class PaymentService:
             str: The URL of the Stripe Checkout Session page.
 
         Raises:
-            HTTPException: If order is not found, not in PENDING status, or Stripe API fails.
+            OrderNotFoundError: If the order is not found.
+            InvalidTransitionError: If the order is not in PENDING status.
+            PaymentGatewayError: If there is an error creating the Stripe session.
         """
         order = await self.uow.orders.find_user_order(order_id, user_id)
         if not order:
-            raise HTTPException(status_code=404, detail="Order not found.")
+            raise OrderNotFoundError(order_id=order_id, user_id=user_id)
 
         if order.status != OrderStatus.PENDING:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Cannot create checkout session for order with status: {order.status}",
+            raise InvalidTransitionError(
+                entity="Order",
+                from_state=order.status.value,
+                to_state=OrderStatus.PENDING,
             )
 
         # Create a checkout session with Stripe
@@ -76,7 +85,7 @@ class PaymentService:
                 idempotency_key=generate_idempotency_key(user_id, order_id),
             )
         except stripe.error.StripeError as e:
-            raise HTTPException(status_code=500, detail=f"Stripe error: {str(e)}") from e
+            raise PaymentGatewayError(message=str(e)) from e
 
         # Create payment record BEFORE user completes payment
         payment = Payment(
@@ -101,7 +110,7 @@ class PaymentService:
             stripe_signature (str): Stripe signature header for event verification.
 
         Raises:
-            HTTPException: If payload is invalid, signature verification fails, or processing errors occur.
+            WebhookValidationError: If payload is invalid or signature verification fails.
         """
         event = None
         try:
@@ -109,9 +118,9 @@ class PaymentService:
                 payload, stripe_signature, settings.stripe_webhook_secret
             )
         except ValueError as e:
-            raise HTTPException(status_code=400, detail="Invalid payload") from e
+            raise WebhookValidationError(reason="Invalid payload") from e
         except stripe.error.SignatureVerificationError as e:
-            raise HTTPException(status_code=400, detail="Invalid signature") from e
+            raise WebhookValidationError(reason="Invalid signature") from e
 
         event_type = event["type"]
 
@@ -132,7 +141,9 @@ class PaymentService:
             session (dict[str, Any]): Stripe checkout session object from webhook.
 
         Raises:
-            HTTPException: If payment/order not found or invalid status transition.
+            PaymentNotFoundError: If the payment record is not found.
+            OrderNotFoundError: If the order is not found.
+            InvalidTransitionError: If the order is not in a valid state for payment processing.
         """
         # Update Order Status
         order_id = UUID(session["metadata"]["order_id"])
@@ -142,10 +153,7 @@ class PaymentService:
         # Find existing payment record (created during checkout)
         payment = await self.uow.payments.find_by_session_id(session_id)
         if not payment:
-            raise HTTPException(
-                status_code=404,
-                detail="Payment not found for this session.",
-            )
+            raise PaymentNotFoundError(session_id=session_id)
 
         # Prevent duplicate processing
         if payment.status == PaymentStatus.SUCCESS:
@@ -154,15 +162,16 @@ class PaymentService:
         # Get order and verify ownership
         order = await self.uow.orders.find_user_order(order_id, user_id)
         if not order:
-            raise HTTPException(status_code=404, detail="Order not found.")
+            raise OrderNotFoundError(order_id=order_id, user_id=user_id)
 
         if order.status == OrderStatus.PAID:
             return  # Idempotent handling
 
         if order.status != OrderStatus.PENDING:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Cannot process payment for order with status: {order.status}",
+            raise InvalidTransitionError(
+                entity="Order",
+                from_state=order.status.value,
+                to_state=OrderStatus.PAID,
             )
 
         order.status = OrderStatus.PAID
