@@ -170,7 +170,7 @@ class ProductInactiveError(ValidationError):
             self.details["product"] = product_name
 
 
-class InvalidCartSessionError(ValidationError):
+class InvalidCartSessionError(ValidationError):  # TODO
     """Invalid cart session."""
 
     def __init__(self, message: str = "Session ID is required for guest cart operations.") -> None:
@@ -183,10 +183,10 @@ class EmptyCartError(ValidationError):
 
     def __init__(self) -> None:
         """Initialize EmptyCartError."""
-        super().__init__(message="Cart is empty. Add items before placing an order.")
+        super().__init__(message="Cart is empty.")
 
 
-class WebhookValidationError(ValidationError):
+class WebhookValidationError(ValidationError):  # TODO
     """Webhook validation failed."""
 
     def __init__(self, reason: str) -> None:
@@ -222,12 +222,20 @@ class InvalidCredentialsError(AuthenticationError):
         super().__init__(message="Invalid email or password.")
 
 
+class IncorrectPasswordError(AuthenticationError):
+    """Incorrect password provided."""
+
+    def __init__(self) -> None:
+        """Initialize IncorrectPasswordError."""
+        super().__init__(message="Incorrect password provided.")
+
+
 class PasswordMismatchError(AuthenticationError):
     """Current password is incorrect."""
 
     def __init__(self) -> None:
         """Initialize PasswordMismatchError."""
-        super().__init__(message="Current password is incorrect.")
+        super().__init__(message="Password mismatch.")
 
 
 # ============================================================================

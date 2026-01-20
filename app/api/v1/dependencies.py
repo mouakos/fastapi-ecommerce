@@ -113,7 +113,7 @@ async def get_current_user(
     user_service: UserServiceDep,
 ) -> User:
     """Get current authenticated user from JWT token."""
-    message = "Could not validate credentials"
+    message = "Could not validate credentials."
 
     if credentials is None or not credentials.credentials:
         raise AuthenticationError(message=message)

@@ -4,6 +4,7 @@ from uuid import UUID
 
 from app.core.exceptions import (
     DuplicateResourceError,
+    IncorrectPasswordError,
     InvalidCredentialsError,
     PasswordMismatchError,
     UserNotFoundError,
@@ -11,7 +12,7 @@ from app.core.exceptions import (
 from app.core.security import create_access_token, hash_password, verify_password
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.user import User
-from app.schemas.user import Login, Token, UserCreate, UserUpdate
+from app.schemas.user import Login, Token, UserCreate, UserPasswordUpdate, UserUpdate
 
 
 class UserService:
@@ -84,26 +85,27 @@ class UserService:
         token = create_access_token({"sub": str(user.id)})
         return Token(access_token=token), user
 
-    async def update_user_password(
-        self, user_id: UUID, old_password: str, new_password: str
-    ) -> None:
+    async def update_user_password(self, user_id: UUID, data: UserPasswordUpdate) -> None:
         """Update user password with verification of current password.
 
         Args:
             user_id (UUID): ID of the user.
-            old_password (str): Current password for verification.
-            new_password (str): New password to set (will be hashed).
+            data (UserPasswordUpdate): Old password, new password, and confirmation.
 
         Raises:
             UserNotFoundError: If user not found.
-            PasswordMismatchError: If old password is incorrect.
+            IncorrectPasswordError: If old password is incorrect.
+            PasswordMismatchError: If new password and confirmation do not match.
         """
         user = await self.get_user(user_id)
 
-        if not verify_password(old_password, user.hashed_password):
+        if not verify_password(data.old_password, user.hashed_password):
+            raise IncorrectPasswordError()
+
+        if data.new_password != data.confirm_password:
             raise PasswordMismatchError()
 
-        user.hashed_password = hash_password(new_password)
+        user.hashed_password = hash_password(data.new_password)
         await self.uow.users.update(user)
 
     async def update_user(self, user_id: UUID, data: UserUpdate) -> User:

@@ -52,7 +52,7 @@ async def change_user_password(
     user_service: UserServiceDep,
 ) -> None:
     """Change the password of the currently authenticated user."""
-    await user_service.update_user_password(current_user.id, data.old_password, data.new_password)
+    await user_service.update_user_password(current_user.id, data)
 
 
 @router.delete(
