@@ -7,7 +7,7 @@ from app.core.exceptions import (
     InvalidTransitionError,
     OrderNotFoundError,
     ReviewNotFoundError,
-    SelfModificationError,
+    SelfActionError,
     UserNotFoundError,
 )
 from app.interfaces.unit_of_work import UnitOfWork
@@ -287,14 +287,14 @@ class AdminService:
 
         Raises:
             UserNotFoundError: If the user is not found.
-            SelfModificationError: If trying to change own role.
+            SelfActionError: If trying to change own role.
         """
         user = await self.uow.users.find_by_id(user_id)
         if not user:
             raise UserNotFoundError(user_id=user_id)
 
         if user_id == current_user_id:
-            raise SelfModificationError(action="changing your own role")
+            raise SelfActionError(action="changing your own role")
 
         if user.role == new_role:
             return

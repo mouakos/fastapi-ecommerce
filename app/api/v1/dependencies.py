@@ -4,10 +4,11 @@ from collections.abc import AsyncGenerator
 from typing import Annotated
 from uuid import uuid4
 
-from fastapi import Depends, HTTPException, Request, Response, status
+from fastapi import Depends, Request, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.core.exceptions import AuthenticationError, AuthorizationError, UserNotFoundError
 from app.core.security import decode_access_token
 from app.db.database import get_session
 from app.interfaces.unit_of_work import UnitOfWork
@@ -112,31 +113,18 @@ async def get_current_user(
     user_service: UserServiceDep,
 ) -> User:
     """Get current authenticated user from JWT token."""
+    message = "Could not validate credentials"
+
     if credentials is None or not credentials.credentials:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing or invalid Authorization header",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise AuthenticationError(message=message)
 
     token_data = decode_access_token(token=credentials.credentials)
     if not token_data:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
+        raise AuthenticationError(message=message)
     try:
         return await user_service.get_user(token_data.user_id)
-    except HTTPException as exc:
-        if exc.status_code == status.HTTP_404_NOT_FOUND:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token.",
-                headers={"WWW-Authenticate": "Bearer"},
-            ) from None
-        raise
+    except UserNotFoundError as exc:
+        raise AuthenticationError(message=message) from exc
 
 
 CurrentUserDep = Annotated[User, Depends(get_current_user)]
@@ -149,10 +137,8 @@ async def get_optional_current_user(
     """Get current authenticated user from JWT token, or None if not authenticated."""
     try:
         return await get_current_user(credentials, user_service)
-    except HTTPException as exc:
-        if exc.status_code == status.HTTP_401_UNAUTHORIZED:
-            return None
-        raise
+    except AuthenticationError:
+        return None
 
 
 OptionalCurrentUserDep = Annotated[User | None, Depends(get_optional_current_user)]
@@ -213,10 +199,7 @@ class RoleChecker:
         if current_user.role in self.allowed_roles:
             return True
 
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have permission to perform this action.",
-        )
+        raise AuthorizationError()
 
 
 AdminRoleDep = Depends(RoleChecker([UserRole.ADMIN]))
