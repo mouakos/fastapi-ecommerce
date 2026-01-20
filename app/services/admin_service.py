@@ -174,11 +174,17 @@ class AdminService:
         return orders, total
 
     async def update_order_status(self, order_id: UUID, new_status: OrderStatus) -> None:
-        """Update the status of an order.
+        """Update order status with validation and timestamp tracking.
+
+        Validates status transitions and updates corresponding timestamp fields
+        (shipped_at, paid_at, canceled_at, delivered_at).
 
         Args:
             order_id (UUID): ID of the order to update.
-            new_status (OrderStatus): New status to set for the order.
+            new_status (OrderStatus): New status (PENDING, PAID, SHIPPED, DELIVERED, CANCELED).
+
+        Raises:
+            HTTPException: If order not found or status transition is invalid.
         """
         order = await self.uow.orders.find_by_id(order_id)
         if not order:
@@ -330,14 +336,19 @@ class AdminService:
         return reviews, total
 
     async def approve_review(self, review_id: UUID, moderator_id: UUID) -> Review:
-        """Approve a product review.
+        """Approve a review to make it publicly visible.
+
+        Sets status to APPROVED and records moderator ID and timestamp.
 
         Args:
             review_id (UUID): ID of the review to approve.
-            moderator_id (UUID): ID of the admin approving the review.
+            moderator_id (UUID): ID of the admin performing the approval.
 
         Returns:
-            Review: The updated review instance.
+            Review: The approved review with updated moderation metadata.
+
+        Raises:
+            HTTPException: If review is not found.
         """
         review = await self.uow.reviews.find_by_id(review_id)
         if not review:
@@ -448,13 +459,13 @@ class AdminService:
     async def get_low_stock_products(
         self, threshold: int = 10, is_active: bool | None = None, page: int = 1, page_size: int = 10
     ) -> tuple[list[Product], int]:
-        """Get products that are low in stock.
+        """Get products with stock below specified threshold for inventory alerts.
 
         Args:
-            threshold (int, optional): Stock threshold. Defaults to 10.
-            is_active (bool | None, optional): Filter by active status. Defaults to None.
-            page (int, optional): Page number. Defaults to 1.
-            page_size (int, optional): Number of products per page. Defaults to 10.
+            threshold (int): Stock quantity threshold for low stock alert. Defaults to 10.
+            is_active (bool | None): Filter by active status (True, False, or None for all). Defaults to None.
+            page (int): Page number for pagination. Defaults to 1.
+            page_size (int): Items per page. Defaults to 10.
 
         Returns:
             tuple[list[Product], int]: List of low stock products and total count.

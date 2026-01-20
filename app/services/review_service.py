@@ -17,18 +17,17 @@ class ReviewService:
         self.uow = uow
 
     async def create_review(self, user_id: UUID, data: ReviewCreate) -> Review:
-        """Create a new review for a product.
+        """Create a new product review with PENDING status.
 
         Args:
-            user_id (UUID): The ID of the user creating the review.
-            data (ReviewCreate): Data for the new review.
+            user_id (UUID): ID of the user creating the review.
+            data (ReviewCreate): Review data including rating (1-5) and optional comment.
 
         Returns:
-            Review: The created review.
+            Review: The created review with PENDING status awaiting admin approval.
 
         Raises:
-            HTTPException: Product does not exist or user has already reviewed the product or
-                has not purchased the product.
+            HTTPException: If product does not exist or user has already reviewed the product.
         """
         product = await self.uow.products.find_by_id(data.product_id)
         if not product:
@@ -107,18 +106,18 @@ class ReviewService:
         return review
 
     async def update_review(self, review_id: UUID, user_id: UUID, data: ReviewUpdate) -> Review:
-        """Update a review.
+        """Update a review and reset approval status to PENDING.
 
         Args:
-            review_id (UUID): The ID of the review to update.
-            user_id (UUID): The ID of the current user.
-            data (ReviewUpdate): Updated data for the review.
+            review_id (UUID): ID of the review to update.
+            user_id (UUID): ID of the user (must be review author).
+            data (ReviewUpdate): Updated rating or comment.
 
         Returns:
-            Review: The updated review.
+            Review: The updated review with status reset to PENDING.
 
         Raises:
-            HTTPException: If the review is not found.
+            HTTPException: If the review is not found or user is not the author.
         """
         review = await self.get_review(review_id, user_id)
 

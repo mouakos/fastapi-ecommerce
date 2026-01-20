@@ -61,16 +61,16 @@ class UserService:
         return await self.uow.users.add(new_user)
 
     async def login(self, data: Login) -> tuple[Token, User]:
-        """Authenticate a user.
+        """Authenticate a user and generate JWT access token.
 
         Args:
-            data (Login): Login data.
+            data (Login): Login credentials (email and password).
 
         Returns:
-            tuple[Token, User]: Access token and user.
+            tuple[Token, User]: JWT access token and authenticated user object.
 
         Raises:
-            HTTPException: If the password or email is invalid.
+            HTTPException: If email or password is incorrect.
         """
         user = await self.uow.users.find_by_email(data.email)
         if not user or not verify_password(data.password, user.hashed_password):
@@ -84,15 +84,15 @@ class UserService:
     async def update_user_password(
         self, user_id: UUID, old_password: str, new_password: str
     ) -> None:
-        """Update user password.
+        """Update user password with verification of current password.
 
         Args:
-            user_id (UUID): User ID.
-            old_password (str): Current password.
-            new_password (str): New password.
+            user_id (UUID): ID of the user.
+            old_password (str): Current password for verification.
+            new_password (str): New password to set (will be hashed).
 
         Raises:
-            HTTPException: If the user does not exist or the old password is incorrect.
+            HTTPException: If user not found or old password is incorrect.
         """
         user = await self.get_user(user_id)
 

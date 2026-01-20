@@ -25,16 +25,19 @@ class PaymentService:
     async def create_checkout_session(
         self, user_id: UUID, order_id: UUID, success_url: str, cancel_url: str
     ) -> str:
-        """Create a Stripe checkout session for the specified order.
+        """Create a Stripe Checkout Session for the specified order.
 
         Args:
-            user_id (UUID): The ID of the user making the payment.
-            order_id (UUID): The ID of the order for which to create the checkout session.
+            user_id (UUID): ID of the user making the payment.
+            order_id (UUID): ID of the order to create checkout session for (must be PENDING).
             success_url (str): URL to redirect to upon successful payment.
-            cancel_url (str): URL to redirect to if the payment is canceled.
+            cancel_url (str): URL to redirect to if payment is canceled.
 
         Returns:
-            str: The URL of the created checkout session.
+            str: The URL of the Stripe Checkout Session page.
+
+        Raises:
+            HTTPException: If order is not found, not in PENDING status, or Stripe API fails.
         """
         order = await self.uow.orders.find_user_order(order_id, user_id)
         if not order:
@@ -88,11 +91,17 @@ class PaymentService:
         return str(session.url)
 
     async def process_stripe_webhook(self, payload: bytes, stripe_signature: str) -> None:
-        """Process  Stripe webhook events.
+        """Process Stripe webhook events for payment confirmations.
+
+        Handles checkout.session.completed events to update order status to PAID,
+        mark payment as SUCCESS, and reduce product stock.
 
         Args:
-            payload (bytes): The data from the webhook event.
-            stripe_signature (str): The Stripe signature for verifying the event.
+            payload (bytes): Raw webhook event data from Stripe.
+            stripe_signature (str): Stripe signature header for event verification.
+
+        Raises:
+            HTTPException: If payload is invalid, signature verification fails, or processing errors occur.
         """
         event = None
         try:
@@ -114,6 +123,17 @@ class PaymentService:
         self,
         session: dict[str, Any],
     ) -> None:
+        """Handle successful payment from Stripe webhook.
+
+        Updates order status to PAID, marks payment as SUCCESS, and reduces product stock.
+        Implements idempotent processing to handle duplicate webhook deliveries safely.
+
+        Args:
+            session (dict[str, Any]): Stripe checkout session object from webhook.
+
+        Raises:
+            HTTPException: If payment/order not found or invalid status transition.
+        """
         # Update Order Status
         order_id = UUID(session["metadata"]["order_id"])
         user_id = UUID(session["metadata"]["user_id"])

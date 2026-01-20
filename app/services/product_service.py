@@ -34,26 +34,26 @@ class ProductService:
         page: int = 1,
         page_size: int = 10,
     ) -> tuple[list[Product], int]:
-        """Get all products with optional filters, sorting, and pagination.
+        """Get all active products with optional filters, sorting, and pagination.
 
         Args:
-            page (int, optional): Page number for pagination.
-            page_size (int, optional): Number of items per page for pagination.
-            search (str | None): Search query to filter products by name or description.
-            category_id (UUID | None): Category ID to filter products.
-            category_slug (str | None): Category slug to filter products.
-            min_price (Decimal | None): Minimum price to filter products.
-            max_price (Decimal | None): Maximum price to filter products.
-            min_rating (float | None): Minimum average rating to filter products.
-            availability (str, optional): Stock availability filter ("in_stock", "out_of_stock", "all").
-            sort_by (str, optional): Field to sort by (e.g., "price", "name", "rating").
-            sort_order (str, optional): Sort order ("asc" or "desc").
+            search (str | None): Search query to filter by name or description. Defaults to None.
+            category_id (UUID | None): Filter by category ID. Defaults to None.
+            category_slug (str | None): Filter by category slug. Defaults to None.
+            min_price (Decimal | None): Minimum price filter. Defaults to None.
+            max_price (Decimal | None): Maximum price filter. Defaults to None.
+            min_rating (float | None): Minimum average rating filter. Defaults to None.
+            availability (str): Stock filter ("in_stock", "out_of_stock", "all"). Defaults to "all".
+            sort_by (str): Field to sort by. Defaults to "created_at".
+            sort_order (str): Sort order ("asc" or "desc"). Defaults to "desc".
+            page (int): Page number for pagination. Defaults to 1.
+            page_size (int): Items per page. Defaults to 10.
 
         Returns:
-            tuple[list[Product], int]: A list of products and the total number of items.
+            tuple[list[Product], int]: List of active products and total count.
 
         Raises:
-            HTTPException: If the category does not exist.
+            HTTPException: If the specified category does not exist.
         """
         if category_id:
             category = await self.uow.categories.find_by_id(category_id)
@@ -164,17 +164,16 @@ class ProductService:
         self,
         data: ProductCreate,
     ) -> Product:
-        """Create a new product.
+        """Create a new product with auto-generated slug and SKU.
 
         Args:
-            session (AsyncSession): The database session.
-            data (ProductCreate): The product data.
+            data (ProductCreate): Product data including name, price, stock, and category.
 
         Returns:
             Product: The created product.
 
         Raises:
-            HTTPException: If the category does not exist.
+            HTTPException: If the specified category does not exist.
         """
         # Validate category existence if category_id is provided
         if data.category_id:

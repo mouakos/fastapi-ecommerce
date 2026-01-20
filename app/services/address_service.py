@@ -59,12 +59,14 @@ class AddressService:
         """Create a new address for a user.
 
         Args:
-            user_id (UUID): ID of the user to whom the address belongs.
-            data (AddressCreate): The address data to create.
+            user_id (UUID): ID of the user.
+            data (AddressCreate): Address data including street, city, country, etc.
 
         Returns:
             Address: The created address.
 
+        Raises:
+            HTTPException: If user has reached maximum address limit (10).
         """
         count = await self.uow.addresses.count(user_id=user_id)
         if count >= MAX_ADDRESSES_PER_USER:

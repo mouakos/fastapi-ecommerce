@@ -17,11 +17,14 @@ class WishlistService:
         self.uow = uow
 
     async def add_wishlist_item(self, user_id: UUID, product_id: UUID) -> None:
-        """Add a product to the user's wishlist.
+        """Add a product to the user's wishlist (idempotent).
 
         Args:
-            user_id (UUID): User ID.
-            product_id (UUID): Product ID.
+            user_id (UUID): ID of the user.
+            product_id (UUID): ID of the product to add.
+
+        Raises:
+            HTTPException: If the product does not exist.
         """
         product = await self.uow.products.find_by_id(product_id)
         if not product:
@@ -80,11 +83,16 @@ class WishlistService:
         return await self.uow.wishlists.count(user_id=user_id)
 
     async def move_wishlist_item_to_cart(self, user_id: UUID, product_id: UUID) -> None:
-        """Move a product from the wishlist to the cart.
+        """Move a product from wishlist to cart and remove from wishlist.
+
+        Adds product to cart with quantity of 1, or increments quantity if already in cart.
 
         Args:
-            user_id (UUID): User ID.
-            product_id (UUID): Product ID.
+            user_id (UUID): ID of the user.
+            product_id (UUID): ID of the product to move.
+
+        Raises:
+            HTTPException: If product is not found, not in wishlist, inactive, or out of stock.
         """
         product = await self.uow.products.find_by_id(product_id)
         if not product:

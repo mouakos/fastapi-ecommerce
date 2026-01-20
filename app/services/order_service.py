@@ -18,7 +18,18 @@ class OrderService:
         self.uow = uow
 
     async def create_order(self, user_id: UUID, data: OrderCreate) -> Order:
-        """Create a new order for the user."""
+        """Create a new order from the user's cart.
+
+        Args:
+            user_id (UUID): ID of the user placing the order.
+            data (OrderCreate): Order creation data including billing and shipping addresses.
+
+        Returns:
+            Order: The created order with PENDING status.
+
+        Raises:
+            HTTPException: If addresses are invalid, cart is empty, or products are out of stock.
+        """
         # Validate addresses
         billing_address = await self.uow.addresses.find_by_id(data.billing_address_id)
         if not billing_address or billing_address.user_id != user_id:

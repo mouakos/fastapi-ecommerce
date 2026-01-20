@@ -35,18 +35,18 @@ class CartService:
     async def add_cart_item(
         self, user_id: UUID | None, session_id: str | None, data: CartItemCreate
     ) -> Cart:
-        """Add an item to the cart.
+        """Add a product to the cart or increment quantity if already exists.
 
         Args:
-            user_id (UUID | None): User ID.
-            session_id (str | None): Session ID.
-            data (CartItemCreate): Data for the cart item.
+            user_id (UUID | None): ID of authenticated user, or None for guest.
+            session_id (str | None): Session ID for guest cart.
+            data (CartItemCreate): Product ID and quantity to add.
 
         Returns:
-            Cart: Updated cart instance.
+            Cart: Updated cart with added item.
 
         Raises:
-            HTTPException: If the product is out of stock or not available.
+            HTTPException: If product not found, inactive, or insufficient stock.
         """
         cart = await self._get_or_create_cart(user_id, session_id)
 
@@ -181,11 +181,13 @@ class CartService:
         return await self.uow.carts.update(cart)
 
     async def merge_carts(self, user_id: UUID, session_id: str) -> None:
-        """Merge carts associated with a user ID and a session ID into the user's cart and delete the guest cart.
+        """Merge guest cart into user cart after authentication.
+
+        Combines quantities for matching products and deletes the guest cart.
 
         Args:
-            user_id (UUID): User ID.
-            session_id (str): Session ID.
+            user_id (UUID): ID of the authenticated user.
+            session_id (str): Session ID of the guest cart to merge.
         """
         guest_cart = await self.uow.carts.find_session_cart(session_id)
 
