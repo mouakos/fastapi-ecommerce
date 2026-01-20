@@ -33,14 +33,14 @@ logger.add(
 
 # Configure file logging
 logger.add(
-    log_dir / f"{datetime.now().strftime('%Y-%m-%d')}.json",
+    log_dir / f"{datetime.now().strftime('%Y-%m-%d')}.jsonl",
     serialize=True,
     rotation="10 MB",
     retention="10 days",
     compression="zip",
     level="INFO",
     enqueue=True,
-    format=LOG_FORMAT,
+    # format=LOG_FORMAT, # JSON logs do not need formatting
 )
 
 # Export the logger instance

@@ -4,18 +4,12 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from app.api.exception_handlers import register_exception_handlers
+from app.api.middleware import register_middleware
 from app.api.v1.routers import router
-from app.core.config import settings
 from app.db.database import async_engine, init_db
-
-
-class RootRead(BaseModel):
-    """Schema for root response."""
-
-    message: str
 
 
 @asynccontextmanager
@@ -109,13 +103,15 @@ app = FastAPI(
     ],
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cross_origin_urls.split(",") if settings.cross_origin_urls else ["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
+register_exception_handlers(app)
+register_middleware(app)
+
+
+class RootRead(BaseModel):
+    """Schema for root response."""
+
+    message: str
 
 
 @app.get("/", tags=["Root"], response_model=RootRead)
