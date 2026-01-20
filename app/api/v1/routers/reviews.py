@@ -18,8 +18,8 @@ router = APIRouter(prefix="/reviews", tags=["Reviews"])
     "",
     response_model=ReviewRead,
     status_code=status.HTTP_201_CREATED,
-    summary="Add product review",
-    description="Submit a new review for a product.",
+    summary="Create product review",
+    description="Submit a new review with rating (1-5 stars) and optional comment for a product. Review status will be PENDING until approved by an administrator.",
 )
 async def create_review(
     data: ReviewCreate,
@@ -78,7 +78,7 @@ async def get_review(
     "/{review_id}",
     response_model=ReviewRead,
     summary="Update review",
-    description="Update an existing review's rating or comment.",
+    description="Update an existing review's rating or comment. Only the review author can modify their own review.",
 )
 async def update_review(
     review_id: UUID,
@@ -94,7 +94,7 @@ async def update_review(
     "/{review_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete review",
-    description="Permanently delete a review.",
+    description="Permanently delete a review. Only the review author can delete their own review. This action cannot be undone.",
 )
 async def delete_review(
     review_id: UUID,

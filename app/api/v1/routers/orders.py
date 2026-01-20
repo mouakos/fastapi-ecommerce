@@ -18,8 +18,8 @@ router = APIRouter(prefix="/orders", tags=["Orders"])
 @router.get(
     "",
     response_model=Page[OrderRead],
-    summary="Get all orders",
-    description="Retrieve all orders for the authenticated user, sorted by creation date (newest first).",
+    summary="List user orders",
+    description="Retrieve paginated list of orders for the authenticated user with optional filtering by status and sorting options.",
 )
 async def get_orders(
     current_user: CurrentUserDep,
@@ -47,8 +47,8 @@ async def get_orders(
 @router.post(
     "/place-order",
     response_model=OrderRead,
-    summary="Create a new order",
-    description="Create a new order from the user's cart and specified shipping/billing addresses. The cart will be emptied after successful order creation.",
+    summary="Place order",
+    description="Create a new order from the user's cart with specified shipping and billing addresses. The cart will be cleared after successful order creation. Order status will be PENDING until payment is confirmed.",
 )
 async def create_order(
     data: OrderCreate,
@@ -62,14 +62,13 @@ async def create_order(
 @router.get(
     "/{order_id}",
     response_model=OrderRead,
-    summary="Get order by ID",
-    description="Retrieve detailed information about a specific order. Only the order owner can access this endpoint.",
+    summary="Get order details",
+    description="Retrieve detailed information about a specific order including items, addresses, and payment status. Only the order owner can access this endpoint.",
 )
 async def get_order(
     order_id: UUID,
-    _: CurrentUserDep,
-    order_service: OrderServiceDep,
     current_user: CurrentUserDep,
+    order_service: OrderServiceDep,
 ) -> OrderRead:
     """Get an order by its ID for the current user."""
     return await order_service.get_order(order_id, current_user.id)

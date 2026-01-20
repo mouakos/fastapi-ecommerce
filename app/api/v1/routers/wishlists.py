@@ -19,7 +19,7 @@ router = APIRouter(prefix="/wishlist", tags=["Wishlist"])
 @router.get(
     "/count",
     summary="Get wishlist item count",
-    description="Retrieve the total number of items currently in wishlist.",
+    description="Retrieve the total number of products currently saved in the user's wishlist.",
     response_model=WishlistStatsRead,
 )
 async def get_wishlist_item_count(
@@ -33,8 +33,8 @@ async def get_wishlist_item_count(
 
 @router.get(
     "",
-    summary="Get user's wishlist",
-    description="Retrieve all items in the current user's wishlist.",
+    summary="List wishlist items",
+    description="Retrieve paginated list of all products in the user's wishlist with product details including price, stock, and availability.",
     response_model=Page[WishlistItemRead],
 )
 async def get_wishlist_items(

@@ -172,8 +172,8 @@ async def update_user_role(
 @router.get(
     "/orders",
     response_model=Page[OrderAdminRead],
-    summary="Get all orders",
-    description="Get all orders with optional filters, sorting, and pagination.",
+    summary="List all orders (Admin)",
+    description="Retrieve paginated list of all orders across all users with optional filtering by status and user, plus sorting options. Admin access required.",
 )
 async def get_orders(
     admin_service: AdminServiceDep,
@@ -234,8 +234,8 @@ async def update_order_status(
 @router.get(
     "/reviews",
     response_model=Page[ReviewAdminRead],
-    summary="Get all reviews",
-    description="Get all reviews with optional filters, sorting, and pagination.",
+    summary="List all reviews (Admin)",
+    description="Retrieve paginated list of all reviews across all products and users with optional filtering by status, rating, user, and product. Includes moderation information. Admin access required.",
 )
 async def get_reviews(
     admin_service: AdminServiceDep,
@@ -314,8 +314,8 @@ async def approve_review(
 @router.patch(
     "/reviews/{review_id}",
     response_model=ReviewAdminRead,
-    summary="Reject a review",
-    description="Reject a review, marking it as inappropriate or not meeting guidelines.",
+    summary="Reject review",
+    description="Reject a review and prevent it from being displayed publicly. Use for reviews that violate guidelines or are inappropriate.",
 )
 async def reject_review(
     review_id: UUID,

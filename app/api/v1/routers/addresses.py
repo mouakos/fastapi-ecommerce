@@ -90,8 +90,8 @@ async def set_default_billing_address(
 @router.delete(
     "/{address_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete user address",
-    description="Remove an address from the user's account.",
+    summary="Delete address",
+    description="Remove an address from the user's account. Only the address owner can delete it.",
 )
 async def delete_address(
     address_id: UUID,

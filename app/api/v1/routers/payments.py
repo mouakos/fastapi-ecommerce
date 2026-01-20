@@ -12,8 +12,8 @@ router = APIRouter(prefix="/payments", tags=["Payments"])
 # Checkout session creation
 @router.post(
     "/checkout-session",
-    summary="Create checkout session",
-    description="Create a Stripe checkout session for a specific order. Returns the session URL for redirecting the user to complete payment.",
+    summary="Create Stripe checkout session",
+    description="Create a Stripe Checkout Session for a specific order. Returns the hosted checkout page URL where the user can securely complete payment. The order must be in PENDING status.",
     response_model=CheckoutResponse,
 )
 async def create_checkout_session(
@@ -35,8 +35,8 @@ async def create_checkout_session(
 @router.post(
     "/stripe-webhook",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Handle Stripe webhooks",
-    description="Process Stripe webhook events for payment confirmations and status updates. This endpoint is called by Stripe, not by clients.",
+    summary="Stripe webhook handler",
+    description="Process Stripe webhook events for payment confirmations. Handles checkout.session.completed events to update order status and reduce product stock. This endpoint is called by Stripe servers, not by clients.",
 )
 async def stripe_webhook(
     request: Request,
@@ -57,8 +57,8 @@ async def stripe_webhook(
 @router.get(
     "/success",
     response_model=str,
-    summary="Payment success page",
-    description="Example success page after payment.",
+    summary="Payment success redirect",
+    description="Redirect page after successful payment completion. For testing purposes only - production should redirect to a frontend URL.",
 )
 def success_page(session_id: str) -> str:
     """Example success page after payment."""
@@ -68,8 +68,8 @@ def success_page(session_id: str) -> str:
 @router.get(
     "/cancel",
     response_model=str,
-    summary="Payment cancel page",
-    description="Example cancel page after payment.",
+    summary="Payment cancellation redirect",
+    description="Redirect page when payment is cancelled by user. For testing purposes only - production should redirect to a frontend URL.",
 )
 def cancel_page() -> str:
     """Example cancel page after payment."""
