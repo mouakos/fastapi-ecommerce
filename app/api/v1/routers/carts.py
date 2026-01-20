@@ -15,7 +15,6 @@ from app.schemas.cart import CartItemCreate, CartItemUpdate, CartRead
 router = APIRouter(prefix="/cart", tags=["Cart"])
 
 
-# Cart operations
 @router.get(
     "",
     response_model=CartRead,
@@ -28,7 +27,7 @@ async def get_cart(
     cart_service: CartServiceDep,
 ) -> CartRead:
     """Get the current user's cart or session cart."""
-    return await cart_service.get_or_create(
+    return await cart_service.get_or_create_cart(
         user_id=current_user.id if current_user else None,
         session_id=session_id,
     )
@@ -40,33 +39,32 @@ async def get_cart(
     summary="Clear cart",
     description="Remove all items from the cart. This action cannot be undone.",
 )
-async def clear_cart(
+async def clear_cart_items(
     session_id: CartSessionIdOrCreateDep,
     current_user: OptionalCurrentUserDep,
     cart_service: CartServiceDep,
 ) -> CartRead:
     """Clear all items from the cart."""
-    return await cart_service.clear(
+    return await cart_service.clear_cart_items(
         user_id=current_user.id if current_user else None,
         session_id=session_id,
     )
 
 
-# Cart item operations
 @router.post(
     "/items",
     response_model=CartRead,
     summary="Add item to cart",
     description="Add a product to the cart with the specified quantity. If the item already exists, the quantities will be combined.",
 )
-async def add_item(
+async def add_item_to_cart(
     data: CartItemCreate,
     session_id: CartSessionIdOrCreateDep,
     current_user: OptionalCurrentUserDep,
     cart_service: CartServiceDep,
 ) -> CartRead:
     """Add an item to the cart."""
-    return await cart_service.add_item(
+    return await cart_service.add_cart_item(
         user_id=current_user.id if current_user else None,
         session_id=session_id,
         data=data,
@@ -79,7 +77,7 @@ async def add_item(
     summary="Update cart item quantity",
     description="Update the quantity of a specific product in the cart. Set quantity to 0 to remove the item.",
 )
-async def update_item(
+async def update_item_in_cart(
     product_id: UUID,
     data: CartItemUpdate,
     session_id: CartSessionIdOrCreateDep,
@@ -87,7 +85,7 @@ async def update_item(
     cart_service: CartServiceDep,
 ) -> CartRead:
     """Update the quantity of a cart item."""
-    return await cart_service.update_item(
+    return await cart_service.update_cart_item(
         user_id=current_user.id if current_user else None,
         session_id=session_id,
         product_id=product_id,
@@ -101,14 +99,14 @@ async def update_item(
     summary="Remove item from cart",
     description="Remove a specific product from the cart completely, regardless of quantity.",
 )
-async def remove_item(
+async def remove_item_from_cart(
     product_id: UUID,
     session_id: CartSessionIdOrCreateDep,
     current_user: OptionalCurrentUserDep,
     cart_service: CartServiceDep,
 ) -> CartRead:
     """Remove an item from the cart."""
-    return await cart_service.remove_item(
+    return await cart_service.remove_cart_item(
         user_id=current_user.id if current_user else None,
         session_id=session_id,
         product_id=product_id,

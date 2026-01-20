@@ -19,11 +19,9 @@ class ProductService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def list_all(
+    async def get_products(
         self,
         *,
-        page: int = 1,
-        page_size: int = 10,
         search: str | None = None,
         category_id: UUID | None = None,
         category_slug: str | None = None,
@@ -33,8 +31,10 @@ class ProductService:
         availability: str = "all",
         sort_by: str = "created_at",
         sort_order: str = "desc",
+        page: int = 1,
+        page_size: int = 10,
     ) -> tuple[list[Product], int]:
-        """List all products with optional filters, sorting, and pagination.
+        """Get all products with optional filters, sorting, and pagination.
 
         Args:
             page (int, optional): Page number for pagination.
@@ -81,8 +81,8 @@ class ProductService:
         )
         return products, total
 
-    async def list_autocomplete_suggestions(self, query: str, limit: int = 10) -> list[str]:
-        """List autocomplete suggestions for product names based on a search query.
+    async def get_products_autocomplete_suggestions(self, query: str, limit: int = 10) -> list[str]:
+        """Get autocomplete suggestions for product names based on a search query.
 
         Args:
             query (str): The search query string.
@@ -98,11 +98,11 @@ class ProductService:
             raise HTTPException(status_code=400, detail="Query must be at least 2 characters long.")
         return await self.uow.products.list_autocomplete_suggestions(query, limit)
 
-    async def find_by_id(
+    async def get_product_by_id(
         self,
         product_id: UUID,
     ) -> Product:
-        """Find a product by its ID.
+        """Get a product by its ID.
 
         Args:
             product_id (UUID): The ID of the product to find.
@@ -118,8 +118,8 @@ class ProductService:
             raise HTTPException(status_code=404, detail="Product not found.")
         return product
 
-    async def calculate_average_rating(self, product_id: UUID) -> float | None:
-        """Calculate the average rating for a product.
+    async def get_product_average_rating(self, product_id: UUID) -> float | None:
+        """Get the average rating for a product.
 
         Args:
             product_id (UUID): The ID of the product.
@@ -129,8 +129,8 @@ class ProductService:
         """
         return await self.uow.products.calculate_average_rating(product_id)
 
-    async def count_reviews(self, product_id: UUID) -> int:
-        """Count the total number of reviews for a product.
+    async def get_product_review_count(self, product_id: UUID) -> int:
+        """Get the total number of reviews for a product.
 
         Args:
             product_id (UUID): The ID of the product.
@@ -140,11 +140,11 @@ class ProductService:
         """
         return await self.uow.products.count_reviews(product_id)
 
-    async def find_by_slug(
+    async def get_product_by_slug(
         self,
         slug: str,
     ) -> Product:
-        """Find a product by its slug.
+        """Get a product by its slug.
 
         Args:
             slug (str): The slug of the product to find.
@@ -160,7 +160,7 @@ class ProductService:
             raise HTTPException(status_code=404, detail="Product not found.")
         return product
 
-    async def create(
+    async def create_product(
         self,
         data: ProductCreate,
     ) -> Product:
@@ -193,7 +193,7 @@ class ProductService:
 
         return await self.uow.products.add(new_product)
 
-    async def update(
+    async def update_product(
         self,
         product_id: UUID,
         data: ProductUpdate,
@@ -210,9 +210,7 @@ class ProductService:
         Raises:
             HTTPException: If the product or category does not exist.
         """
-        product = await self.uow.products.find_by_id(product_id)
-        if not product:
-            raise HTTPException(status_code=404, detail="Product not found.")
+        product = await self.get_product_by_id(product_id)
 
         # Validate category existence if category_id is provided
         if data.category_id:
@@ -229,7 +227,7 @@ class ProductService:
 
         return await self.uow.products.update(product)
 
-    async def delete(
+    async def delete_product(
         self,
         product_id: UUID,
     ) -> None:
@@ -241,7 +239,5 @@ class ProductService:
         Raises:
             HTTPException: If the product does not exist.
         """
-        product = await self.uow.products.find_by_id(product_id)
-        if not product:
-            raise HTTPException(status_code=404, detail="Product not found.")
+        product = await self.get_product_by_id(product_id)
         await self.uow.products.delete(product)

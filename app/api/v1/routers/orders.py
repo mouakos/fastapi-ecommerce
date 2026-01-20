@@ -15,7 +15,6 @@ from app.utils.pagination import build_page
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
 
-# Collection paths
 @router.get(
     "",
     response_model=Page[OrderRead],
@@ -34,8 +33,8 @@ async def list_all(
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
 ) -> Page[OrderRead]:
     """List all orders for the current user."""
-    orders, total = await order_service.list_all(
-        current_user.id,
+    orders, total = await order_service.get_orders(
+        user_id=current_user.id,
         page=page,
         page_size=page_size,
         status=status,
@@ -57,10 +56,9 @@ async def create(
     order_service: OrderServiceDep,
 ) -> OrderRead:
     """Create a new order for the current user."""
-    return await order_service.create(current_user.id, data)
+    return await order_service.create_order(current_user.id, data)
 
 
-# Single order paths
 @router.get(
     "/{order_id}",
     response_model=OrderRead,
@@ -74,4 +72,4 @@ async def get(
     current_user: CurrentUserDep,
 ) -> OrderRead:
     """Retrieve an order by its ID for the current user."""
-    return await order_service.find_by_id(order_id, current_user.id)
+    return await order_service.get_order(order_id, current_user.id)

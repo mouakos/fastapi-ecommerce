@@ -11,18 +11,17 @@ from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
 router = APIRouter(prefix="/categories", tags=["Categories"])
 
 
-# Collection paths
 @router.get(
     "",
     response_model=list[CategoryRead],
     summary="List categories",
     description="Retrieve all product categories with their hierarchy information.",
 )
-async def list_all(
+async def get_categories(
     category_service: CategoryServiceDep,
 ) -> list[CategoryRead]:
     """List all categories."""
-    return await category_service.list_all()
+    return await category_service.get_categories()
 
 
 @router.post(
@@ -33,21 +32,24 @@ async def list_all(
     description="Create a new product category. Admin access required.",
     dependencies=[AdminRoleDep],
 )
-async def create(data: CategoryCreate, category_service: CategoryServiceDep) -> CategoryRead:
+async def create_category(
+    data: CategoryCreate, category_service: CategoryServiceDep
+) -> CategoryRead:
     """Create a new category."""
-    return await category_service.create(data)
+    return await category_service.create_category(data)
 
 
-# Specific lookup paths (before parameterized paths)
 @router.get(
     "/id/{category_id}",
     response_model=CategoryRead,
     summary="Get category by ID",
     description="Retrieve a specific category using its UUID.",
 )
-async def get(category_id: UUID, category_service: CategoryServiceDep) -> CategoryRead:
+async def get_category_by_id(
+    category_id: UUID, category_service: CategoryServiceDep
+) -> CategoryRead:
     """Retrieve a category by its ID."""
-    return await category_service.find_by_id(category_id)
+    return await category_service.get_category_by_id(category_id)
 
 
 @router.get(
@@ -56,12 +58,11 @@ async def get(category_id: UUID, category_service: CategoryServiceDep) -> Catego
     summary="Get category by slug",
     description="Retrieve a specific category using its URL-friendly slug.",
 )
-async def get_by_slug(slug: str, category_service: CategoryServiceDep) -> CategoryRead:
+async def get_category_by_slug(slug: str, category_service: CategoryServiceDep) -> CategoryRead:
     """Retrieve a category by its slug."""
-    return await category_service.find_by_slug(slug)
+    return await category_service.get_category_by_slug(slug)
 
 
-# Parameterized admin operations
 @router.patch(
     "/{category_id}",
     response_model=CategoryRead,
@@ -69,13 +70,13 @@ async def get_by_slug(slug: str, category_service: CategoryServiceDep) -> Catego
     description="Update an existing category's information. Admin access required.",
     dependencies=[AdminRoleDep],
 )
-async def update(
+async def update_category(
     category_id: UUID,
     data: CategoryUpdate,
     category_service: CategoryServiceDep,
 ) -> CategoryRead:
     """Update a category by its ID."""
-    return await category_service.update(category_id, data)
+    return await category_service.update_category(category_id, data)
 
 
 @router.delete(
@@ -85,6 +86,6 @@ async def update(
     description="Permanently delete a category. Admin access required. This action cannot be undone.",
     dependencies=[AdminRoleDep],
 )
-async def delete(category_id: UUID, category_service: CategoryServiceDep) -> None:
+async def delete_category(category_id: UUID, category_service: CategoryServiceDep) -> None:
     """Delete a category by its ID."""
-    return await category_service.delete(category_id)
+    return await category_service.delete_category(category_id)

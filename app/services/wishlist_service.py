@@ -16,7 +16,7 @@ class WishlistService:
         """Initialize the service with a wishlist repository."""
         self.uow = uow
 
-    async def add_item(self, user_id: UUID, product_id: UUID) -> None:
+    async def add_wishlist_item(self, user_id: UUID, product_id: UUID) -> None:
         """Add a product to the user's wishlist.
 
         Args:
@@ -32,8 +32,8 @@ class WishlistService:
             new_wishlist_item = WishlistItem(user_id=user_id, product_id=product_id)
             await self.uow.wishlists.add(new_wishlist_item)
 
-    async def list_items(
-        self, user_id: UUID, page: int, page_size: int
+    async def get_wishlist_items(
+        self, user_id: UUID, page: int = 1, page_size: int = 10
     ) -> tuple[list[WishlistItem], int]:
         """List all wishlist items for a user.
 
@@ -47,7 +47,7 @@ class WishlistService:
         """
         return await self.uow.wishlists.paginate(page=page, page_size=page_size, user_id=user_id)
 
-    async def remove_item(self, user_id: UUID, product_id: UUID) -> None:
+    async def remove_wishlist_item(self, user_id: UUID, product_id: UUID) -> None:
         """Remove a product from the user's wishlist.
 
         Args:
@@ -60,7 +60,7 @@ class WishlistService:
 
         await self.uow.wishlists.delete(wishlist_item)
 
-    async def clear(self, user_id: UUID) -> None:
+    async def clear_wishlist_items(self, user_id: UUID) -> None:
         """Clear all wishlist items for a user.
 
         Args:
@@ -68,8 +68,8 @@ class WishlistService:
         """
         await self.uow.wishlists.delete_by_user_id(user_id)
 
-    async def count(self, user_id: UUID) -> int:
-        """Count the total number of wishlist items for a user.
+    async def get_wishlist_item_count(self, user_id: UUID) -> int:
+        """Get the total number of wishlist items for a user.
 
         Args:
             user_id (UUID): User ID.
@@ -79,7 +79,7 @@ class WishlistService:
         """
         return await self.uow.wishlists.count(user_id=user_id)
 
-    async def move_to_cart(self, user_id: UUID, product_id: UUID) -> None:
+    async def move_wishlist_item_to_cart(self, user_id: UUID, product_id: UUID) -> None:
         """Move a product from the wishlist to the cart.
 
         Args:
@@ -91,7 +91,7 @@ class WishlistService:
             raise HTTPException(status_code=404, detail="Product not found.")
 
         if not product.is_active:
-            raise HTTPException(status_code=400, detail="Product is not longer available")
+            raise HTTPException(status_code=400, detail="Product is no longer available")
 
         if product.stock < 1:
             raise HTTPException(status_code=400, detail="Product out of stock.")

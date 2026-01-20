@@ -21,13 +21,13 @@ router = APIRouter(prefix="/reviews", tags=["Reviews"])
     summary="Add product review",
     description="Submit a new review for a product.",
 )
-async def create(
+async def create_review(
     data: ReviewCreate,
     review_service: ReviewServiceDep,
     current_user: CurrentUserDep,
 ) -> ReviewRead:
     """Create a new review for a product."""
-    return await review_service.create(current_user.id, data)
+    return await review_service.create_review(current_user.id, data)
 
 
 @router.get(
@@ -36,7 +36,7 @@ async def create(
     summary="Get product reviews",
     description="Retrieve all approved reviews for a specific product with pagination support.",
 )
-async def list_all(
+async def get_product_reviews(
     product_id: UUID,
     review_service: ReviewServiceDep,
     page: int = Query(1, description="Page number"),
@@ -48,8 +48,8 @@ async def list_all(
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
 ) -> Page[ReviewRead]:
     """Get all reviews for a specific product."""
-    total, items = await review_service.list_paginated(
-        product_id,
+    total, items = await review_service.get_product_reviews(
+        product_id=product_id,
         page=page,
         page_size=page_size,
         rating=rating,
@@ -65,13 +65,13 @@ async def list_all(
     summary="Get review by ID",
     description="Retrieve detailed information about a specific review using its UUID.",
 )
-async def get(
+async def get_review(
     review_id: UUID,
     review_service: ReviewServiceDep,
     current_user: CurrentUserDep,
 ) -> ReviewRead:
     """Get a review by its ID."""
-    return await review_service.find_by_id(review_id, current_user.id)
+    return await review_service.get_review(review_id, current_user.id)
 
 
 @router.patch(
@@ -80,14 +80,14 @@ async def get(
     summary="Update review",
     description="Update an existing review's rating or comment.",
 )
-async def update(
+async def update_review(
     review_id: UUID,
     data: ReviewUpdate,
     review_service: ReviewServiceDep,
     current_user: CurrentUserDep,
 ) -> ReviewRead:
     """Update a review by its ID."""
-    return await review_service.update(review_id, current_user.id, data)
+    return await review_service.update_review(review_id, current_user.id, data)
 
 
 @router.delete(
@@ -96,10 +96,10 @@ async def update(
     summary="Delete review",
     description="Permanently delete a review.",
 )
-async def delete(
+async def delete_review(
     review_id: UUID,
     review_service: ReviewServiceDep,
     current_user: CurrentUserDep,
 ) -> None:
     """Delete a review by its ID."""
-    await review_service.delete(review_id, current_user.id)
+    await review_service.delete_review(review_id, current_user.id)

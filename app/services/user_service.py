@@ -17,8 +17,8 @@ class UserService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def find_by_id(self, user_id: UUID) -> User:
-        """Find a user by id.
+    async def get_user(self, user_id: UUID) -> User:
+        """Get a user by its ID.
 
         Args:
             user_id (UUID): User ID.
@@ -34,7 +34,7 @@ class UserService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
         return user
 
-    async def create(self, data: UserCreate) -> User:
+    async def create_user(self, data: UserCreate) -> User:
         """Create a new user.
 
         Args:
@@ -81,7 +81,9 @@ class UserService:
         token = create_access_token({"sub": str(user.id)})
         return Token(access_token=token), user
 
-    async def update_password(self, user_id: UUID, old_password: str, new_password: str) -> None:
+    async def update_user_password(
+        self, user_id: UUID, old_password: str, new_password: str
+    ) -> None:
         """Update user password.
 
         Args:
@@ -92,9 +94,7 @@ class UserService:
         Raises:
             HTTPException: If the user does not exist or the old password is incorrect.
         """
-        user = await self.uow.users.find_by_id(user_id)
-        if not user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+        user = await self.get_user(user_id)
 
         if not verify_password(old_password, user.hashed_password):
             raise HTTPException(
@@ -104,8 +104,8 @@ class UserService:
         user.hashed_password = hash_password(new_password)
         await self.uow.users.update(user)
 
-    async def update(self, user_id: UUID, data: UserUpdate) -> User:
-        """Update mutable profile fields (first/last name, phone number).
+    async def update_user(self, user_id: UUID, data: UserUpdate) -> User:
+        """Update user information.
 
         Args:
             user_id (UUID): User ID.
@@ -117,9 +117,7 @@ class UserService:
         Raises:
             HTTPException: If the user does not exist.
         """
-        user = await self.uow.users.find_by_id(user_id)
-        if not user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+        user = await self.get_user(user_id)
 
         user_data = data.model_dump(exclude_unset=True)
         for key, value in user_data.items():
@@ -127,8 +125,8 @@ class UserService:
 
         return await self.uow.users.update(user)
 
-    async def delete(self, user_id: UUID) -> None:
-        """Delete user.
+    async def delete_user(self, user_id: UUID) -> None:
+        """Delete a user by its ID.
 
         Args:
             user_id (UUID): User ID.
@@ -136,7 +134,5 @@ class UserService:
         Raises:
             HTTPException: If the user does not exist.
         """
-        user = await self.uow.users.find_by_id(user_id)
-        if not user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+        user = await self.get_user(user_id)
         await self.uow.users.delete(user)

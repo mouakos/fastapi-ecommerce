@@ -5,8 +5,8 @@ from decimal import Decimal
 from pydantic import BaseModel, Field
 
 
-class SalesStatistics(BaseModel):
-    """Schema for sales statistics data."""
+class SalesAnalytics(BaseModel):
+    """Schema for sales analytics data."""
 
     total_revenue: Decimal = Field(..., description="Total revenue from all orders")
     total_orders: int = Field(..., description="Total number of orders")
@@ -23,8 +23,8 @@ class SalesStatistics(BaseModel):
     )
 
 
-class UserStatistics(BaseModel):
-    """Schema for user statistics data."""
+class UserAnalytics(BaseModel):
+    """Schema for user analytics data."""
 
     total_users: int = Field(..., description="Total number of users")
     total_customers: int = Field(..., description="Number of customer users")
@@ -32,8 +32,8 @@ class UserStatistics(BaseModel):
     new_users_last_30_days: int = Field(..., description="New users in last 30 days")
 
 
-class ProductStatistics(BaseModel):
-    """Schema for product statistics data."""
+class ProductAnalytics(BaseModel):
+    """Schema for product analytics data."""
 
     total_products: int = Field(..., description="Total number of products")
     active_products: int = Field(..., description="Number of active products")
@@ -42,8 +42,8 @@ class ProductStatistics(BaseModel):
     low_stock_count: int = Field(..., description="Number of low stock products (< 10)")
 
 
-class ReviewStatistics(BaseModel):
-    """Schema for review statistics data."""
+class ReviewAnalytics(BaseModel):
+    """Schema for review analytics data."""
 
     total_reviews: int = Field(..., description="Total number of reviews")
     pending_reviews: int = Field(..., description="Reviews awaiting approval")
@@ -52,9 +52,9 @@ class ReviewStatistics(BaseModel):
 
 
 class AdminDashboard(BaseModel):
-    """Schema for admin dashboard statistics."""
+    """Schema for admin dashboard analytics."""
 
-    sales: SalesStatistics
-    users: UserStatistics
-    products: ProductStatistics
-    reviews: ReviewStatistics
+    sales: SalesAnalytics
+    users: UserAnalytics
+    products: ProductAnalytics
+    reviews: ReviewAnalytics

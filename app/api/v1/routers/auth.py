@@ -18,7 +18,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 )
 async def register(data: UserCreate, user_service: UserServiceDep) -> UserRead:
     """Register a new user."""
-    return await user_service.create(data)
+    return await user_service.create_user(data)
 
 
 @router.post(

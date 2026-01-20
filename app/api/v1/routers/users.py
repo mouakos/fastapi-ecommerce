@@ -12,14 +12,13 @@ from app.schemas.user import UserPasswordUpdate, UserRead, UserUpdate
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
-# Current user profile operations
 @router.get(
     "/me",
     response_model=UserRead,
     summary="Get current user profile",
     description="Retrieve the profile information of the currently authenticated user.",
 )
-async def get(
+async def get_user(
     current_user: CurrentUserDep,
 ) -> UserRead:
     """Retrieve the profile of the currently authenticated user."""
@@ -32,13 +31,13 @@ async def get(
     summary="Update current user profile",
     description="Update profile information such as name, email, or other personal details.",
 )
-async def update(
+async def update_user(
     data: UserUpdate,
     current_user: CurrentUserDep,
     user_service: UserServiceDep,
 ) -> UserRead:
     """Update the profile of the currently authenticated user."""
-    return await user_service.update(current_user.id, data)
+    return await user_service.update_user(current_user.id, data)
 
 
 @router.patch(
@@ -47,13 +46,13 @@ async def update(
     summary="Change current user password",
     description="Update the password of the currently authenticated user. Requires the old password for verification.",
 )
-async def change_password(
+async def change_user_password(
     data: UserPasswordUpdate,
     current_user: CurrentUserDep,
     user_service: UserServiceDep,
 ) -> None:
     """Change the password of the currently authenticated user."""
-    await user_service.update_password(current_user.id, data.old_password, data.new_password)
+    await user_service.update_user_password(current_user.id, data.old_password, data.new_password)
 
 
 @router.delete(
@@ -62,9 +61,9 @@ async def change_password(
     summary="Delete user account",
     description="Permanently delete the current user's account. This action cannot be undone.",
 )
-async def delete(
+async def delete_user(
     current_user: CurrentUserDep,
     user_service: UserServiceDep,
 ) -> None:
     """Delete the current user's account."""
-    await user_service.delete(current_user.id)
+    await user_service.delete_user(current_user.id)

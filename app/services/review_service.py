@@ -16,7 +16,7 @@ class ReviewService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def create(self, user_id: UUID, data: ReviewCreate) -> Review:
+    async def create_review(self, user_id: UUID, data: ReviewCreate) -> Review:
         """Create a new review for a product.
 
         Args:
@@ -46,14 +46,15 @@ class ReviewService:
         )
         return await self.uow.reviews.add(new_review)
 
-    async def list_paginated(
+    async def get_product_reviews(
         self,
+        *,
         product_id: UUID,
-        page: int = 1,
-        page_size: int = 10,
         rating: int | None = None,
         sort_by: str = "created_at",
         sort_order: str = "desc",
+        page: int = 1,
+        page_size: int = 10,
     ) -> tuple[list[Review], int]:
         """List reviews for a specific product.
 
@@ -86,8 +87,8 @@ class ReviewService:
         )
         return total, reviews
 
-    async def find_by_id(self, review_id: UUID, user_id: UUID) -> Review:
-        """Find a review by its ID.
+    async def get_review(self, review_id: UUID, user_id: UUID) -> Review:
+        """Get a review.
 
         Args:
             review_id (UUID): The ID of the review.
@@ -105,8 +106,8 @@ class ReviewService:
 
         return review
 
-    async def update(self, review_id: UUID, user_id: UUID, data: ReviewUpdate) -> Review:
-        """Update a review by its ID.
+    async def update_review(self, review_id: UUID, user_id: UUID, data: ReviewUpdate) -> Review:
+        """Update a review.
 
         Args:
             review_id (UUID): The ID of the review to update.
@@ -119,9 +120,7 @@ class ReviewService:
         Raises:
             HTTPException: If the review is not found.
         """
-        review = await self.uow.reviews.find_user_review(review_id, user_id)
-        if not review:
-            raise HTTPException(status_code=404, detail="Review not found.")
+        review = await self.get_review(review_id, user_id)
 
         review_data = data.model_dump(exclude_unset=True)
         for key, value in review_data.items():
@@ -134,16 +133,15 @@ class ReviewService:
 
         return await self.uow.reviews.update(review)
 
-    async def delete(self, review_id: UUID, user_id: UUID) -> None:
-        """Delete a review by its ID.
+    async def delete_review(self, review_id: UUID, user_id: UUID) -> None:
+        """Delete a review.
 
         Args:
             review_id (UUID): The ID of the review to delete.
             user_id (UUID): The ID of the current user.
+
+        Raises:
+            HTTPException: If the review is not found.
         """
-        review = await self.uow.reviews.find_user_review(review_id, user_id)
-
-        if not review:
-            raise HTTPException(status_code=404, detail="Review not found.")
-
+        review = await self.get_review(review_id, user_id)
         await self.uow.reviews.delete(review)

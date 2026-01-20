@@ -17,7 +17,7 @@ class CartService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def get_or_create(self, user_id: UUID | None, session_id: str | None) -> CartRead:
+    async def get_or_create_cart(self, user_id: UUID | None, session_id: str | None) -> CartRead:
         """Get or create a cart for a user.
 
         Args:
@@ -30,9 +30,9 @@ class CartService:
         Raises:
             HTTPException: If session_id is not provided for guest cart.
         """
-        return await self._get_or_create(user_id, session_id)
+        return await self._get_or_create_cart(user_id, session_id)
 
-    async def add_item(
+    async def add_cart_item(
         self, user_id: UUID | None, session_id: str | None, data: CartItemCreate
     ) -> Cart:
         """Add an item to the cart.
@@ -48,7 +48,7 @@ class CartService:
         Raises:
             HTTPException: If the product is out of stock or not available.
         """
-        cart = await self._get_or_create(user_id, session_id)
+        cart = await self._get_or_create_cart(user_id, session_id)
 
         product = await self.uow.products.find_by_id(data.product_id)
         if not product:
@@ -80,7 +80,7 @@ class CartService:
 
         return await self.uow.carts.update(cart)
 
-    async def update_item(
+    async def update_cart_item(
         self,
         user_id: UUID | None,
         session_id: str | None,
@@ -105,7 +105,7 @@ class CartService:
         if not product:
             raise HTTPException(status_code=404, detail="Product not found.")
 
-        cart = await self._get_or_create(user_id, session_id)
+        cart = await self._get_or_create_cart(user_id, session_id)
 
         item = await self.uow.carts.find_cart_item(cart.id, product_id)
         if not item:
@@ -121,7 +121,7 @@ class CartService:
 
         return await self.uow.carts.update(cart)
 
-    async def remove_item(
+    async def remove_cart_item(
         self, user_id: UUID | None, session_id: str | None, product_id: UUID
     ) -> Cart:
         """Remove an item from the cart.
@@ -137,7 +137,7 @@ class CartService:
         Raises:
             HTTPException: If product is not found in cart.
         """
-        cart = await self._get_or_create(user_id, session_id)
+        cart = await self._get_or_create_cart(user_id, session_id)
 
         item = await self.uow.carts.find_cart_item(cart.id, product_id)
 
@@ -147,7 +147,7 @@ class CartService:
         cart.items.remove(item)
         return await self.uow.carts.update(cart)
 
-    async def _get_or_create(self, user_id: UUID | None, session_id: str | None) -> Cart:
+    async def _get_or_create_cart(self, user_id: UUID | None, session_id: str | None) -> Cart:
         """Get or create a cart for a user.
 
         Args:
@@ -166,7 +166,7 @@ class CartService:
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e)) from e
 
-    async def clear(self, user_id: UUID | None, session_id: str | None) -> CartRead:
+    async def clear_cart_items(self, user_id: UUID | None, session_id: str | None) -> CartRead:
         """Clear all items from the cart.
 
         Args:
@@ -176,7 +176,7 @@ class CartService:
         Returns:
             CartRead: Updated cart instance with no items.
         """
-        cart = await self._get_or_create(user_id, session_id)
+        cart = await self._get_or_create_cart(user_id, session_id)
         cart.items.clear()
         return await self.uow.carts.update(cart)
 
@@ -192,7 +192,7 @@ class CartService:
         if not guest_cart:
             return
 
-        user_cart = await self._get_or_create(user_id, None)
+        user_cart = await self._get_or_create_cart(user_id, None)
 
         for item in guest_cart.items:
             existing_item = await self.uow.carts.find_cart_item(user_cart.id, item.product_id)

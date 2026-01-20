@@ -18,8 +18,8 @@ class AddressService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def list(self, user_id: UUID) -> list[Address]:
-        """List all Addresses for a user.
+    async def get_addresses(self, user_id: UUID) -> list[Address]:
+        """Get all Addresses for a user.
 
         Args:
             user_id (UUID): ID of the user owning the addresses.
@@ -30,8 +30,8 @@ class AddressService:
         """
         return await self.uow.addresses.list_all(user_id=user_id)
 
-    async def find_by_id(self, address_id: UUID, user_id: UUID) -> Address:
-        """Find an address for a specific user.
+    async def get_address(self, address_id: UUID, user_id: UUID) -> Address:
+        """Get an address for a specific user.
 
         Args:
             address_id (UUID): Address ID.
@@ -51,7 +51,7 @@ class AddressService:
             )
         return address
 
-    async def create(
+    async def create_address(
         self,
         user_id: UUID,
         data: AddressCreate,
@@ -91,12 +91,7 @@ class AddressService:
         Raises:
             HTTPException: If the address does not exists.
         """
-        address = await self.uow.addresses.find_user_address(address_id, user_id)
-        if not address:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Address not found.",
-            )
+        address = await self.get_address(address_id, user_id)
 
         address_data = data.model_dump(exclude_unset=True)
 
@@ -105,7 +100,7 @@ class AddressService:
 
         return await self.uow.addresses.update(address)
 
-    async def delete(self, address_id: UUID, user_id: UUID) -> None:
+    async def delete_address(self, address_id: UUID, user_id: UUID) -> None:
         """Delete an address for a user.
 
         Args:
@@ -115,15 +110,10 @@ class AddressService:
         Raises:
             HTTPException: If the address does not exists.
         """
-        address = await self.uow.addresses.find_user_address(address_id, user_id)
-        if not address:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Address not found.",
-            )
+        address = await self.get_address(address_id, user_id)
         await self.uow.addresses.delete(address)
 
-    async def set_default_billing(self, address_id: UUID, user_id: UUID) -> Address:
+    async def set_default_billing_address(self, address_id: UUID, user_id: UUID) -> Address:
         """Set an address as the default billing address for a user.
 
         Args:
@@ -136,20 +126,14 @@ class AddressService:
         Raises:
             HTTPException: If the address does not exists.
         """
-        address = await self.uow.addresses.find_user_address(address_id, user_id)
-        if not address:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Address not found.",
-            )
-
+        address = await self.get_address(address_id, user_id)
         await self.uow.addresses.unset_default_billing(user_id)
 
         address.is_default_billing = True
 
         return await self.uow.addresses.update(address)
 
-    async def set_default_shipping(self, address_id: UUID, user_id: UUID) -> Address:
+    async def set_default_shipping_address(self, address_id: UUID, user_id: UUID) -> Address:
         """Set an address as the default shipping address for a user.
 
         Args:
@@ -162,13 +146,7 @@ class AddressService:
         Raises:
             HTTPException: If the address does not exists.
         """
-        address = await self.uow.addresses.find_user_address(address_id, user_id)
-        if not address:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Address not found.",
-            )
-
+        address = await self.get_address(address_id, user_id)
         await self.uow.addresses.unset_default_shipping(user_id)
 
         address.is_default_shipping = True

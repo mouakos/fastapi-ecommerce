@@ -60,26 +60,26 @@ class SqlReviewRepository(SqlGenericRepository[Review], ReviewRepository):
     async def paginate(
         self,
         *,
-        page: int = 1,
-        page_size: int = 10,
         product_id: UUID | None = None,
         status: ReviewStatus | None = None,
         user_id: UUID | None = None,
         rating: int | None = None,
         sort_by: str = "created_at",
         sort_order: str = "desc",
+        page: int = 1,
+        page_size: int = 10,
     ) -> tuple[list[Review], int]:
         """Get all reviews with pagination and optional filters.
 
         Args:
-            page (int, optional): Page number. Defaults to 1.
-            page_size (int, optional): Number of records per page. Defaults to 10.
             product_id (UUID | None, optional): Filter by product ID. Defaults to None.
             status (ReviewStatus | None, optional): Filter by review status. Defaults to None.
             user_id (UUID | None, optional): Filter by user ID. Defaults to None.
             rating (int | None, optional): Filter by rating. Defaults to None.
             sort_by (str, optional): Field to sort by. Defaults to "created_at".
             sort_order (str, optional): Sort order. Defaults to "desc".
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of records per page. Defaults to 10.
 
         Returns:
             tuple[list[Review], int]: List of reviews and total count.

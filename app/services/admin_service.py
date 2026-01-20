@@ -10,12 +10,12 @@ from app.models.order import Order, OrderStatus
 from app.models.product import Product
 from app.models.review import Review, ReviewStatus
 from app.models.user import User, UserRole
-from app.schemas.statistics import (
+from app.schemas.analytics import (
     AdminDashboard,
-    ProductStatistics,
-    ReviewStatistics,
-    SalesStatistics,
-    UserStatistics,
+    ProductAnalytics,
+    ReviewAnalytics,
+    SalesAnalytics,
+    UserAnalytics,
 )
 from app.utils.order_utils import is_valid_order_status_transition
 from app.utils.utc_time import utcnow
@@ -28,12 +28,12 @@ class AdminService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    # ----------------------------- Statistics Related Admin Services ----------------------------- #
-    async def get_sales_statistics(self) -> SalesStatistics:
-        """Calculate sales statistics data.
+    # ----------------------------- Analytics Related Admin Services ----------------------------- #
+    async def get_sales_analytics(self) -> SalesAnalytics:
+        """Get sales analytics data.
 
         Returns:
-            SalesStatistics: Sales statistics data.
+            SalesAnalytics: Sales analytics data.
         """
         # Total orders and revenue
         total_orders = await self.uow.orders.count()
@@ -52,7 +52,7 @@ class AdminService:
         # Revenue in the last 30 days
         revenue_last_30_days = await self.uow.orders.calculate_recent_sales(days=30)
 
-        return SalesStatistics(
+        return SalesAnalytics(
             total_revenue=total_revenue,
             total_orders=total_orders,
             pending_orders=pending_orders,
@@ -64,11 +64,11 @@ class AdminService:
             revenue_last_30_days=revenue_last_30_days,
         )
 
-    async def get_user_statistics(self) -> UserStatistics:
-        """Calculate user statistics data.
+    async def get_user_analytics(self) -> UserAnalytics:
+        """Get user analytics data.
 
         Returns:
-            UserStatistics: User statistics data.
+            UserAnalytics: User analytics data.
         """
         total_users = await self.uow.users.count()
         total_customers = await self.uow.users.count(role=UserRole.USER)
@@ -77,18 +77,18 @@ class AdminService:
         # New users in the last 30 days
         new_users_last_30_days = await self.uow.users.count_recent(days=30)
 
-        return UserStatistics(
+        return UserAnalytics(
             total_users=total_users,
             total_customers=total_customers,
             total_admins=total_admins,
             new_users_last_30_days=new_users_last_30_days,
         )
 
-    async def get_product_statistics(self) -> ProductStatistics:
-        """Calculate product statistics data.
+    async def get_product_analytics(self) -> ProductAnalytics:
+        """Get product analytics data.
 
         Returns:
-            ProductStatistics: Product statistics data.
+            ProductAnalytics: Product analytics data.
         """
         total_products = await self.uow.products.count()
         active_products = await self.uow.products.count(is_active=True)
@@ -96,7 +96,7 @@ class AdminService:
         out_of_stock_count = await self.uow.products.count(stock=0)
         low_stock_count = await self.uow.products.count_low_stock(threshold=10)
 
-        return ProductStatistics(
+        return ProductAnalytics(
             total_products=total_products,
             active_products=active_products,
             inactive_products=inactive_products,
@@ -104,18 +104,18 @@ class AdminService:
             low_stock_count=low_stock_count,
         )
 
-    async def get_review_statistics(self) -> ReviewStatistics:
-        """Calculate review statistics data.
+    async def get_review_analytics(self) -> ReviewAnalytics:
+        """Get review analytics data.
 
         Returns:
-            ReviewStatistics: Review statistics data.
+            ReviewAnalytics: Review analytics data.
         """
         total_reviews = await self.uow.reviews.count()
         pending_reviews = await self.uow.reviews.count(status=ReviewStatus.PENDING)
         approved_reviews = await self.uow.reviews.count(status=ReviewStatus.APPROVED)
         average_rating = await self.uow.reviews.calculate_average_rating()
 
-        return ReviewStatistics(
+        return ReviewAnalytics(
             total_reviews=total_reviews,
             pending_reviews=pending_reviews,
             approved_reviews=approved_reviews,
@@ -123,16 +123,15 @@ class AdminService:
         )
 
     async def get_dashboard_data(self) -> AdminDashboard:
-        """Calculate comprehensive dashboard data.
+        """Get comprehensive dashboard data.
 
         Returns:
             AdminDashboard: Comprehensive dashboard data, including sales, users, products, and reviews.
         """
-        sales = await self.get_sales_statistics()
-        users = await self.get_user_statistics()
-        products = await self.get_product_statistics()
-        reviews = await self.get_review_statistics()
-
+        sales = await self.get_sales_analytics()
+        users = await self.get_user_analytics()
+        products = await self.get_product_analytics()
+        reviews = await self.get_review_analytics()
         return AdminDashboard(
             sales=sales,
             users=users,
@@ -143,22 +142,22 @@ class AdminService:
     # ----------------------------- Order Related Admin Services ----------------------------- #
     async def list_orders(
         self,
-        page: int = 1,
-        page_size: int = 10,
         status: OrderStatus | None = None,
         user_id: UUID | None = None,
         sort_by: str = "created_at",
         sort_order: str = "desc",
+        page: int = 1,
+        page_size: int = 10,
     ) -> tuple[list[Order], int]:
         """List all orders with pagination and optional filters.
 
         Args:
-            page (int, optional): Page number. Defaults to 1.
-            page_size (int, optional): Number of records per page. Defaults to 10.
             status (OrderStatus | None, optional): Filter by order status. Defaults to None.
             user_id (UUID | None, optional): Filter by user ID. Defaults to None.
             sort_by (str, optional): Field to sort by. Defaults to "created_at".
             sort_order (str, optional): Sort order, either "asc" or "desc".
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of orders per page. Defaults to 10.
 
         Returns:
             tuple[list[Order], int]: List of orders and total count.
@@ -211,22 +210,23 @@ class AdminService:
     # ----------------------------- User Related Admin Services ----------------------------- #
     async def list_users(
         self,
-        page: int = 1,
-        page_size: int = 10,
         role: UserRole | None = None,
         search: str | None = None,
         sort_by: str = "created_at",
         sort_order: str = "desc",
+        page: int = 1,
+        page_size: int = 10,
     ) -> tuple[list[User], int]:
         """List all users in the system.
 
         Args:
-            page (int, optional): Page number. Defaults to 1.
-            page_size (int, optional): Number of records per page. Defaults to 10.
             role (UserRole | None, optional): Filter by user role. Defaults to None.
             search (str | None, optional): Search query for name or email. Defaults to None.
             sort_by (str, optional): Field to sort by. Defaults to "created_at".
             sort_order (str, optional): Sort order, either "asc" or "desc". Defaults to "desc".
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of records per page. Defaults to 10.
+
 
         Returns:
             tuple[list[User], int]: List of users and total number of users.
@@ -283,14 +283,14 @@ class AdminService:
     # ----------------------------- Review Related Admin Services ----------------------------- #
     async def list_reviews(
         self,
-        page: int = 1,
-        page_size: int = 10,
         product_id: UUID | None = None,
         status: ReviewStatus | None = None,
         user_id: UUID | None = None,
         rating: int | None = None,
         sort_by: str = "created_at",
         sort_order: str = "desc",
+        page: int = 1,
+        page_size: int = 10,
     ) -> tuple[list[Review], int]:
         """List all product reviews with pagination and optional product filter.
 
@@ -303,6 +303,8 @@ class AdminService:
             rating (int | None, optional): Filter by rating. Defaults to None.
             sort_by (str, optional): Field to sort by. Defaults to "created_at".
             sort_order (str, optional): Sort order. Defaults to "desc".
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of reviews per page. Defaults to 10.
 
         Returns:
             tuple[list[Review], int]: List of reviews and total count.
@@ -384,8 +386,6 @@ class AdminService:
 
     async def list_products(
         self,
-        page: int = 1,
-        page_size: int = 10,
         search: str | None = None,
         category_id: UUID | None = None,
         category_slug: str | None = None,
@@ -396,12 +396,12 @@ class AdminService:
         is_active: bool | None = None,
         sort_by: str = "created_at",
         sort_order: str = "asc",
+        page: int = 1,
+        page_size: int = 10,
     ) -> tuple[list[Product], int]:
         """List all products with pagination and optional filters.
 
         Args:
-            page (int, optional): Page number. Defaults to 1.
-            page_size (int, optional): Number of records per page. Defaults to 10.
             search (str | None, optional): Search query to filter products by name or description. Defaults to None.
             category_id (UUID | None, optional): Category ID to filter products. Defaults to None.
             category_slug (str | None, optional): Category slug to filter products. Defaults to None.
@@ -412,6 +412,8 @@ class AdminService:
             is_active (bool | None, optional): Filter by active status. Defaults to None.
             sort_by (str, optional): Field to sort by. Defaults to "created_at".
             sort_order (str, optional): Sort order ("asc" or "desc"). Defaults to "asc".
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of records per page. Defaults to 10.
 
         Returns:
             tuple[list[Product], int]: List of products and total count.

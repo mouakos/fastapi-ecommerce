@@ -18,7 +18,7 @@ class CategoryService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def list_all(self) -> list[Category]:
+    async def get_categories(self) -> list[Category]:
         """List all categories.
 
         Returns:
@@ -26,11 +26,11 @@ class CategoryService:
         """
         return await self.uow.categories.list_all()
 
-    async def find_by_id(
+    async def get_category_by_id(
         self,
         category_id: UUID,
     ) -> Category:
-        """Find a category by its ID.
+        """Get a category by its ID.
 
         Args:
             category_id (UUID): The ID of the category to find.
@@ -46,11 +46,11 @@ class CategoryService:
             raise HTTPException(status_code=404, detail="Category not found.")
         return category
 
-    async def find_by_slug(
+    async def get_category_by_slug(
         self,
         slug: str,
     ) -> Category:
-        """Find a category by its slug.
+        """Get a category by its slug.
 
         Args:
             slug (str): The slug of the category to find.
@@ -66,7 +66,7 @@ class CategoryService:
             raise HTTPException(status_code=404, detail="Category not found.")
         return category
 
-    async def create(
+    async def create_category(
         self,
         data: CategoryCreate,
     ) -> Category:
@@ -83,7 +83,7 @@ class CategoryService:
         """
         if data.parent_id:
             # Ensure the parent category exists
-            _ = await self.find_by_id(data.parent_id)
+            _ = await self.get_category_by_id(data.parent_id)
 
         slug = await self.uow.categories.generate_slug(data.name)
 
@@ -94,7 +94,7 @@ class CategoryService:
         new_category = Category(slug=slug, **category_data)
         return await self.uow.categories.add(new_category)
 
-    async def update(
+    async def update_category(
         self,
         category_id: UUID,
         data: CategoryUpdate,
@@ -111,9 +111,7 @@ class CategoryService:
         Raises:
             HTTPException: If the category or new parent category does not exist, or if trying to set itself as parent.
         """
-        category = await self.uow.categories.find_by_id(category_id)
-        if not category:
-            raise HTTPException(status_code=404, detail="Category not found.")
+        category = await self.get_category_by_id(category_id)
 
         if data.parent_id:
             # Prevent setting itself as parent
@@ -123,7 +121,7 @@ class CategoryService:
                     detail="Category cannot be its own parent.",
                 )
             # Ensure the new parent category exists
-            _ = await self.find_by_id(data.parent_id)
+            _ = await self.get_category_by_id(data.parent_id)
 
         category_data = data.model_dump(exclude_unset=True)
 
@@ -135,7 +133,7 @@ class CategoryService:
 
         return await self.uow.categories.update(category)
 
-    async def delete(
+    async def delete_category(
         self,
         category_id: UUID,
     ) -> None:
@@ -147,7 +145,5 @@ class CategoryService:
         Raises:
             HTTPException: If the category is not found.
         """
-        category = await self.uow.categories.find_by_id(category_id)
-        if not category:
-            raise HTTPException(status_code=404, detail="Category not found.")
+        category = await self.get_category_by_id(category_id)
         await self.uow.categories.delete(category)

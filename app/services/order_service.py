@@ -17,7 +17,7 @@ class OrderService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
-    async def create(self, user_id: UUID, data: OrderCreate) -> Order:
+    async def create_order(self, user_id: UUID, data: OrderCreate) -> Order:
         """Create a new order for the user."""
         # Validate addresses
         billing_address = await self.uow.addresses.find_by_id(data.billing_address_id)
@@ -75,8 +75,8 @@ class OrderService:
 
         return await self.uow.orders.update(created_order)
 
-    async def find_by_id(self, order_id: UUID, user_id: UUID) -> Order:
-        """Find an order by its ID.
+    async def get_order(self, order_id: UUID, user_id: UUID) -> Order:
+        """Get an order for a specific user.
 
         Args:
             order_id (UUID): The ID of the order.
@@ -93,16 +93,17 @@ class OrderService:
             raise HTTPException(status_code=404, detail="Order not found.")
         return order
 
-    async def list_all(
+    async def get_orders(
         self,
+        *,
         user_id: UUID,
-        page: int = 1,
-        page_size: int = 10,
         status: OrderStatus | None = None,
         sort_by: str = "created_at",
         sort_order: str = "desc",
+        page: int = 1,
+        page_size: int = 10,
     ) -> tuple[list[Order], int]:
-        """List all orders for a user.
+        """Get all orders for a user.
 
         Args:
             user_id (UUID): The ID of the user.

@@ -17,12 +17,12 @@ router = APIRouter(prefix="/addresses", tags=["Addresses"])
     summary="List user addresses",
     description="Retrieve all delivery and billing addresses associated with the current user.",
 )
-async def list_all(
+async def get_addresses(
     current_user: CurrentUserDep,
     address_service: AddressServiceDep,
 ) -> list[AddressRead]:
     """List all addresses for the current user."""
-    return await address_service.list(current_user.id)
+    return await address_service.get_addresses(current_user.id)
 
 
 @router.post(
@@ -32,13 +32,13 @@ async def list_all(
     summary="Add new address",
     description="Create a new delivery or billing address for the current user.",
 )
-async def create(
+async def create_address(
     data: AddressCreate,
     current_user: CurrentUserDep,
     address_service: AddressServiceDep,
 ) -> AddressRead:
     """Add a new address to the currently authenticated user's account."""
-    return await address_service.create(current_user.id, data)
+    return await address_service.create_address(current_user.id, data)
 
 
 @router.patch(
@@ -47,7 +47,7 @@ async def create(
     summary="Update address",
     description="Update an existing address. Only the address owner can modify it.",
 )
-async def update(
+async def update_address(
     address_id: UUID,
     data: AddressUpdate,
     current_user: CurrentUserDep,
@@ -63,13 +63,13 @@ async def update(
     summary="Set address as default shipping",
     description="Mark an address as the default shipping address for the user.",
 )
-async def set_default_shipping(
+async def set_default_shipping_address(
     address_id: UUID,
     current_user: CurrentUserDep,
     address_service: AddressServiceDep,
 ) -> AddressRead:
     """Set an address as the default shipping address for the current user."""
-    return await address_service.set_default_shipping(address_id, current_user.id)
+    return await address_service.set_default_shipping_address(address_id, current_user.id)
 
 
 @router.patch(
@@ -78,13 +78,13 @@ async def set_default_shipping(
     summary="Set address as default billing",
     description="Mark an address as the default billing address for the user.",
 )
-async def set_default_billing(
+async def set_default_billing_address(
     address_id: UUID,
     current_user: CurrentUserDep,
     address_service: AddressServiceDep,
 ) -> AddressRead:
     """Set an address as the default billing address for the current user."""
-    return await address_service.set_default_billing(address_id, current_user.id)
+    return await address_service.set_default_billing_address(address_id, current_user.id)
 
 
 @router.delete(
@@ -93,10 +93,10 @@ async def set_default_billing(
     summary="Delete user address",
     description="Remove an address from the user's account.",
 )
-async def delete(
+async def delete_address(
     address_id: UUID,
     current_user: CurrentUserDep,
     address_service: AddressServiceDep,
 ) -> None:
     """Delete an existing address. Only the owner or an admin can delete an address."""
-    await address_service.delete(address_id, current_user.id)
+    await address_service.delete_address(address_id, current_user.id)

@@ -14,16 +14,16 @@ class WishlistRepository(GenericRepository[WishlistItem], ABC):
     async def paginate(
         self,
         *,
-        page: int,
-        page_size: int,
         user_id: UUID,
+        page: int = 1,
+        page_size: int = 10,
     ) -> tuple[list[WishlistItem], int]:
         """Paginate wishlist items by user ID.
 
         Args:
-            page (int): Page number.
-            page_size (int): Number of items per page.
             user_id (UUID): User ID.
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of items per page. Defaults to 10.
 
         Returns:
             tuple[list[WishlistItem], int]: List of wishlist items and total count.
