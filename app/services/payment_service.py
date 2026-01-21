@@ -89,7 +89,7 @@ class PaymentService:
         )
         return payment_intent_response
 
-    async def process_stripe_webhook(self, payload: bytes, stripe_signature: str) -> None:
+    async def process_stripe_webhook(self, payload: bytes, stripe_signature: str | None) -> None:
         """Process Stripe webhook events for payment confirmations.
 
         Handles checkout.session.completed events to update order status to PAID,
@@ -97,11 +97,13 @@ class PaymentService:
 
         Args:
             payload (bytes): Raw webhook event data from Stripe.
-            stripe_signature (str): Stripe signature header for event verification.
+            stripe_signature (str | None): Stripe signature header for event verification.
 
         Raises:
-            WebhookValidationError: If payload is invalid or signature verification fails.
+            WebhookValidationError: If the webhook payload or signature is invalid.
         """
+        if not stripe_signature:
+            raise WebhookValidationError(reason="Missing Stripe signature")
         event = None
         try:
             event = stripe.Webhook.construct_event(  # type: ignore [no-untyped-call]

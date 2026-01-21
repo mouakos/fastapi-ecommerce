@@ -1,6 +1,6 @@
 """Payment processing API routes for Stripe checkout sessions and webhooks."""
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Request, status
 
 from app.api.v1.dependencies import CurrentUserDep, PaymentServiceDep
 from app.schemas.payment import PaymentIntentRequest, PaymentIntentResponse
@@ -25,9 +25,8 @@ async def create_payment_intent(
     return await payment_service.create_payment_intent(current_user.id, data.order_id)
 
 
-# Webhook endpoints
 @router.post(
-    "/stripe-webhook",
+    "/webhook",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Stripe webhook handler",
     description="Process Stripe webhook events for payment confirmations. This endpoint is called by Stripe servers, not by clients.",
@@ -38,9 +37,6 @@ async def stripe_webhook(
 ) -> None:
     """Process Stripe webhook."""
     stripe_signature = request.headers.get("stripe-signature")
-
-    if not stripe_signature:
-        raise HTTPException(status_code=400, detail="Missing Stripe signature header.")
 
     payload = await request.body()
 
