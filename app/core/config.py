@@ -47,6 +47,16 @@ class Settings(BaseSettings):
         description="Comma-separated list of allowed CORS origins",
         alias="CORS_ORIGINS",
     )
+    enable_metrics: bool = Field(
+        default=True,
+        description="Enable Prometheus metrics endpoint",
+        alias="ENABLE_METRICS",
+    )
+    environment: str = Field(
+        default="development",
+        description="Application environment (development, staging, production)",
+        alias="ENVIRONMENT",
+    )
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
