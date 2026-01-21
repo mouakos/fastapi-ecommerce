@@ -4,7 +4,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from app.core.exceptions import (
-    InvalidTransitionError,
+    InvalidOrderStatusError,
     OrderNotFoundError,
     ReviewNotFoundError,
     SelfActionError,
@@ -191,6 +191,7 @@ class AdminService:
 
         Raises:
             OrderNotFoundError: If order not found.
+            InvalidTransitionError: If status transition is invalid.
         """
         order = await self.uow.orders.find_by_id(order_id)
         if not order:
@@ -198,10 +199,9 @@ class AdminService:
 
         # validate status transition
         is_valid_transition = is_valid_order_status_transition(order.status, new_status)
+        message = f"Order status transition from {order.status} to {new_status} is not allowed."
         if not is_valid_transition:
-            raise InvalidTransitionError(
-                entity="Order", from_state=order.status, to_state=new_status
-            )
+            raise InvalidOrderStatusError(message=message, current_status=order.status.value)
 
         # perform status update
         order.status = new_status
@@ -214,9 +214,8 @@ class AdminService:
         elif new_status == OrderStatus.DELIVERED:
             order.delivered_at = utcnow()
         else:
-            raise InvalidTransitionError(
-                entity="Order", from_state=order.status, to_state=new_status
-            )
+            raise InvalidOrderStatusError(message=message, current_status=order.status.value)
+
         order.status = new_status
         await self.uow.orders.update(order)
         logger.info("order_status_updated", order_id=str(order_id), new_status=new_status.value)

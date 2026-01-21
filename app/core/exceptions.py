@@ -6,13 +6,13 @@ Exception Hierarchy by HTTP Status Code:
 400 Bad Request - Validation Errors:
     ValidationError (base)
     ├── ResourceLimitError
-    ├── InvalidTransitionError
     ├── SelfReferenceError
     ├── InsufficientStockError
     ├── ProductInactiveError
     ├── InvalidCartSessionError
     ├── EmptyCartError
-    └── WebhookValidationError
+    ├── WebhookValidationError
+    └── InvalidOrderStatusError
 
 401 Unauthorized - Authentication Errors:
     AuthenticationError (base)
@@ -29,7 +29,6 @@ Exception Hierarchy by HTTP Status Code:
     ├── ProductNotFoundError
     ├── OrderNotFoundError
     ├── ReviewNotFoundError
-    ├── PaymentNotFoundError
     ├── AddressNotFoundError
     ├── CategoryNotFoundError
     ├── WishlistItemNotFoundError
@@ -113,21 +112,6 @@ class ResourceLimitError(ValidationError):
             self.details["current"] = current
 
 
-class InvalidTransitionError(ValidationError):  # TODO
-    """Invalid state transition."""
-
-    def __init__(self, entity: str, from_state: str, to_state: str) -> None:
-        """Initialize InvalidTransitionError."""
-        message = f"Cannot transition {entity} from {from_state} to {to_state}."
-        super().__init__(message=message)
-        self.error_code = "INVALID_TRANSITION"
-        self.details = {
-            "entity": entity,
-            "from_state": from_state,
-            "to_state": to_state,
-        }
-
-
 class SelfReferenceError(ValidationError):
     """Entity cannot reference itself."""
 
@@ -195,6 +179,16 @@ class WebhookValidationError(ValidationError):  # TODO
         super().__init__(message=message)
         self.error_code = "WEBHOOK_VALIDATION_ERROR"
         self.details["reason"] = reason
+
+
+class InvalidOrderStatusError(ValidationError):
+    """Order status is invalid for the requested operation."""
+
+    def __init__(self, message: str, current_status: str) -> None:
+        """Initialize InvalidOrderStatusError."""
+        super().__init__(message=message)
+        self.error_code = "INVALID_ORDER_STATUS"
+        self.details["current_status"] = current_status
 
 
 # ============================================================================
@@ -327,16 +321,6 @@ class ReviewNotFoundError(NotFoundError):
         super().__init__(resource="Review", identifier=review_id, message=message)
         if user_id:
             self.details["user_id"] = str(user_id)
-
-
-class PaymentNotFoundError(NotFoundError):  # TODO
-    """Payment not found exception."""
-
-    def __init__(self, session_id: str | None = None) -> None:
-        """Initialize PaymentNotFoundError."""
-        super().__init__(resource="Payment", identifier=session_id)
-        if session_id:
-            self.details["session_id"] = session_id
 
 
 class AddressNotFoundError(NotFoundError):

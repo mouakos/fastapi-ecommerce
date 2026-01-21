@@ -15,15 +15,15 @@ class SqlPaymentRepository(SqlGenericRepository[Payment], PaymentRepository):
         """Initialize the repository with a database session."""
         super().__init__(session, Payment)
 
-    async def find_by_session_id(self, session_id: str) -> Payment | None:
-        """Find a payment by Stripe session ID.
+    async def find_by_transaction_id(self, transaction_id: str) -> Payment | None:
+        """Find a payment by transaction ID.
 
         Args:
-            session_id (str): Stripe session ID.
+            transaction_id (str): Transaction ID.
 
         Returns:
             Payment | None: Payment record or None.
         """
-        stmt = select(Payment).where(Payment.session_id == session_id)
+        stmt = select(Payment).where(Payment.transaction_id == transaction_id)
         result = await self._session.exec(stmt)
         return result.first()

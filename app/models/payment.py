@@ -18,6 +18,7 @@ class PaymentStatus(StrEnum):
     """Enumeration for payment statuses."""
 
     PENDING = "pending"
+    FAILED = "failed"
     SUCCESS = "success"
 
 
@@ -28,7 +29,7 @@ class Payment(ModelBase, TimestampMixin, table=True):
     order_id: UUID = Field(default=None, foreign_key="orders.id", index=True, ondelete="CASCADE")
     amount: Decimal = Field(default=Decimal("0.00"), max_digits=10, decimal_places=2)
     currency: str = Field(max_length=50, default="usd", index=True)
-    payment_method: str = Field(max_length=50, default="card", index=True)
+    payment_method: str = Field(max_length=50, index=True)
     status: PaymentStatus = Field(
         default=PaymentStatus.PENDING,
         sa_column=Column(
@@ -45,8 +46,7 @@ class Payment(ModelBase, TimestampMixin, table=True):
             index=True,
         ),
     )
-    session_id: str = Field(index=True, unique=True, max_length=100)
-    payment_intent_id: str | None = Field(default=None, max_length=100)
+    transaction_id: str = Field(max_length=100)
 
     # Relationships
     order: "Order" = Relationship(

@@ -10,11 +10,11 @@ class PaymentRepository(GenericRepository[Payment], ABC):
     """Interface for Payment repository."""
 
     @abstractmethod
-    async def find_by_session_id(self, session_id: str) -> Payment | None:
-        """Find a payment by Stripe session ID.
+    async def find_by_transaction_id(self, transaction_id: str) -> Payment | None:
+        """Find a payment by transaction ID.
 
         Args:
-            session_id (str): Stripe session ID.
+            transaction_id (str): Transaction ID.
 
         Returns:
             Payment | None: Payment record or None.

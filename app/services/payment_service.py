@@ -7,16 +7,16 @@ import stripe
 
 from app.core.config import settings
 from app.core.exceptions import (
-    InvalidTransitionError,
+    InvalidOrderStatusError,
     OrderNotFoundError,
     PaymentGatewayError,
-    PaymentNotFoundError,
     WebhookValidationError,
 )
 from app.core.logger import logger
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import OrderStatus
 from app.models.payment import Payment, PaymentStatus
+from app.schemas.payment import PaymentIntentResponse
 from app.utils.datetime import utcnow
 from app.utils.stripe import generate_idempotency_key
 
@@ -29,23 +29,19 @@ class PaymentService:
         self.uow = uow
         stripe.api_key = settings.stripe_api_key
 
-    async def create_checkout_session(
-        self, user_id: UUID, order_id: UUID, success_url: str, cancel_url: str
-    ) -> str:
+    async def create_payment_intent(self, user_id: UUID, order_id: UUID) -> PaymentIntentResponse:
         """Create a Stripe Checkout Session for the specified order.
 
         Args:
             user_id (UUID): ID of the user making the payment.
             order_id (UUID): ID of the order to create checkout session for (must be PENDING).
-            success_url (str): URL to redirect to upon successful payment.
-            cancel_url (str): URL to redirect to if payment is canceled.
 
         Returns:
-            str: The URL of the Stripe Checkout Session page.
+            PaymentIntentResponse: The response containing payment intent details.
 
         Raises:
             OrderNotFoundError: If the order is not found.
-            InvalidTransitionError: If the order is not in PENDING status.
+            InvalidOrderStatusError: If the order is not in PENDING status.
             PaymentGatewayError: If there is an error creating the Stripe session.
         """
         order = await self.uow.orders.find_user_order(order_id, user_id)
@@ -53,58 +49,45 @@ class PaymentService:
             raise OrderNotFoundError(order_id=order_id, user_id=user_id)
 
         if order.status != OrderStatus.PENDING:
-            raise InvalidTransitionError(
-                entity="Order",
-                from_state=order.status.value,
-                to_state=OrderStatus.PENDING,
+            raise InvalidOrderStatusError(
+                message="Checkout session can only be created for orders in 'pending' status.",
+                current_status=order.status.value,
             )
 
-        # Create a checkout session with Stripe
+        # Create Stripe PaymentIntent
         try:
-            session = stripe.checkout.Session.create(
-                payment_method_types=["card"],
-                line_items=[
-                    {
-                        "price_data": {
-                            "currency": "usd",
-                            "product_data": {
-                                "name": f"{item.product_name}",
-                            },
-                            "unit_amount": int(item.unit_price * 100),  # amount in cents
-                        },
-                        "quantity": item.quantity,
-                    }
-                    for item in order.items
-                ],
-                mode="payment",
-                success_url=success_url,
-                cancel_url=cancel_url,
-                metadata={"order_id": str(order_id), "user_id": str(user_id)},
-                expires_at=int(
-                    (utcnow().timestamp()) + settings.checkout_session_expire_minutes * 60
-                ),
-                idempotency_key=generate_idempotency_key(user_id, order_id),
+            intent = stripe.PaymentIntent.create(
+                amount=int(order.total_amount * 100),  # Amount in cents
+                currency="usd",
+                metadata={"order_id": str(order.id), "user_id": str(user_id)},
+                idempotency_key=generate_idempotency_key(order.id, user_id),
+                automatic_payment_methods={"enabled": True},
             )
         except stripe.error.StripeError as e:
             raise PaymentGatewayError(message=str(e)) from e
 
-        # Create payment record BEFORE user completes payment
         payment = Payment(
             order_id=order_id,
             amount=order.total_amount,
-            currency=session.currency,
-            payment_method="card",
-            session_id=session.id,
+            currency=intent.currency,
+            payment_method="stripe",
+            transaction_id=intent.id,
         )
         await self.uow.payments.add(payment)
+
+        payment_intent_response = PaymentIntentResponse(
+            client_secret=intent.client_secret,  # type: ignore [arg-type]
+            intent_id=intent.id,
+            amount=order.total_amount,
+            currency=intent.currency,
+        )
         logger.info(
-            "checkout_session_created",
+            "payment_intent_created",
             order_id=str(order_id),
             user_id=str(user_id),
-            session_id=session.id,
+            transaction_id=intent.id,
         )
-
-        return str(session.url)
+        return payment_intent_response
 
     async def process_stripe_webhook(self, payload: bytes, stripe_signature: str) -> None:
         """Process Stripe webhook events for payment confirmations.
@@ -131,13 +114,16 @@ class PaymentService:
 
         event_type = event["type"]
 
-        if event_type == "checkout.session.completed":
-            session = event["data"]["object"]
-            await self._handle_successful_payment(session)
+        if event_type == "payment_intent.succeeded":
+            transaction_intent = event["data"]["object"]
+            await self._handle_successful_payment(transaction_intent)
+        elif event_type == "payment_intent.payment_failed":
+            transaction_intent = event["data"]["object"]
+            await self._handle_failed_payment(transaction_intent)
 
     async def _handle_successful_payment(
         self,
-        session: dict[str, Any],
+        transaction_intent: dict[str, Any],
     ) -> None:
         """Handle successful payment from Stripe webhook.
 
@@ -145,54 +131,83 @@ class PaymentService:
         Implements idempotent processing to handle duplicate webhook deliveries safely.
 
         Args:
-            session (dict[str, Any]): Stripe checkout session object from webhook.
-
-        Raises:
-            PaymentNotFoundError: If the payment record is not found.
-            OrderNotFoundError: If the order is not found.
-            InvalidTransitionError: If the order is not in a valid state for payment processing.
+            transaction_intent (dict[str, Any]): Stripe payment intent object from webhook.
         """
-        # Update Order Status
-        order_id = UUID(session["metadata"]["order_id"])
-        user_id = UUID(session["metadata"]["user_id"])
-        session_id = session["id"]
+        user_id = UUID(transaction_intent["metadata"]["user_id"])
+        transaction_id = transaction_intent["id"]
 
         # Find existing payment record (created during checkout)
-        payment = await self.uow.payments.find_by_session_id(session_id)
+        payment = await self.uow.payments.find_by_transaction_id(transaction_id=transaction_id)
         if not payment:
-            raise PaymentNotFoundError(session_id=session_id)
+            logger.warning(
+                "payment_not_found",
+                transaction_id=transaction_id,
+                user_id=str(user_id),
+            )
+            return  # Ignore unknown payments
 
         # Prevent duplicate processing
         if payment.status == PaymentStatus.SUCCESS:
-            return  # Already processed
+            logger.info(
+                "payment_already_processed",
+                order_id=str(payment.order_id),
+                user_id=str(user_id),
+                transaction_id=payment.transaction_id,
+            )
+            return  # Already processed, do nothing
+
+        # Update payment status to SUCCESS
+        payment.status = PaymentStatus.SUCCESS
+        await self.uow.payments.update(payment)
 
         # Get order and verify ownership
-        order = await self.uow.orders.find_user_order(order_id, user_id)
+        order = await self.uow.orders.find_user_order(payment.order_id, user_id)
         if not order:
-            raise OrderNotFoundError(order_id=order_id, user_id=user_id)
-
-        if order.status == OrderStatus.PAID:
-            return  # Idempotent handling
-
-        if order.status != OrderStatus.PENDING:
-            raise InvalidTransitionError(
-                entity="Order",
-                from_state=order.status.value,
-                to_state=OrderStatus.PAID,
+            logger.warning(
+                "order_not_found_for_payment",
+                order_id=str(payment.order_id),
+                user_id=str(user_id),
             )
+            return  # Ignore if order not found
 
         order.status = OrderStatus.PAID
         order.paid_at = utcnow()
         await self.uow.orders.update(order)
 
-        # Update payment record to success
-        payment.status = PaymentStatus.SUCCESS
-        payment.payment_intent_id = session["payment_intent"]
-        await self.uow.payments.update(payment)
         logger.info(
             "payment_successful",
-            order_id=str(order_id),
+            order_id=str(order.id),
             user_id=str(user_id),
-            amount=float(payment.amount),
-            session_id=session_id,
+            transaction_id=payment.transaction_id,
+        )
+
+    async def _handle_failed_payment(
+        self,
+        transaction_intent: dict[str, Any],
+    ) -> None:
+        """Handle failed payment from Stripe webhook.
+
+        Args:
+            transaction_intent (dict[str, Any]): Stripe payment intent object from webhook.
+        """
+        transaction_id = transaction_intent["id"]
+        user_id = UUID(transaction_intent["metadata"]["user_id"])
+
+        # Find existing payment record (created during checkout)
+        payment = await self.uow.payments.find_by_transaction_id(transaction_id=transaction_id)
+        if not payment:
+            logger.warning(
+                "payment_not_found",
+                transaction_id=transaction_id,
+                user_id=str(user_id),
+            )
+            return  # Ignore unknown payments
+
+        payment.status = PaymentStatus.FAILED
+        await self.uow.payments.update(payment)
+        logger.warning(
+            "payment_failed",
+            order_id=str(payment.order_id),
+            user_id=str(user_id),
+            transaction_id=payment.transaction_id,
         )
