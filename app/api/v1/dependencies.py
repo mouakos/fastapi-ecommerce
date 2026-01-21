@@ -121,10 +121,7 @@ async def get_current_user(
     token_data = decode_access_token(token=credentials.credentials)
     if not token_data:
         raise AuthenticationError(message=message)
-    try:
-        return await user_service.get_user(token_data.user_id)
-    except UserNotFoundError as exc:
-        raise AuthenticationError(message=message) from exc
+    return await user_service.get_user(token_data.user_id)
 
 
 CurrentUserDep = Annotated[User, Depends(get_current_user)]
@@ -137,7 +134,7 @@ async def get_optional_current_user(
     """Get current authenticated user from JWT token, or None if not authenticated."""
     try:
         return await get_current_user(credentials, user_service)
-    except AuthenticationError:
+    except (AuthenticationError, UserNotFoundError):
         return None
 
 

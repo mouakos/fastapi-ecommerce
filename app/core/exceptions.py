@@ -113,7 +113,7 @@ class ResourceLimitError(ValidationError):
             self.details["current"] = current
 
 
-class InvalidTransitionError(ValidationError):
+class InvalidTransitionError(ValidationError):  # TODO
     """Invalid state transition."""
 
     def __init__(self, entity: str, from_state: str, to_state: str) -> None:
@@ -329,7 +329,7 @@ class ReviewNotFoundError(NotFoundError):
             self.details["user_id"] = str(user_id)
 
 
-class PaymentNotFoundError(NotFoundError):
+class PaymentNotFoundError(NotFoundError):  # TODO
     """Payment not found exception."""
 
     def __init__(self, session_id: str | None = None) -> None:
@@ -359,7 +359,7 @@ class CategoryNotFoundError(NotFoundError):
         super().__init__(resource="Category", identifier=identifier)
 
 
-class WishlistItemNotFoundError(NotFoundError):
+class WishlistItemNotFoundError(NotFoundError):  # TODO
     """Wishlist item not found exception."""
 
     def __init__(self, product_id: UUID | None = None, user_id: UUID | None = None) -> None:
@@ -373,7 +373,7 @@ class WishlistItemNotFoundError(NotFoundError):
             self.details["user_id"] = str(user_id)
 
 
-class ProductNotInCartError(NotFoundError):
+class ProductNotInCartError(NotFoundError):  # TODO
     """Product not found in cart."""
 
     def __init__(self, product_id: UUID | None = None) -> None:
@@ -424,7 +424,7 @@ class DuplicateReviewError(DuplicateResourceError):
 # ============================================================================
 
 
-class PaymentGatewayError(AppError):
+class PaymentGatewayError(AppError):  # TODO
     """Payment gateway (Stripe) error."""
 
     def __init__(self, message: str, gateway: str = "Stripe") -> None:

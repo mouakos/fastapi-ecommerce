@@ -20,7 +20,7 @@ class CartItemCreate(BaseModel):
 class CartItemUpdate(BaseModel):
     """Schema for updating a cart item."""
 
-    quantity: int = Field(..., ge=1)
+    quantity: int = Field(..., ge=0)
     model_config = ConfigDict(frozen=True)
 
 

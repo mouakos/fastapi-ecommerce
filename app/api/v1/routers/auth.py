@@ -22,7 +22,7 @@ async def register(data: UserCreate, user_service: UserServiceDep) -> UserRead:
 
 
 @router.post(
-    "/login",
+    "/token",
     response_model=Token,
     summary="Login user",
     description="Authenticate with email and password to receive a JWT access token. If a guest cart session exists, it will be merged with the user's cart.",

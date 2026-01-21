@@ -3,7 +3,7 @@
 # mypy: disable-error-code=return-value
 from uuid import UUID
 
-from fastapi import APIRouter
+from fastapi import APIRouter, status
 
 from app.api.v1.dependencies import (
     CartServiceDep,
@@ -35,7 +35,7 @@ async def get_cart(
 
 @router.delete(
     "",
-    response_model=CartRead,
+    status_code=status.HTTP_204_NO_CONTENT,
     summary="Clear cart",
     description="Remove all items from the cart. This action cannot be undone.",
 )
@@ -43,9 +43,9 @@ async def clear_cart_items(
     session_id: CartSessionIdOrCreateDep,
     current_user: OptionalCurrentUserDep,
     cart_service: CartServiceDep,
-) -> CartRead:
+) -> None:
     """Clear all items from the cart."""
-    return await cart_service.clear_cart_items(
+    await cart_service.clear_cart_items(
         user_id=current_user.id if current_user else None,
         session_id=session_id,
     )

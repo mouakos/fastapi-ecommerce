@@ -126,6 +126,10 @@ class CartService:
         if not product.is_active:
             raise ProductInactiveError(product_name=product.name)
 
+        if data.quantity == 0:
+            cart.items.remove(item)
+            return await self.uow.carts.update(cart)
+
         if product.stock < data.quantity:
             raise InsufficientStockError(
                 product_name=product.name, requested=data.quantity, available=product.stock
@@ -180,19 +184,16 @@ class CartService:
         except ValueError as e:
             raise InvalidCartSessionError(message=str(e)) from e
 
-    async def clear_cart_items(self, user_id: UUID | None, session_id: str | None) -> CartRead:
+    async def clear_cart_items(self, user_id: UUID | None, session_id: str | None) -> None:
         """Clear all items from the cart.
 
         Args:
             user_id (UUID | None): User ID.
             session_id (str | None): Session ID.
-
-        Returns:
-            CartRead: Updated cart instance with no items.
         """
         cart = await self._get_or_create_cart(user_id, session_id)
         cart.items.clear()
-        return await self.uow.carts.update(cart)
+        await self.uow.carts.update(cart)
 
     async def merge_carts(self, user_id: UUID, session_id: str) -> None:
         """Merge guest cart into user cart after authentication.
