@@ -30,7 +30,7 @@ from app.schemas.review import ReviewAdminRead, ReviewAdminSortByField
 from app.schemas.user import UserAdminRead, UserRoleUpdate, UserSortByField
 from app.utils.pagination import build_page
 
-router = APIRouter(prefix="/admin", tags=["Admin"], dependencies=[AdminRoleDep])
+router = APIRouter(dependencies=[AdminRoleDep])
 
 
 # ------------------------- Dashboard Overview ------------------------ #

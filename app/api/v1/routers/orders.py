@@ -12,7 +12,7 @@ from app.schemas.common import Page, SortOrder
 from app.schemas.order import OrderCreate, OrderRead, OrderSortByField
 from app.utils.pagination import build_page
 
-router = APIRouter(prefix="/orders", tags=["Orders"])
+router = APIRouter()
 
 
 @router.get(

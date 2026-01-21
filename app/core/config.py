@@ -4,13 +4,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlmodel import Field
 
 
-class Settings(BaseSettings):
-    """Environment variables for the application."""
+class AuthConfig(BaseSettings):
+    """Authentication-related configuration settings."""
 
-    # database
-    database_url: str = Field(
-        default="", alias="DATABASE_URL", description="Database connection URL"
-    )
     jwt_secret_key: str = Field(
         default="",
         description="Secret key for JWT signing",
@@ -23,6 +19,22 @@ class Settings(BaseSettings):
     )
     jwt_algorithm: str = Field(
         default="HS256", description="JWT signing algorithm", alias="JWT_ALGORITHM"
+    )
+
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", frozen=True, extra="ignore"
+    )
+
+
+auth_settings = AuthConfig()
+
+
+class Config(BaseSettings):
+    """Environment variables for the application."""
+
+    # database
+    database_url: str = Field(
+        default="", alias="DATABASE_URL", description="Database connection URL"
     )
     stripe_webhook_secret: str = Field(
         default="", description="Stripe webhook secret", alias="STRIPE_WEBHOOK_SECRET"
@@ -47,8 +59,13 @@ class Settings(BaseSettings):
         description="Application environment (dev, prod)",
         alias="ENVIRONMENT",
     )
+    app_version: str = Field(
+        default="1.0.0", description="Application version", alias="APP_VERSION"
+    )
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", frozen=True, extra="ignore"
+    )
 
 
-settings = Settings()
+settings = Config()

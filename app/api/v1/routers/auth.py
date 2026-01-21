@@ -6,7 +6,7 @@ from fastapi import APIRouter, status
 from app.api.v1.dependencies import CartServiceDep, CartSessionIdDep, UserServiceDep
 from app.schemas.user import Login, Token, UserCreate, UserRead
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+router = APIRouter()
 
 
 @router.post(

@@ -20,7 +20,7 @@ from app.schemas.product import (
 )
 from app.utils.pagination import build_page
 
-router = APIRouter(prefix="/products", tags=["Products"])
+router = APIRouter()
 
 
 @router.get(

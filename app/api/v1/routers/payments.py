@@ -5,7 +5,7 @@ from fastapi import APIRouter, Request, status
 from app.api.v1.dependencies import CurrentUserDep, PaymentServiceDep
 from app.schemas.payment import PaymentIntentRequest, PaymentIntentResponse
 
-router = APIRouter(prefix="/payments", tags=["Payments"])
+router = APIRouter()
 
 
 # Checkout session creation

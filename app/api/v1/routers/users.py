@@ -9,7 +9,7 @@ from app.api.v1.dependencies import (
 )
 from app.schemas.user import UserPasswordUpdate, UserRead, UserUpdate
 
-router = APIRouter(prefix="/users", tags=["Users"])
+router = APIRouter()
 
 
 @router.get(

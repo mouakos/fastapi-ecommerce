@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: ARG001
     """Lifespan context manager for startup and shutdown events."""
     logger.info("application_starting", environment=settings.environment)
     await init_db()
-    logger.info("application_ready", version="1.0.0")
+    logger.info("application_ready", version=settings.app_version)
     yield
     logger.info("application_shutting_down")
     await async_engine.dispose()
@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: ARG001
 app = FastAPI(
     lifespan=lifespan,
     description="This is a simple RESTful  API to for managing the products catalog, user authentication, shopping cart, and order processing in an e-commerce platform.",
-    version="1.0.0",
+    version=settings.app_version,
     root_path="/api/v1",
     servers=[],
     docs_url="/docs",
@@ -57,7 +57,7 @@ app = FastAPI(
             "description": "API root endpoint with welcome message and documentation links.",
         },
         {
-            "name": "Healthcheck",
+            "name": "Health Check",
             "description": "Database connectivity monitoring for health checks and readiness probes.",
         },
         {

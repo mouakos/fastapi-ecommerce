@@ -12,7 +12,7 @@ from app.api.v1.dependencies import (
 )
 from app.schemas.cart import CartItemCreate, CartItemUpdate, CartRead
 
-router = APIRouter(prefix="/cart", tags=["Cart"])
+router = APIRouter()
 
 
 @router.get(

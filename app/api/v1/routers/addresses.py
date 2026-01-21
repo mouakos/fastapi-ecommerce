@@ -8,7 +8,7 @@ from fastapi import APIRouter, status
 from app.api.v1.dependencies import AddressServiceDep, CurrentUserDep
 from app.schemas.address import AddressCreate, AddressRead, AddressUpdate
 
-router = APIRouter(prefix="/addresses", tags=["Addresses"])
+router = APIRouter()
 
 
 @router.get(

@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from app.api.v1.dependencies import SessionDep
 from app.db.database import check_db_health
 
-router = APIRouter(prefix="/healthcheck", tags=["Healthcheck"])
+router = APIRouter()
 
 
 class DatabaseStatus(StrEnum):

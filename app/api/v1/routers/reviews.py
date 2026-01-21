@@ -11,7 +11,7 @@ from app.schemas.common import Page, SortOrder
 from app.schemas.review import ReviewCreate, ReviewRead, ReviewSortByField, ReviewUpdate
 from app.utils.pagination import build_page
 
-router = APIRouter(prefix="/reviews", tags=["Reviews"])
+router = APIRouter()
 
 
 @router.post(

@@ -7,7 +7,7 @@ from uuid import UUID
 import jwt
 from pwdlib import PasswordHash
 
-from app.core.config import settings
+from app.core.config import auth_settings
 from app.core.logger import logger
 from app.schemas.user import TokenData
 
@@ -47,9 +47,11 @@ def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = 
     if expires_delta:
         expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.now(UTC) + timedelta(minutes=settings.jwt_default_exp_minutes)
+        expire = datetime.now(UTC) + timedelta(minutes=auth_settings.jwt_default_exp_minutes)
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    return jwt.encode(
+        to_encode, auth_settings.jwt_secret_key, algorithm=auth_settings.jwt_algorithm
+    )
 
 
 def decode_access_token(token: str) -> TokenData | None:
@@ -64,8 +66,8 @@ def decode_access_token(token: str) -> TokenData | None:
     try:
         payload: dict[str, Any] = jwt.decode(
             token,
-            settings.jwt_secret_key,
-            algorithms=[settings.jwt_algorithm],
+            auth_settings.jwt_secret_key,
+            algorithms=[auth_settings.jwt_algorithm],
             options={"verify_signature": True, "verify_exp": True},
         )
         user_id = payload.get("sub")

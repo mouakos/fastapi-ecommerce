@@ -13,7 +13,7 @@ from app.schemas.wishlist import (
 )
 from app.utils.pagination import build_page
 
-router = APIRouter(prefix="/wishlist", tags=["Wishlist"])
+router = APIRouter()
 
 
 @router.get(
