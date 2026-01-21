@@ -8,6 +8,7 @@ from app.core.exceptions import (
     InsufficientStockError,
     OrderNotFoundError,
 )
+from app.core.logger import logger
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import Order, OrderItem, OrderStatus
 from app.schemas.order import OrderCreate
@@ -93,7 +94,15 @@ class OrderService:
         # Clear cart
         await self.uow.carts.delete(cart)
 
-        return await self.uow.orders.update(created_order)
+        updated_order = await self.uow.orders.update(created_order)
+        logger.info(
+            "OrderCreated",
+            order_id=str(updated_order.id),
+            user_id=str(user_id),
+            order_number=updated_order.order_number,
+            total_amount=float(total_amount),
+        )
+        return updated_order
 
     async def get_order(self, order_id: UUID, user_id: UUID) -> Order:
         """Get an order for a specific user.

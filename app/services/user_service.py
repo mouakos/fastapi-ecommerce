@@ -9,6 +9,7 @@ from app.core.exceptions import (
     PasswordMismatchError,
     UserNotFoundError,
 )
+from app.core.logger import logger
 from app.core.security import create_access_token, hash_password, verify_password
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.user import User
@@ -64,7 +65,9 @@ class UserService:
         user_data = data.model_dump(exclude={"password"})
 
         new_user = User(hashed_password=hashed_password, **user_data)
-        return await self.uow.users.add(new_user)
+        created_user = await self.uow.users.add(new_user)
+        logger.info("UserRegistered", user_id=str(created_user.id), email=created_user.email)
+        return created_user
 
     async def login(self, data: Login) -> tuple[Token, User]:
         """Authenticate a user and generate JWT access token.
@@ -83,6 +86,7 @@ class UserService:
             raise InvalidCredentialsError()
 
         token = create_access_token({"sub": str(user.id)})
+        logger.info("UserLoggedIn", user_id=str(user.id), email=user.email)
         return Token(access_token=token), user
 
     async def update_user_password(self, user_id: UUID, data: UserPasswordUpdate) -> None:
@@ -107,6 +111,7 @@ class UserService:
 
         user.hashed_password = hash_password(data.new_password)
         await self.uow.users.update(user)
+        logger.info("UserPasswordUpdated", user_id=str(user_id))
 
     async def update_user(self, user_id: UUID, data: UserUpdate) -> User:
         """Update user information.
@@ -140,3 +145,4 @@ class UserService:
         """
         user = await self.get_user(user_id)
         await self.uow.users.delete(user)
+        logger.info("UserDeleted", user_id=str(user_id))

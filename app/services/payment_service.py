@@ -13,6 +13,7 @@ from app.core.exceptions import (
     PaymentNotFoundError,
     WebhookValidationError,
 )
+from app.core.logger import logger
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import OrderStatus
 from app.models.payment import Payment, PaymentStatus
@@ -96,6 +97,12 @@ class PaymentService:
             session_id=session.id,
         )
         await self.uow.payments.add(payment)
+        logger.info(
+            "CheckoutSessionCreated",
+            order_id=str(order_id),
+            user_id=str(user_id),
+            session_id=session.id,
+        )
 
         return str(session.url)
 
@@ -182,3 +189,10 @@ class PaymentService:
         payment.status = PaymentStatus.SUCCESS
         payment.payment_intent_id = session["payment_intent"]
         await self.uow.payments.update(payment)
+        logger.info(
+            "PaymentSuccessful",
+            order_id=str(order_id),
+            user_id=str(user_id),
+            amount=float(payment.amount),
+            session_id=session_id,
+        )

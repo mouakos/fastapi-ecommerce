@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import HttpUrl
 
 from app.core.exceptions import CategoryNotFoundError, SelfReferenceError
+from app.core.logger import logger
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.category import Category
 from app.schemas.category import CategoryCreate, CategoryUpdate
@@ -92,7 +93,11 @@ class CategoryService:
             category_data["image_url"] = str(category_data["image_url"])
 
         new_category = Category(slug=slug, **category_data)
-        return await self.uow.categories.add(new_category)
+        created_category = await self.uow.categories.add(new_category)
+        logger.info(
+            "CategoryCreated", category_id=str(created_category.id), name=created_category.name
+        )
+        return created_category
 
     async def update_category(
         self,
@@ -129,7 +134,9 @@ class CategoryService:
         for key, value in category_data.items():
             setattr(category, key, value)
 
-        return await self.uow.categories.update(category)
+        updated_category = await self.uow.categories.update(category)
+        logger.info("CategoryUpdated", category_id=str(category_id))
+        return updated_category
 
     async def delete_category(
         self,
@@ -145,3 +152,4 @@ class CategoryService:
         """
         category = await self.get_category_by_id(category_id)
         await self.uow.categories.delete(category)
+        logger.info("CategoryDeleted", category_id=str(category_id))

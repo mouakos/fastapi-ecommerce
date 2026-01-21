@@ -10,6 +10,7 @@ from app.core.exceptions import (
     SelfActionError,
     UserNotFoundError,
 )
+from app.core.logger import logger
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import Order, OrderStatus
 from app.models.product import Product
@@ -218,6 +219,7 @@ class AdminService:
             )
         order.status = new_status
         await self.uow.orders.update(order)
+        logger.info("OrderStatusUpdated", order_id=str(order_id), new_status=new_status.value)
 
     # ----------------------------- User Related Admin Services ----------------------------- #
     async def get_users(
@@ -301,6 +303,12 @@ class AdminService:
 
         user.role = new_role
         await self.uow.users.update(user)
+        logger.info(
+            "UserRoleUpdated",
+            user_id=str(user_id),
+            new_role=new_role.value,
+            updated_by=str(current_user_id),
+        )
 
     # ----------------------------- Review Related Admin Services ----------------------------- #
     async def get_reviews(
@@ -388,7 +396,9 @@ class AdminService:
         review.moderated_at = utcnow()
         review.moderated_by = moderator_id
 
-        return await self.uow.reviews.update(review)
+        updated_review = await self.uow.reviews.update(review)
+        logger.info("ReviewRejected", review_id=str(review_id), moderator_id=str(moderator_id))
+        return updated_review
 
     async def delete_review(self, review_id: UUID) -> None:
         """Delete a product review.
@@ -403,6 +413,7 @@ class AdminService:
         if not review:
             raise ReviewNotFoundError(review_id=review_id)
         await self.uow.reviews.delete(review)
+        logger.info("ReviewDeleted", review_id=str(review_id))
 
     # ---------------- Product Related Admin Services ---------------- #
 

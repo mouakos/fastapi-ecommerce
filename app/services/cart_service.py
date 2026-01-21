@@ -10,6 +10,7 @@ from app.core.exceptions import (
     ProductNotFoundError,
     ProductNotInCartError,
 )
+from app.core.logger import logger
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.cart import Cart, CartItem
 from app.schemas.cart import CartItemCreate, CartItemUpdate, CartRead
@@ -86,6 +87,12 @@ class CartService:
                 product_image_url=product.image_url,
             )
             cart.items.append(new_item)
+            logger.info(
+                "CartItemAdded",
+                cart_id=str(cart.id),
+                product_id=str(product.id),
+                quantity=data.quantity,
+            )
 
         return await self.uow.carts.update(cart)
 
@@ -194,6 +201,7 @@ class CartService:
         cart = await self._get_or_create_cart(user_id, session_id)
         cart.items.clear()
         await self.uow.carts.update(cart)
+        logger.info("CartCleared", cart_id=str(cart.id))
 
     async def merge_carts(self, user_id: UUID, session_id: str) -> None:
         """Merge guest cart into user cart after authentication.
@@ -222,3 +230,4 @@ class CartService:
 
         await self.uow.carts.update(user_cart)
         await self.uow.carts.delete(guest_cart)
+        logger.info("CartsMerged", user_id=str(user_id), guest_session_id=session_id)

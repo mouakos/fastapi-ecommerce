@@ -8,6 +8,7 @@ from app.core.exceptions import (
     ProductNotFoundError,
     WishlistItemNotFoundError,
 )
+from app.core.logger import logger
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.cart import Cart, CartItem
 from app.models.wishlist_item import WishlistItem
@@ -38,6 +39,7 @@ class WishlistService:
         if not wishlist_item:
             new_wishlist_item = WishlistItem(user_id=user_id, product_id=product_id)
             await self.uow.wishlists.add(new_wishlist_item)
+            logger.info("WishlistItemAdded", user_id=str(user_id), product_id=str(product_id))
 
     async def get_wishlist_items(
         self, user_id: UUID, page: int = 1, page_size: int = 10
@@ -69,6 +71,7 @@ class WishlistService:
             raise WishlistItemNotFoundError(product_id=product_id, user_id=user_id)
 
         await self.uow.wishlists.delete(wishlist_item)
+        logger.info("WishlistItemRemoved", user_id=str(user_id), product_id=str(product_id))
 
     async def clear_wishlist_items(self, user_id: UUID) -> None:
         """Clear all wishlist items for a user.
@@ -77,6 +80,7 @@ class WishlistService:
             user_id (UUID): User ID.
         """
         await self.uow.wishlists.delete_by_user_id(user_id)
+        logger.info("WishlistCleared", user_id=str(user_id))
 
     async def get_wishlist_item_count(self, user_id: UUID) -> int:
         """Get the total number of wishlist items for a user.
@@ -146,3 +150,4 @@ class WishlistService:
 
         # Remove from wishlist
         await self.uow.wishlists.delete(wishlist_item)
+        logger.info("WishlistItemMovedToCart", user_id=str(user_id), product_id=str(product_id))

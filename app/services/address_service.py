@@ -3,6 +3,7 @@
 from uuid import UUID
 
 from app.core.exceptions import AddressNotFoundError, ResourceLimitError
+from app.core.logger import logger
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.address import Address
 from app.schemas.address import AddressCreate, AddressUpdate
@@ -74,7 +75,9 @@ class AddressService:
 
         new_address = Address(**data.model_dump(), user_id=user_id)
 
-        return await self.uow.addresses.add(new_address)
+        created_address = await self.uow.addresses.add(new_address)
+        logger.info("AddressCreated", user_id=str(user_id), address_id=str(created_address.id))
+        return created_address
 
     async def update_address(self, address_id: UUID, user_id: UUID, data: AddressUpdate) -> Address:
         """Update an address for a user.
@@ -97,7 +100,9 @@ class AddressService:
         for key, value in address_data.items():
             setattr(address, key, value)
 
-        return await self.uow.addresses.update(address)
+        updated_address = await self.uow.addresses.update(address)
+        logger.info("AddressUpdated", user_id=str(user_id), address_id=str(address_id))
+        return updated_address
 
     async def delete_address(self, address_id: UUID, user_id: UUID) -> None:
         """Delete an address for a user.
@@ -111,6 +116,7 @@ class AddressService:
         """
         address = await self.get_address(address_id, user_id)
         await self.uow.addresses.delete(address)
+        logger.info("AddressDeleted", user_id=str(user_id), address_id=str(address_id))
 
     async def set_default_billing_address(self, address_id: UUID, user_id: UUID) -> Address:
         """Set an address as the default billing address for a user.
@@ -130,7 +136,9 @@ class AddressService:
 
         address.is_default_billing = True
 
-        return await self.uow.addresses.update(address)
+        updated_address = await self.uow.addresses.update(address)
+        logger.info("DefaultBillingAddressSet", user_id=str(user_id), address_id=str(address_id))
+        return updated_address
 
     async def set_default_shipping_address(self, address_id: UUID, user_id: UUID) -> Address:
         """Set an address as the default shipping address for a user.
@@ -150,4 +158,6 @@ class AddressService:
 
         address.is_default_shipping = True
 
-        return await self.uow.addresses.update(address)
+        updated_address = await self.uow.addresses.update(address)
+        logger.info("DefaultShippingAddressSet", user_id=str(user_id), address_id=str(address_id))
+        return updated_address

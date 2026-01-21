@@ -8,6 +8,7 @@ import jwt
 from pwdlib import PasswordHash
 
 from app.core.config import settings
+from app.core.logger import logger
 from app.schemas.user import TokenData
 
 password_hash = PasswordHash.recommended()
@@ -55,7 +56,7 @@ def decode_access_token(token: str) -> TokenData | None:
     """Verify and decode a JWT access token..
 
     Args:
-        token (str): he JWT string to verify.
+        token (str): The JWT string to verify.
 
     Returns:
         TokenData | None: The decoded token data or None if verification fails.
@@ -70,6 +71,15 @@ def decode_access_token(token: str) -> TokenData | None:
         user_id = payload.get("sub")
         if user_id:
             return TokenData(user_id=UUID(user_id))
+
+        logger.warning("TokenDecodedMissingUserID")
         return None
-    except jwt.PyJWTError:
+    except jwt.ExpiredSignatureError:
+        logger.info("TokenExpired")
+        return None
+    except jwt.InvalidTokenError as exc:
+        logger.warning("InvalidTokenAttempt", error=str(exc), exc_info=True)
+        return None
+    except jwt.PyJWTError as exc:
+        logger.warning("JWTDecodeError", error=str(exc), exc_info=True)
         return None

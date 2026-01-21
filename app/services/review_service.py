@@ -7,6 +7,7 @@ from app.core.exceptions import (
     ProductNotFoundError,
     ReviewNotFoundError,
 )
+from app.core.logger import logger
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.review import Review, ReviewStatus
 from app.schemas.review import ReviewCreate, ReviewUpdate
@@ -47,7 +48,15 @@ class ReviewService:
             **review_data,
             status=ReviewStatus.PENDING,
         )
-        return await self.uow.reviews.add(new_review)
+        created_review = await self.uow.reviews.add(new_review)
+        logger.info(
+            "ReviewCreated",
+            review_id=str(created_review.id),
+            user_id=str(user_id),
+            product_id=str(data.product_id),
+            rating=data.rating,
+        )
+        return created_review
 
     async def get_product_reviews(
         self,
@@ -134,7 +143,9 @@ class ReviewService:
         review.moderated_at = None
         review.moderated_by = None
 
-        return await self.uow.reviews.update(review)
+        updated_review = await self.uow.reviews.update(review)
+        logger.info("ReviewUpdated", review_id=str(review_id), user_id=str(user_id))
+        return updated_review
 
     async def delete_review(self, review_id: UUID, user_id: UUID) -> None:
         """Delete a review.
@@ -148,3 +159,4 @@ class ReviewService:
         """
         review = await self.get_review(review_id, user_id)
         await self.uow.reviews.delete(review)
+        logger.info("ReviewDeleted", review_id=str(review_id), user_id=str(user_id))

@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import HttpUrl
 
 from app.core.exceptions import CategoryNotFoundError, ProductNotFoundError
+from app.core.logger import logger
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.product import Product
 from app.schemas.product import ProductCreate, ProductUpdate
@@ -173,7 +174,11 @@ class ProductService:
 
         new_product = Product(slug=slug, sku=sku, **product_data)
 
-        return await self.uow.products.add(new_product)
+        created_product = await self.uow.products.add(new_product)
+        logger.info(
+            "ProductCreated", product_id=str(created_product.id), name=created_product.name, sku=sku
+        )
+        return created_product
 
     async def update_product(
         self,
@@ -208,7 +213,9 @@ class ProductService:
         for key, value in product_data.items():
             setattr(product, key, value)
 
-        return await self.uow.products.update(product)
+        updated_product = await self.uow.products.update(product)
+        logger.info("ProductUpdated", product_id=str(product_id))
+        return updated_product
 
     async def delete_product(
         self,
@@ -224,3 +231,4 @@ class ProductService:
         """
         product = await self.get_product_by_id(product_id)
         await self.uow.products.delete(product)
+        logger.info("ProductDeleted", product_id=str(product_id))
