@@ -14,4 +14,3 @@ stripe
 pycountry
 phonenumbers
 loguru
-prometheus-fastapi-instrumentator

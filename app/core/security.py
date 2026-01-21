@@ -72,14 +72,14 @@ def decode_access_token(token: str) -> TokenData | None:
         if user_id:
             return TokenData(user_id=UUID(user_id))
 
-        logger.warning("TokenDecodedMissingUserID")
+        logger.warning("token_decoded_missing_user_id")
         return None
     except jwt.ExpiredSignatureError:
-        logger.info("TokenExpired")
+        logger.info("token_expired")
         return None
     except jwt.InvalidTokenError as exc:
-        logger.warning("InvalidTokenAttempt", error=str(exc), exc_info=True)
+        logger.warning("invalid_token_attempt", error=str(exc), exc_info=True)
         return None
     except jwt.PyJWTError as exc:
-        logger.warning("JWTDecodeError", error=str(exc), exc_info=True)
+        logger.warning("jwt_decode_error", error=str(exc), exc_info=True)
         return None

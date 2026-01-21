@@ -17,13 +17,13 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         """Log incoming requests and outgoing responses."""
         start_time = time.time()
 
-        logger.info("Request started", method=request.method, path=request.url.path)
+        logger.info("request_started", method=request.method, path=request.url.path)
 
         response = await call_next(request)
 
         process_time = time.time() - start_time
         logger.info(
-            "Request completed",
+            "request_completed",
             method=request.method,
             path=request.url.path,
             status_code=response.status_code,

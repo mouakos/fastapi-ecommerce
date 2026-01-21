@@ -35,15 +35,15 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
 async def create_tables() -> None:
     """Create database tables."""
-    logger.info("CreatingDatabaseTables")
+    logger.info("creating_database_tables")
     async with async_engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
-    logger.info("DatabaseTablesCreated")
+    logger.info("database_tables_created")
 
 
 async def init_db() -> None:
     """Initialize the database."""
-    logger.info("InitializingDatabase")
+    logger.info("initializing_database")
     # Optional: create tables for quick local dev (use Alembic in real flows)
     await create_tables()
 
@@ -52,7 +52,7 @@ async def init_db() -> None:
         stmt = await session.exec(select(User).where(User.email == settings.superuser_email))
         user = stmt.first()
         if not user:
-            logger.info("CreatingSuperuser", email=settings.superuser_email)
+            logger.info("creating_superuser", email=settings.superuser_email)
             new_user = User(
                 email=settings.superuser_email,
                 hashed_password=hash_password(settings.superuser_password),
@@ -61,11 +61,11 @@ async def init_db() -> None:
             )
             session.add(new_user)
             await session.commit()
-            logger.info("SuperuserCreated", email=settings.superuser_email)
+            logger.info("superuser_created", email=settings.superuser_email)
         else:
-            logger.info("SuperuserAlreadyExists", email=settings.superuser_email)
+            logger.info("superuser_already_exists", email=settings.superuser_email)
 
-    logger.info("DatabaseInitialized")
+    logger.info("database_initialized")
 
 
 async def check_db_health(session: AsyncSession) -> bool:
@@ -74,5 +74,5 @@ async def check_db_health(session: AsyncSession) -> bool:
         await session.exec(text("SELECT 1 "))  # type: ignore [call-overload]
         return True
     except Exception as exc:
-        logger.warning("DatabaseHealthCheckFailed", error=str(exc), exc_info=True)
+        logger.warning("database_health_check_failed", error=str(exc), exc_info=True)
         return False

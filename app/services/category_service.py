@@ -95,7 +95,7 @@ class CategoryService:
         new_category = Category(slug=slug, **category_data)
         created_category = await self.uow.categories.add(new_category)
         logger.info(
-            "CategoryCreated", category_id=str(created_category.id), name=created_category.name
+            "category_created", category_id=str(created_category.id), name=created_category.name
         )
         return created_category
 
@@ -135,7 +135,7 @@ class CategoryService:
             setattr(category, key, value)
 
         updated_category = await self.uow.categories.update(category)
-        logger.info("CategoryUpdated", category_id=str(category_id))
+        logger.info("category_updated", category_id=str(category_id))
         return updated_category
 
     async def delete_category(
@@ -152,4 +152,4 @@ class CategoryService:
         """
         category = await self.get_category_by_id(category_id)
         await self.uow.categories.delete(category)
-        logger.info("CategoryDeleted", category_id=str(category_id))
+        logger.info("category_deleted", category_id=str(category_id))

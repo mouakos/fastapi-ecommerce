@@ -4,7 +4,6 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel
 
 from app.api.exception_handlers import register_exception_handlers
@@ -18,13 +17,13 @@ from app.db.database import async_engine, init_db
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: ARG001
     """Lifespan context manager for startup and shutdown events."""
-    logger.info("ApplicationStarting", environment=settings.environment)
+    logger.info("application_starting", environment=settings.environment)
     await init_db()
-    logger.info("ApplicationReady", version="1.0.0")
+    logger.info("application_ready", version="1.0.0")
     yield
-    logger.info("ApplicationShuttingDown")
+    logger.info("application_shutting_down")
     await async_engine.dispose()
-    logger.info("ApplicationStopped")
+    logger.info("application_stopped")
 
 
 app = FastAPI(
@@ -111,9 +110,6 @@ app = FastAPI(
 
 register_exception_handlers(app)
 register_middleware(app)
-
-# Prometheus metrics instrumentation
-Instrumentator().instrument(app).expose(app)
 
 
 class RootRead(BaseModel):

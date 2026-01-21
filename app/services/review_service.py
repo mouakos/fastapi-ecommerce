@@ -50,7 +50,7 @@ class ReviewService:
         )
         created_review = await self.uow.reviews.add(new_review)
         logger.info(
-            "ReviewCreated",
+            "review_created",
             review_id=str(created_review.id),
             user_id=str(user_id),
             product_id=str(data.product_id),
@@ -144,7 +144,7 @@ class ReviewService:
         review.moderated_by = None
 
         updated_review = await self.uow.reviews.update(review)
-        logger.info("ReviewUpdated", review_id=str(review_id), user_id=str(user_id))
+        logger.info("review_updated", review_id=str(review_id), user_id=str(user_id))
         return updated_review
 
     async def delete_review(self, review_id: UUID, user_id: UUID) -> None:
@@ -159,4 +159,4 @@ class ReviewService:
         """
         review = await self.get_review(review_id, user_id)
         await self.uow.reviews.delete(review)
-        logger.info("ReviewDeleted", review_id=str(review_id), user_id=str(user_id))
+        logger.info("review_deleted", review_id=str(review_id), user_id=str(user_id))

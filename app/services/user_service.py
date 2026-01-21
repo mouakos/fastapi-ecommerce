@@ -66,7 +66,7 @@ class UserService:
 
         new_user = User(hashed_password=hashed_password, **user_data)
         created_user = await self.uow.users.add(new_user)
-        logger.info("UserRegistered", user_id=str(created_user.id), email=created_user.email)
+        logger.info("user_registered", user_id=str(created_user.id), email=created_user.email)
         return created_user
 
     async def login(self, data: Login) -> tuple[Token, User]:
@@ -86,7 +86,7 @@ class UserService:
             raise InvalidCredentialsError()
 
         token = create_access_token({"sub": str(user.id)})
-        logger.info("UserLoggedIn", user_id=str(user.id), email=user.email)
+        logger.info("user_logged_in", user_id=str(user.id), email=user.email)
         return Token(access_token=token), user
 
     async def update_user_password(self, user_id: UUID, data: UserPasswordUpdate) -> None:
@@ -111,7 +111,7 @@ class UserService:
 
         user.hashed_password = hash_password(data.new_password)
         await self.uow.users.update(user)
-        logger.info("UserPasswordUpdated", user_id=str(user_id))
+        logger.info("user_password_updated", user_id=str(user_id))
 
     async def update_user(self, user_id: UUID, data: UserUpdate) -> User:
         """Update user information.
@@ -145,4 +145,4 @@ class UserService:
         """
         user = await self.get_user(user_id)
         await self.uow.users.delete(user)
-        logger.info("UserDeleted", user_id=str(user_id))
+        logger.info("user_deleted", user_id=str(user_id))

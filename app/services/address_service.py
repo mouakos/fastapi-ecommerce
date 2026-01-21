@@ -76,7 +76,7 @@ class AddressService:
         new_address = Address(**data.model_dump(), user_id=user_id)
 
         created_address = await self.uow.addresses.add(new_address)
-        logger.info("AddressCreated", user_id=str(user_id), address_id=str(created_address.id))
+        logger.info("address_created", user_id=str(user_id), address_id=str(created_address.id))
         return created_address
 
     async def update_address(self, address_id: UUID, user_id: UUID, data: AddressUpdate) -> Address:
@@ -101,7 +101,7 @@ class AddressService:
             setattr(address, key, value)
 
         updated_address = await self.uow.addresses.update(address)
-        logger.info("AddressUpdated", user_id=str(user_id), address_id=str(address_id))
+        logger.info("address_updated", user_id=str(user_id), address_id=str(address_id))
         return updated_address
 
     async def delete_address(self, address_id: UUID, user_id: UUID) -> None:
@@ -116,7 +116,7 @@ class AddressService:
         """
         address = await self.get_address(address_id, user_id)
         await self.uow.addresses.delete(address)
-        logger.info("AddressDeleted", user_id=str(user_id), address_id=str(address_id))
+        logger.info("address_deleted", user_id=str(user_id), address_id=str(address_id))
 
     async def set_default_billing_address(self, address_id: UUID, user_id: UUID) -> Address:
         """Set an address as the default billing address for a user.
@@ -137,7 +137,7 @@ class AddressService:
         address.is_default_billing = True
 
         updated_address = await self.uow.addresses.update(address)
-        logger.info("DefaultBillingAddressSet", user_id=str(user_id), address_id=str(address_id))
+        logger.info("default_billing_address_set", user_id=str(user_id), address_id=str(address_id))
         return updated_address
 
     async def set_default_shipping_address(self, address_id: UUID, user_id: UUID) -> Address:
@@ -159,5 +159,7 @@ class AddressService:
         address.is_default_shipping = True
 
         updated_address = await self.uow.addresses.update(address)
-        logger.info("DefaultShippingAddressSet", user_id=str(user_id), address_id=str(address_id))
+        logger.info(
+            "default_shipping_address_set", user_id=str(user_id), address_id=str(address_id)
+        )
         return updated_address

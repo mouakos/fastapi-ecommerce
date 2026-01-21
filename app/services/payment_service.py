@@ -98,7 +98,7 @@ class PaymentService:
         )
         await self.uow.payments.add(payment)
         logger.info(
-            "CheckoutSessionCreated",
+            "checkout_session_created",
             order_id=str(order_id),
             user_id=str(user_id),
             session_id=session.id,
@@ -190,7 +190,7 @@ class PaymentService:
         payment.payment_intent_id = session["payment_intent"]
         await self.uow.payments.update(payment)
         logger.info(
-            "PaymentSuccessful",
+            "payment_successful",
             order_id=str(order_id),
             user_id=str(user_id),
             amount=float(payment.amount),

@@ -88,7 +88,7 @@ class CartService:
             )
             cart.items.append(new_item)
             logger.info(
-                "CartItemAdded",
+                "cart_item_added",
                 cart_id=str(cart.id),
                 product_id=str(product.id),
                 quantity=data.quantity,
@@ -201,7 +201,7 @@ class CartService:
         cart = await self._get_or_create_cart(user_id, session_id)
         cart.items.clear()
         await self.uow.carts.update(cart)
-        logger.info("CartCleared", cart_id=str(cart.id))
+        logger.info("cart_cleared", cart_id=str(cart.id))
 
     async def merge_carts(self, user_id: UUID, session_id: str) -> None:
         """Merge guest cart into user cart after authentication.
@@ -230,4 +230,4 @@ class CartService:
 
         await self.uow.carts.update(user_cart)
         await self.uow.carts.delete(guest_cart)
-        logger.info("CartsMerged", user_id=str(user_id), guest_session_id=session_id)
+        logger.info("carts_merged", user_id=str(user_id), guest_session_id=session_id)

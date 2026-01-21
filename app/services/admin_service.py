@@ -219,7 +219,7 @@ class AdminService:
             )
         order.status = new_status
         await self.uow.orders.update(order)
-        logger.info("OrderStatusUpdated", order_id=str(order_id), new_status=new_status.value)
+        logger.info("order_status_updated", order_id=str(order_id), new_status=new_status.value)
 
     # ----------------------------- User Related Admin Services ----------------------------- #
     async def get_users(
@@ -304,7 +304,7 @@ class AdminService:
         user.role = new_role
         await self.uow.users.update(user)
         logger.info(
-            "UserRoleUpdated",
+            "user_role_updated",
             user_id=str(user_id),
             new_role=new_role.value,
             updated_by=str(current_user_id),
@@ -397,7 +397,7 @@ class AdminService:
         review.moderated_by = moderator_id
 
         updated_review = await self.uow.reviews.update(review)
-        logger.info("ReviewRejected", review_id=str(review_id), moderator_id=str(moderator_id))
+        logger.info("review_rejected", review_id=str(review_id), moderator_id=str(moderator_id))
         return updated_review
 
     async def delete_review(self, review_id: UUID) -> None:
@@ -413,7 +413,7 @@ class AdminService:
         if not review:
             raise ReviewNotFoundError(review_id=review_id)
         await self.uow.reviews.delete(review)
-        logger.info("ReviewDeleted", review_id=str(review_id))
+        logger.info("review_deleted", review_id=str(review_id))
 
     # ---------------- Product Related Admin Services ---------------- #
 

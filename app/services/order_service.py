@@ -96,7 +96,7 @@ class OrderService:
 
         updated_order = await self.uow.orders.update(created_order)
         logger.info(
-            "OrderCreated",
+            "order_created",
             order_id=str(updated_order.id),
             user_id=str(user_id),
             order_number=updated_order.order_number,

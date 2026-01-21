@@ -176,7 +176,10 @@ class ProductService:
 
         created_product = await self.uow.products.add(new_product)
         logger.info(
-            "ProductCreated", product_id=str(created_product.id), name=created_product.name, sku=sku
+            "product_created",
+            product_id=str(created_product.id),
+            name=created_product.name,
+            sku=sku,
         )
         return created_product
 
@@ -214,7 +217,7 @@ class ProductService:
             setattr(product, key, value)
 
         updated_product = await self.uow.products.update(product)
-        logger.info("ProductUpdated", product_id=str(product_id))
+        logger.info("product_updated", product_id=str(product_id))
         return updated_product
 
     async def delete_product(
@@ -231,4 +234,4 @@ class ProductService:
         """
         product = await self.get_product_by_id(product_id)
         await self.uow.products.delete(product)
-        logger.info("ProductDeleted", product_id=str(product_id))
+        logger.info("product_deleted", product_id=str(product_id))
