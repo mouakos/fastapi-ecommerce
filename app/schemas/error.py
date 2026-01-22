@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ErrorDetail(BaseModel):
@@ -10,7 +10,7 @@ class ErrorDetail(BaseModel):
 
     message: str
     error_code: str
-    details: dict[str, Any] = {}
+    details: dict[str, Any] = Field(default_factory=dict)
 
 
 class ErrorResponse(BaseModel):
@@ -23,7 +23,7 @@ class ErrorResponse(BaseModel):
             "example": {
                 "error": {
                     "message": "User not found.",
-                    "error_code": "RESOURCE_NOT_FOUND",
+                    "error_code": "resource_not_found",
                     "details": {"resource": "User", "user_id": "123e4567..."},
                 }
             }

@@ -1,29 +1,34 @@
-"""Custom exceptions for the application.
+"""Application-specific exceptions.
 
-Exception Hierarchy by HTTP Status Code:
------------------------------------------
+These exceptions are raised in the service layer and translated into HTTP
+responses by the API exception handlers.
 
-400 Bad Request - Validation Errors:
+Exception groups (by HTTP status code)
+--------------------------------------
+
+400 Bad Request (validation / business rules):
     ValidationError (base)
     ├── ResourceLimitError
-    ├── SelfReferenceError
+    ├── CategorySelfReferenceError
     ├── InsufficientStockError
     ├── ProductInactiveError
     ├── InvalidCartSessionError
     ├── EmptyCartError
     ├── WebhookValidationError
-    └── InvalidOrderStatusError
+    ├── InvalidOrderStatusError
+    └── OrderStatusTransitionError
 
-401 Unauthorized - Authentication Errors:
+401 Unauthorized (authentication):
     AuthenticationError (base)
     ├── InvalidCredentialsError
+    ├── IncorrectPasswordError
     └── PasswordMismatchError
 
-403 Forbidden - Authorization Errors:
+403 Forbidden (authorization):
     AuthorizationError (base)
     └── SelfActionError
 
-404 Not Found - Resource Not Found:
+404 Not Found:
     NotFoundError (base)
     ├── UserNotFoundError
     ├── ProductNotFoundError
@@ -34,24 +39,24 @@ Exception Hierarchy by HTTP Status Code:
     ├── ProductNotInWishlistError
     └── ProductNotInCartError
 
-409 Conflict - Resource Conflicts:
+409 Conflict (duplicates):
     DuplicateResourceError (base)
-    └── DuplicateReviewError
+    ├── DuplicateUserError
+    ├── DuplicateReviewError
+    └── DuplicateWishlistItemError
 
-502 Bad Gateway - External Service Errors:
+502 Bad Gateway (external services):
     PaymentGatewayError
 
-Usage:
-------
-Raise exceptions in service layer:
-    raise UserNotFoundError(user_id=user_id)
-    raise ValidationError(message="Invalid input", field="email")
-
-All exceptions include:
+Common fields:
     - message: Human-readable error message
     - status_code: HTTP status code
-    - error_code: Machine-readable error code (e.g., "RESOURCE_NOT_FOUND")
+    - error_code: Machine-readable error code (snake_case)
     - details: Dictionary with additional context
+
+Examples:
+    raise UserNotFoundError(user_id=user_id)
+    raise ValidationError(message="Invalid input")
 """
 
 from typing import Any
@@ -69,7 +74,7 @@ class AppError(Exception):
         self,
         message: str,
         status_code: int = 500,
-        error_code: str = "INTERNAL_ERROR",
+        error_code: str = "internal_error",
         details: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the AppError."""
