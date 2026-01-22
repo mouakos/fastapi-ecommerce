@@ -5,10 +5,10 @@ from decimal import Decimal
 from enum import StrEnum
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.models.user import UserRole
-from app.schemas.common import UUIDMixin
+from app.schemas.common import UUIDMixin, validate_phone_number
 
 
 class UserCreate(BaseModel):
@@ -18,6 +18,13 @@ class UserCreate(BaseModel):
     password: str = Field(..., min_length=6, max_length=255)
     first_name: str | None = Field(default=None, min_length=2, max_length=50)
     last_name: str | None = Field(default=None, min_length=2, max_length=50)
+    phone_number: str | None = Field(default=None, max_length=20)
+
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone_number(cls, v: str | None) -> str | None:
+        """Validate phone number format using international E.164 standard."""
+        return validate_phone_number(v)
 
     model_config = ConfigDict(
         frozen=True,
@@ -27,6 +34,7 @@ class UserCreate(BaseModel):
                 "password": "string",
                 "first_name": "John",
                 "last_name": "Doe",
+                "phone_number": "+4917612345678",
             }
         },
     )
@@ -38,6 +46,12 @@ class UserUpdate(BaseModel):
     first_name: str | None = Field(None, min_length=2, max_length=50)
     last_name: str | None = Field(None, min_length=2, max_length=50)
     phone_number: str | None = Field(None, max_length=20)
+
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone_number(cls, v: str | None) -> str | None:
+        """Validate phone number format using international E.164 standard."""
+        return validate_phone_number(v)
 
     model_config = ConfigDict(frozen=True)
 

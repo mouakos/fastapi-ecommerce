@@ -1,5 +1,6 @@
 """SQL User repository implementation."""
 
+from datetime import timedelta
 from decimal import Decimal
 from uuid import UUID
 
@@ -9,6 +10,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.interfaces.order_repository import OrderRepository
 from app.models.order import Order, OrderStatus
 from app.repositories.sql_generic_repository import SqlGenericRepository
+from app.utils.datetime import utcnow
 
 
 class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
@@ -54,9 +56,10 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
         Returns:
             Decimal: Total sales amount over the last specified number of days.
         """
+        cutoff = utcnow() - timedelta(days=days)
         stmt = select(func.sum(Order.total_amount)).where(
-            Order.status == OrderStatus.PAID,
-            func.now() - Order.created_at <= func.make_interval(0, 0, 0, days, 0, 0, 0),
+            Order.status.in_({OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.DELIVERED}),  # type: ignore [attr-defined]
+            Order.created_at >= cutoff,
         )
         result = await self._session.exec(stmt)
         return result.first() or Decimal("0.00")
@@ -71,7 +74,8 @@ class SqlOrderRepository(SqlGenericRepository[Order], OrderRepository):
             Decimal: Total sales amount for the specified user.
         """
         stmt = select(func.sum(Order.total_amount)).where(
-            Order.user_id == user_id, Order.status == OrderStatus.PAID
+            Order.user_id == user_id,
+            Order.status.in_({OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.DELIVERED}),  # type: ignore [attr-defined]
         )
         result = await self._session.exec(stmt)
         return result.first() or Decimal("0.00")

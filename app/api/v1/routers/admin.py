@@ -23,7 +23,6 @@ from app.schemas.order import (
     OrderActionResponse,
     OrderAdmin,
     OrderSortByField,
-    OrderStatusUpdateRequest,
 )
 from app.schemas.product import (
     ProductAdmin,
@@ -31,7 +30,7 @@ from app.schemas.product import (
     ProductPublic,
     ProductSortByField,
 )
-from app.schemas.review import ReviewActionResponse, ReviewAdmin, ReviewAdminSortByField
+from app.schemas.review import ReviewActionResponse, ReviewAdmin, ReviewSortByField
 from app.schemas.user import UserActionResponse, UserAdmin, UserRoleUpdateRequest, UserSortByField
 from app.utils.pagination import build_page
 
@@ -177,8 +176,8 @@ async def update_user_role(
 @router.get(
     "/orders",
     response_model=Page[OrderAdmin],
-    summary="List all orders (Admin)",
-    description="Retrieve paginated list of all orders across all users with optional filtering by status and user, plus sorting options. Admin access required.",
+    summary="List all orders",
+    description="Retrieve paginated list of all orders across all users with optional filtering by status and user, plus sorting options.",
 )
 async def get_orders(
     admin_service: AdminServiceDep,
@@ -221,26 +220,25 @@ async def get_orders(
 
 
 @router.patch(
-    "/orders/{order_id}/status",
-    summary="Update order status",
-    description="Update the status of an order (e.g., from 'pending' to 'processing', 'shipped', or 'delivered').",
+    "/orders/{order_id}/mark-shipped",
+    summary="Mark order as shipped",
+    description="Mark an order as shipped, updating its status accordingly.",
 )
-async def update_order_status(
+async def mark_order_as_shipped(
     order_id: UUID,
-    status_update: OrderStatusUpdateRequest,
     admin_service: AdminServiceDep,
 ) -> OrderActionResponse:
-    """Update an order's status."""
-    await admin_service.update_order_status(order_id=order_id, new_status=status_update.status)
-    return OrderActionResponse(message="Order status updated successfully.", order_id=order_id)
+    """Mark an order as shipped."""
+    await admin_service.mark_order_as_shipped(order_id=order_id)
+    return OrderActionResponse(message="Order status updated to shipped.", order_id=order_id)
 
 
 # -------------------------- Review management ------------------------ #
 @router.get(
     "/reviews",
     response_model=Page[ReviewAdmin],
-    summary="List all reviews (Admin)",
-    description="Retrieve paginated list of all reviews across all products and users with optional filtering by status, rating, user, and product. Includes moderation information. Admin access required.",
+    summary="List all reviews",
+    description="Retrieve paginated list of all reviews across all products and users with optional filtering by status, rating, user, and product. Includes moderation information.",
 )
 async def get_reviews(
     admin_service: AdminServiceDep,
@@ -251,8 +249,8 @@ async def get_reviews(
     product_id: Annotated[UUID | None, Query(description="Filter by product ID")] = None,
     rating: int | None = Query(None, ge=1, le=5, description="Filter by rating"),
     sort_by: Annotated[
-        ReviewAdminSortByField, Query(description="Field to sort by")
-    ] = ReviewAdminSortByField.CREATED_AT,
+        ReviewSortByField, Query(description="Field to sort by")
+    ] = ReviewSortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
 ) -> Page[ReviewAdmin]:
     """Get all reviews with optional filters, sorting, and pagination."""
@@ -289,7 +287,7 @@ async def get_reviews(
 
 @router.patch(
     "/reviews/{review_id}/approve",
-    response_model=ReviewAdmin,
+    response_model=ReviewActionResponse,
     summary="Approve review",
     description="Approve a pending review to make it publicly visible on the product page.",
 )
@@ -299,10 +297,10 @@ async def approve_review(
     current_user: CurrentUserDep,
 ) -> ReviewActionResponse:
     """Approve a review."""
-    review = await admin_service.approve_review(review_id=review_id, moderator_id=current_user.id)
+    await admin_service.approve_review(review_id=review_id, moderator_id=current_user.id)
     return ReviewActionResponse(
         message="Review approved successfully.",
-        review_id=review.id,
+        review_id=review_id,
     )
 
 
@@ -318,10 +316,10 @@ async def reject_review(
     current_user: CurrentUserDep,
 ) -> ReviewActionResponse:
     """Reject a review."""
-    review = await admin_service.reject_review(review_id=review_id, moderator_id=current_user.id)
+    await admin_service.reject_review(review_id=review_id, moderator_id=current_user.id)
     return ReviewActionResponse(
         message="Review rejected successfully.",
-        review_id=review.id,
+        review_id=review_id,
     )
 
 

@@ -63,10 +63,13 @@ class CartService:
         product = await self.uow.products.find_by_id(product_id)
         if not product:
             raise ProductNotFoundError(product_id=product_id)
+
         if not product.is_active:
             raise ProductInactiveError(product_id=product.id)
 
-        item = await self.uow.carts.find_cart_item(cart.id, product.id)
+        item = await self.uow.carts.find_cart_item(cart.id, product_id)
+        if not item:
+            raise ProductNotInCartError(product_id=product_id, cart_id=cart.id)
 
         current_qty = item.quantity if item else 0
         new_qty = current_qty + quantity
@@ -116,22 +119,19 @@ class CartService:
             quantity (int): Quantity for updating the cart item.
 
         Raises:
-            ProductNotFoundError: If product does not exist.
             ProductNotInCartError: If product is not in the cart.
             InsufficientStockError: If insufficient stock available.
         """
-        product = await self.uow.products.find_by_id(product_id)
-        if not product:
-            raise ProductNotFoundError(product_id=product_id)
-
-        if not product.is_active:
-            raise ProductInactiveError(product_id=product.id)
-
         cart = await self._get_or_create_cart(user_id, session_id)
 
         item = await self.uow.carts.find_cart_item(cart.id, product_id)
         if not item:
             raise ProductNotInCartError(product_id=product_id, cart_id=cart.id)
+
+        product = item.product
+
+        if not product.is_active:
+            raise ProductInactiveError(product_id=product.id)
 
         if quantity == 0:
             cart.items.remove(item)

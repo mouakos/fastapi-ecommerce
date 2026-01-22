@@ -4,8 +4,8 @@ from decimal import Decimal
 from uuid import UUID
 
 from app.core.exceptions import (
+    InvalidOrderStatusError,
     OrderNotFoundError,
-    OrderStatusTransitionError,
     ReviewNotFoundError,
     SelfActionError,
     UserNotFoundError,
@@ -24,7 +24,7 @@ from app.schemas.analytics import (
     UserAnalytics,
 )
 from app.utils.datetime import utcnow
-from app.utils.order import is_valid_order_status_transition
+from app.utils.order import money_format
 
 
 class AdminService:
@@ -53,21 +53,23 @@ class AdminService:
         cancelled_orders = await self.uow.orders.count(status=OrderStatus.CANCELED)
 
         # Average order value
-        average_order_value = total_revenue / total_orders if total_orders > 0 else 0.0
+        average_order_value = (
+            total_revenue / Decimal(total_orders) if total_orders > 0 else Decimal("0.00")
+        )
 
         # Revenue in the last 30 days
         revenue_last_30_days = await self.uow.orders.calculate_recent_sales(days=30)
 
         return SalesAnalytics(
-            total_revenue=total_revenue,
+            total_revenue=money_format(total_revenue),
             total_orders=total_orders,
             pending_orders=pending_orders,
             paid_orders=paid_orders,
             shipped_orders=shipped_orders,
             delivered_orders=delivered_orders,
             cancelled_orders=cancelled_orders,
-            average_order_value=Decimal(str(average_order_value)),
-            revenue_last_30_days=revenue_last_30_days,
+            average_order_value=money_format(average_order_value),
+            revenue_last_30_days=money_format(revenue_last_30_days),
         )
 
     async def get_user_analytics(self) -> UserAnalytics:
@@ -179,58 +181,31 @@ class AdminService:
 
         return orders, total
 
-    async def update_order_status(self, order_id: UUID, new_status: OrderStatus) -> None:
-        """Update order status with validation and timestamp tracking.
-
-        Validates status transitions and updates corresponding timestamp fields
-        (shipped_at, paid_at, canceled_at, delivered_at).
+    async def mark_order_as_shipped(self, order_id: UUID) -> None:
+        """Mark an order as shipped.
 
         Args:
             order_id (UUID): ID of the order to update.
-            new_status (OrderStatus): New status.
 
         Raises:
             OrderNotFoundError: If order not found.
-            OrderStatusTransitionError: If status transition is invalid.
+            InvalidOrderStatusError: If order status transition is invalid.
         """
         order = await self.uow.orders.find_by_id(order_id)
         if not order:
             raise OrderNotFoundError(order_id=order_id)
 
-        # validate status transition
-        current_status = order.status
-        is_valid_transition = is_valid_order_status_transition(current_status, new_status)
-        if not is_valid_transition:
-            raise OrderStatusTransitionError(
+        if order.status != OrderStatus.PAID:
+            raise InvalidOrderStatusError(
                 order_id=order_id,
-                current_status=current_status.value,
-                requested_status=new_status.value,
+                current_status=order.status.value,
+                expected_status=OrderStatus.PAID.value,
             )
 
-        # track timestamps for known statuses
-        if new_status == OrderStatus.SHIPPED:
-            order.shipped_at = utcnow()
-        elif new_status == OrderStatus.PAID:
-            order.paid_at = utcnow()
-        elif new_status == OrderStatus.CANCELED:
-            order.canceled_at = utcnow()
-        elif new_status == OrderStatus.DELIVERED:
-            order.delivered_at = utcnow()
-        else:
-            raise OrderStatusTransitionError(
-                order_id=order_id,
-                current_status=current_status.value,
-                requested_status=new_status.value,
-            )
-
-        order.status = new_status
+        order.status = OrderStatus.SHIPPED
+        order.shipped_at = utcnow()
         await self.uow.orders.update(order)
-        logger.info(
-            "order_status_updated",
-            order_id=str(order_id),
-            old_status=current_status.value,
-            new_status=new_status.value,
-        )
+        logger.info("order_marked_as_shipped", order_id=str(order_id))
 
     # ----------------------------- User Related Admin Services ----------------------------- #
     async def get_users(
@@ -286,7 +261,7 @@ class AdminService:
         Returns:
             Decimal: Total amount spent by the user.
         """
-        return await self.uow.orders.calculate_user_sales(user_id)
+        return money_format(await self.uow.orders.calculate_user_sales(user_id))
 
     async def update_user_role(
         self, current_user_id: UUID, user_id: UUID, new_role: UserRole
@@ -362,7 +337,7 @@ class AdminService:
         )
         return reviews, total
 
-    async def approve_review(self, review_id: UUID, moderator_id: UUID) -> Review:
+    async def approve_review(self, review_id: UUID, moderator_id: UUID) -> None:
         """Approve a review to make it publicly visible.
 
         Sets status to APPROVED and records moderator ID and timestamp.
@@ -370,9 +345,6 @@ class AdminService:
         Args:
             review_id (UUID): ID of the review to approve.
             moderator_id (UUID): ID of the admin performing the approval.
-
-        Returns:
-            Review: The approved review with updated moderation metadata.
 
         Raises:
             ReviewNotFoundError: If review is not found.
@@ -386,17 +358,15 @@ class AdminService:
         review.moderated_at = utcnow()
         review.moderated_by = moderator_id
 
-        return await self.uow.reviews.update(review)
+        await self.uow.reviews.update(review)
+        logger.info("review_approved", review_id=str(review_id), moderator_id=str(moderator_id))
 
-    async def reject_review(self, review_id: UUID, moderator_id: UUID) -> Review:
+    async def reject_review(self, review_id: UUID, moderator_id: UUID) -> None:
         """Reject a product review.
 
         Args:
             review_id (UUID): ID of the review to reject.
             moderator_id (UUID): ID of the admin rejecting the review.
-
-        Returns:
-            Review: The updated review instance.
         """
         review = await self.uow.reviews.find_by_id(review_id)
         if not review:
@@ -407,9 +377,8 @@ class AdminService:
         review.moderated_at = utcnow()
         review.moderated_by = moderator_id
 
-        updated_review = await self.uow.reviews.update(review)
+        await self.uow.reviews.update(review)
         logger.info("review_rejected", review_id=str(review_id), moderator_id=str(moderator_id))
-        return updated_review
 
     async def delete_review(self, review_id: UUID) -> None:
         """Delete a product review.

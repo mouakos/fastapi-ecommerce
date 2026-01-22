@@ -2,11 +2,9 @@
 
 from uuid import UUID
 
-import phonenumbers
-import pycountry
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.schemas.common import UUIDMixin
+from app.schemas.common import UUIDMixin, validate_country, validate_phone_number
 
 
 class AddressBase(BaseModel):
@@ -27,33 +25,15 @@ class AddressBase(BaseModel):
 
     @field_validator("country")
     @classmethod
-    def validate_country(cls, v: str) -> str:
+    def validate_country(cls, v: str) -> str | None:
         """Validate country code using ISO 3166-1 alpha-2 standard."""
-        v = v.upper()
-        if not pycountry.countries.get(alpha_2=v):
-            raise ValueError(
-                f"Invalid country code: {v}. Must be ISO 3166-1 alpha-2 (e.g., US, FR, CA)"
-            )
-        return v
+        return validate_country(v)
 
     @field_validator("phone_number")
     @classmethod
     def validate_phone_number(cls, v: str | None) -> str | None:
         """Validate phone number format using international E.164 standard."""
-        if v is None:
-            return v
-        try:
-            parsed = phonenumbers.parse(v, None)
-            if not phonenumbers.is_valid_number(parsed):
-                raise ValueError(
-                    f"Invalid phone number: {v}. Must be in E.164 format (e.g., +1234567890)"
-                )
-            # Return formatted phone number
-            return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
-        except phonenumbers.NumberParseException as e:
-            raise ValueError(
-                f"Invalid phone number format: {v}. Must include country code (e.g., +1234567890)"
-            ) from e
+        return validate_phone_number(v)
 
 
 class AddressCreate(AddressBase):
@@ -81,6 +61,8 @@ class AddressPublic(AddressCreate, UUIDMixin):
     """Schema for reading address information."""
 
     user_id: UUID
+    is_default_shipping: bool
+    is_default_billing: bool
 
     model_config = ConfigDict(frozen=True)
 
@@ -105,32 +87,12 @@ class AddressUpdate(BaseModel):
     @classmethod
     def validate_country(cls, v: str | None) -> str | None:
         """Validate country code using ISO 3166-1 alpha-2 standard."""
-        if v is None:
-            return v
-        v = v.upper()
-        if not pycountry.countries.get(alpha_2=v):
-            raise ValueError(
-                f"Invalid country code: {v}. Must be ISO 3166-1 alpha-2 (e.g., US, FR, CA)"
-            )
-        return v
+        return validate_country(v)
 
     @field_validator("phone_number")
     @classmethod
     def validate_phone_number(cls, v: str | None) -> str | None:
         """Validate phone number format using international E.164 standard."""
-        if v is None:
-            return v
-        try:
-            parsed = phonenumbers.parse(v, None)
-            if not phonenumbers.is_valid_number(parsed):
-                raise ValueError(
-                    f"Invalid phone number: {v}. Must be in E.164 format (e.g., +1234567890)"
-                )
-            # Return formatted phone number
-            return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
-        except phonenumbers.NumberParseException as e:
-            raise ValueError(
-                f"Invalid phone number format: {v}. Must include country code (e.g., +1234567890)"
-            ) from e
+        return validate_phone_number(v)
 
     model_config = ConfigDict(frozen=True)

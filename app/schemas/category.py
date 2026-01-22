@@ -27,7 +27,7 @@ class CategoryCreate(CategoryBase):
         json_schema_extra={
             "example": {
                 "name": "Electronics",
-                "parent_id": None,
+                "parent_id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
                 "description": "Category for electronic products",
                 "image_url": "https://example.com/images/electronics.png",
             }

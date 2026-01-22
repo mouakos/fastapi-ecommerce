@@ -189,22 +189,14 @@ class InvalidOrderStatusError(ValidationError):
         self.details["expected_status"] = expected_status
 
 
-class OrderStatusTransitionError(ValidationError):
-    """Order status transition is not allowed."""
+class PasswordMismatchError(ValidationError):
+    """Password and confirmation do not match."""
 
-    def __init__(
-        self,
-        *,
-        order_id: UUID,
-        current_status: str,
-        requested_status: str,
-    ) -> None:
-        """Initialize OrderStatusTransitionError."""
-        msg = f"Order status transition from {current_status} to {requested_status} is not allowed."
-        super().__init__(message=msg, error_code="order_status_transition_not_allowed")
-        self.details["order_id"] = str(order_id)
-        self.details["requested_status"] = requested_status
-        self.details["current_status"] = current_status
+    def __init__(self) -> None:
+        """Initialize PasswordMismatchError."""
+        super().__init__(
+            message="Password and confirmation do not match.", error_code="password_mismatch"
+        )
 
 
 # ============================================================================
@@ -215,12 +207,16 @@ class OrderStatusTransitionError(ValidationError):
 class AuthenticationError(AppError):
     """Authentication failed."""
 
-    def __init__(self, message: str = "Authentication failed.") -> None:
+    def __init__(
+        self,
+        message: str = "Authentication failed.",
+        error_code: str = "authentication_failed",
+    ) -> None:
         """Initialize AuthenticationError."""
         super().__init__(
             message=message,
             status_code=401,
-            error_code="authentication_failed",
+            error_code=error_code,
         )
 
 
@@ -229,7 +225,7 @@ class InvalidCredentialsError(AuthenticationError):
 
     def __init__(self) -> None:
         """Initialize InvalidCredentialsError."""
-        super().__init__(message="Invalid email or password.")
+        super().__init__(message="Invalid email or password.", error_code="invalid_credentials")
 
 
 class IncorrectPasswordError(AuthenticationError):
@@ -237,15 +233,7 @@ class IncorrectPasswordError(AuthenticationError):
 
     def __init__(self) -> None:
         """Initialize IncorrectPasswordError."""
-        super().__init__(message="Incorrect password provided.")
-
-
-class PasswordMismatchError(AuthenticationError):
-    """Current password is incorrect."""
-
-    def __init__(self) -> None:
-        """Initialize PasswordMismatchError."""
-        super().__init__(message="Password mismatch.")
+        super().__init__(message="Incorrect password provided.", error_code="incorrect_password")
 
 
 # ============================================================================
@@ -275,7 +263,7 @@ class SelfActionError(AuthorizationError):
     def __init__(self, user_id: UUID, action: str = "perform this action") -> None:
         """Initialize SelfActionError."""
         super().__init__(
-            message=f"You cannot {action} on your own account.",
+            message=f"You cannot {action}.",
             error_code="self_action_forbidden",
         )
         self.details["user_id"] = str(user_id)

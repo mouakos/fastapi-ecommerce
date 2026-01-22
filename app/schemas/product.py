@@ -5,7 +5,7 @@ from decimal import Decimal
 from enum import StrEnum
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, computed_field
 
 from app.schemas.common import UUIDMixin
 
@@ -80,7 +80,12 @@ class ProductDetail(ProductPublic):
         None, ge=1, le=5, description="Average rating from reviews (1-5)"
     )
     review_count: int = Field(0, ge=0, description="Total number of reviews")
-    in_stock: bool
+
+    @property
+    @computed_field
+    def in_stock(self) -> bool:
+        """Determine if the product is in stock."""
+        return self.stock > 0
 
     model_config = ConfigDict(frozen=True)
 

@@ -66,14 +66,6 @@ class ReviewAdmin(ReviewPublic):
     model_config = ConfigDict(frozen=True)
 
 
-class ReviewAdminSortByField(StrEnum):
-    """Fields to sort product reviews by."""
-
-    RATING = "rating"
-    STATUS = "status"
-    CREATED_AT = "created_at"
-
-
 class ReviewSortByField(StrEnum):
     """Fields to sort product reviews by."""
 

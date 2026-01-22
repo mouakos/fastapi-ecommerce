@@ -1,16 +1,8 @@
 """Utility functions for order management."""
 
+from decimal import Decimal
+
 import ulid
-
-from app.models.order import OrderStatus
-
-_ALLOWED_ORDER_STATUS_TRANSITIONS = {
-    OrderStatus.PENDING: {OrderStatus.PAID, OrderStatus.CANCELED},
-    OrderStatus.PAID: {OrderStatus.SHIPPED, OrderStatus.CANCELED},
-    OrderStatus.SHIPPED: {OrderStatus.DELIVERED},
-    OrderStatus.DELIVERED: set(),
-    OrderStatus.CANCELED: set(),
-}
 
 
 def generate_order_number() -> str:
@@ -18,10 +10,6 @@ def generate_order_number() -> str:
     return f"ORD-{ulid.new().str}"
 
 
-def is_valid_order_status_transition(
-    current_status: OrderStatus,
-    new_status: OrderStatus,
-) -> bool:
-    """Check if the transition from current_status to new_status is valid."""
-    allowed_transitions = _ALLOWED_ORDER_STATUS_TRANSITIONS.get(current_status, set())
-    return new_status in allowed_transitions
+def money_format(value: Decimal) -> Decimal:
+    """Format a Decimal value to two decimal places for monetary representation."""
+    return value.quantize(Decimal("0.01"), rounding="ROUND_HALF_UP")

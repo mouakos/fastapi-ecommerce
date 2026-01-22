@@ -36,6 +36,7 @@ class Review(ModelBase, TimestampMixin, table=True):
     rating: int = Field(ge=1, le=5)
     comment: str | None = Field(default=None, max_length=1000)
     status: ReviewStatus = Field(
+        default=ReviewStatus.PENDING,
         sa_column=Column(
             SQLEnum(
                 ReviewStatus,

@@ -33,7 +33,7 @@ class CartItemPublic(BaseModel):
         ..., description="Price per unit of the product", decimal_places=2, max_digits=10
     )
     product_name: str = Field(..., max_length=255)
-    product_image_url: HttpUrl | None
+    product_image_url: HttpUrl | None = Field(..., max_length=500)
 
     @computed_field(return_type=Decimal)
     def subtotal(self) -> Decimal:

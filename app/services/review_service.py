@@ -20,6 +20,38 @@ class ReviewService:
         """Initialize the service with a unit of work."""
         self.uow = uow
 
+    async def get_reviews(
+        self,
+        user_id: UUID,
+        status: ReviewStatus | None = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
+        page: int = 1,
+        page_size: int = 10,
+    ) -> tuple[list[Review], int]:
+        """Get all reviews created by a specific user.
+
+        Args:
+            user_id (UUID): The ID of the user.
+            status (ReviewStatus | None, optional): Filter by review status. Defaults to None.
+            sort_by (str, optional): Field to sort by. Defaults to "created_at".
+            sort_order (str, optional): Sort order ("asc" or "desc"). Defaults to "desc".
+            page (int, optional): Page number. Defaults to 1.
+            page_size (int, optional): Number of reviews per page. Defaults to 10.
+
+        Returns:
+            tuple[list[Review], int]: List of reviews and total count.
+        """
+        reviews, total = await self.uow.reviews.find_all(
+            user_id=user_id,
+            status=status,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            page=page,
+            page_size=page_size,
+        )
+        return reviews, total
+
     async def create_review(self, user_id: UUID, data: ReviewCreate) -> Review:
         """Create a new product review with PENDING status.
 
@@ -94,25 +126,6 @@ class ReviewService:
         )
         return reviews, total
 
-    async def get_review(self, review_id: UUID, user_id: UUID) -> Review:
-        """Get a review.
-
-        Args:
-            review_id (UUID): The ID of the review.
-            user_id (UUID): The ID of the current user.
-
-        Returns:
-            Review: The review with the specified ID.
-
-        Raises:
-            ReviewNotFoundError: If the review is not found.
-        """
-        review = await self.uow.reviews.find_user_review(review_id, user_id)
-        if not review:
-            raise ReviewNotFoundError(review_id=review_id, user_id=user_id)
-
-        return review
-
     async def update_review(self, review_id: UUID, user_id: UUID, data: ReviewUpdate) -> Review:
         """Update a review and reset approval status to PENDING.
 
@@ -127,7 +140,9 @@ class ReviewService:
         Raises:
             ReviewNotFoundError: If the review is not found or user is not the author.
         """
-        review = await self.get_review(review_id, user_id)
+        review = await self.uow.reviews.find_user_review(review_id, user_id)
+        if not review:
+            raise ReviewNotFoundError(review_id=review_id)
 
         review_data = data.model_dump(exclude_unset=True)
         for key, value in review_data.items():
@@ -152,6 +167,8 @@ class ReviewService:
         Raises:
             ReviewNotFoundError: If the review is not found.
         """
-        review = await self.get_review(review_id, user_id)
+        review = await self.uow.reviews.find_user_review(review_id, user_id)
+        if not review:
+            raise ReviewNotFoundError(review_id=review_id)
         await self.uow.reviews.delete(review)
         logger.info("review_deleted", review_id=str(review_id), user_id=str(user_id))
