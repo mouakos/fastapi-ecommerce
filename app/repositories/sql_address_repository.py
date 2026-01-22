@@ -2,6 +2,7 @@
 
 from uuid import UUID
 
+from sqlalchemy import update
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -37,13 +38,12 @@ class SqlAddressRepository(SqlGenericRepository[Address], AddressRepository):
         Args:
             user_id (UUID): ID of the user owning the address.
         """
-        stmt = select(Address).where((Address.user_id == user_id) & (Address.is_default_billing))
-        result = await self._session.exec(stmt)
-        address = result.first()
-        if address:
-            address.is_default_billing = False
-            self._session.add(address)
-            await self._session.flush()
+        stmt = (
+            update(Address)
+            .where((Address.user_id == user_id) & (Address.is_default_billing.is_(True)))  # type: ignore [attr-defined]
+            .values(is_default_billing=False)
+        )
+        await self._session.exec(stmt)
 
     async def unset_default_shipping(self, user_id: UUID) -> None:
         """Unset the default shipping address for a user.
@@ -51,10 +51,9 @@ class SqlAddressRepository(SqlGenericRepository[Address], AddressRepository):
         Args:
             user_id (UUID): ID of the user owning the address.
         """
-        stmt = select(Address).where((Address.user_id == user_id) & (Address.is_default_shipping))
-        result = await self._session.exec(stmt)
-        address = result.first()
-        if address:
-            address.is_default_shipping = False
-            self._session.add(address)
-            await self._session.flush()
+        stmt = (
+            update(Address)
+            .where((Address.user_id == user_id) & (Address.is_default_shipping.is_(True)))  # type: ignore [attr-defined]
+            .values(is_default_shipping=False)
+        )
+        await self._session.exec(stmt)

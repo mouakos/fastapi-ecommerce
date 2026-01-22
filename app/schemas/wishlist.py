@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict
 from app.schemas.common import UUIDMixin
 
 
-class WishlistCreate(BaseModel):
+class AddToWishlistRequest(BaseModel):
     """Schema for adding an item to the wishlist."""
 
     product_id: UUID
@@ -17,7 +17,7 @@ class WishlistCreate(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class WishlistItemRead(UUIDMixin):
+class WishlistItemPublic(UUIDMixin):
     """Schema for reading a wishlist item."""
 
     product_id: UUID
@@ -25,16 +25,32 @@ class WishlistItemRead(UUIDMixin):
     product_slug: str
     product_price: Decimal
     product_image_url: str | None
-    product_stock_quantity: int
+    product_in_stock: bool
     product_is_active: bool
     added_at: datetime
 
     model_config = ConfigDict(frozen=True)
 
 
-class WishlistStatsRead(BaseModel):
+class WishlistStatsResponse(BaseModel):
     """Schema for reading wishlist statistics."""
 
     count: int
 
     model_config = ConfigDict(frozen=True)
+
+
+class WishlistActionResponse(BaseModel):
+    """Schema for wishlist action responses."""
+
+    message: str
+    product_id: UUID
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "message": "Product added to wishlist successfully.",
+                "product_id": "123e4567-e89b-12d3-a456-426614174000",
+            }
+        }
+    )

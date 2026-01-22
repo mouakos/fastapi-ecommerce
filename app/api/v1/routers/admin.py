@@ -19,15 +19,20 @@ from app.schemas.analytics import (
     UserAnalytics,
 )
 from app.schemas.common import Page, SortOrder
-from app.schemas.order import OrderAdminRead, OrderSortByField, OrderStatusUpdate
+from app.schemas.order import (
+    OrderActionResponse,
+    OrderAdmin,
+    OrderSortByField,
+    OrderStatusUpdateRequest,
+)
 from app.schemas.product import (
-    ProductAdminRead,
+    ProductAdmin,
     ProductAvailabilityFilter,
-    ProductRead,
+    ProductPublic,
     ProductSortByField,
 )
-from app.schemas.review import ReviewAdminRead, ReviewAdminSortByField
-from app.schemas.user import UserAdminRead, UserRoleUpdate, UserSortByField
+from app.schemas.review import ReviewActionResponse, ReviewAdmin, ReviewAdminSortByField
+from app.schemas.user import UserActionResponse, UserAdmin, UserRoleUpdateRequest, UserSortByField
 from app.utils.pagination import build_page
 
 router = APIRouter(dependencies=[AdminRoleDep])
@@ -103,7 +108,7 @@ async def get_review_analytics(
 # ------------------------ User management ------------------------ #
 @router.get(
     "/users",
-    response_model=Page[UserAdminRead],
+    response_model=Page[UserAdmin],
     summary="Get all users",
     description="Retrieve paginated list of all users with optional filtering by name, email, or role.",
 )
@@ -120,7 +125,7 @@ async def get_users(
         Query(description="Field to sort by"),
     ] = UserSortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
-) -> Page[UserAdminRead]:
+) -> Page[UserAdmin]:
     """Get all users with optional filters, sorting, and pagination."""
     users, total = await admin_service.get_users(
         page=page,
@@ -131,7 +136,7 @@ async def get_users(
         sort_order=sort_order.value,
     )
     users_dto = [
-        UserAdminRead(
+        UserAdmin(
             id=user.id,
             email=user.email,
             is_superuser=user.is_superuser,
@@ -152,26 +157,26 @@ async def get_users(
 
 @router.patch(
     "/users/{user_id}/role",
-    status_code=status.HTTP_204_NO_CONTENT,
     summary="Update user role",
     description="Change a user's role between 'customer' and 'admin'. Use with caution as this affects user permissions.",
 )
 async def update_user_role(
     user_id: UUID,
-    role_update: UserRoleUpdate,
+    role_update: UserRoleUpdateRequest,
     admin_service: AdminServiceDep,
     current_user: CurrentUserDep,
-) -> None:
+) -> UserActionResponse:
     """Update a user's role."""
     await admin_service.update_user_role(
         current_user_id=current_user.id, user_id=user_id, new_role=role_update.role
     )
+    return UserActionResponse(message="User role updated successfully.", user_id=user_id)
 
 
 # ------------------------ Order management ------------------------ #
 @router.get(
     "/orders",
-    response_model=Page[OrderAdminRead],
+    response_model=Page[OrderAdmin],
     summary="List all orders (Admin)",
     description="Retrieve paginated list of all orders across all users with optional filtering by status and user, plus sorting options. Admin access required.",
 )
@@ -185,7 +190,7 @@ async def get_orders(
         OrderSortByField, Query(description="Field to sort by")
     ] = OrderSortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
-) -> Page[OrderAdminRead]:
+) -> Page[OrderAdmin]:
     """Get all orders with optional filters, sorting, and pagination."""
     orders, total = await admin_service.get_orders(
         page=page,
@@ -196,7 +201,7 @@ async def get_orders(
         sort_order=sort_order.value,
     )
     orders_dto = [
-        OrderAdminRead(
+        OrderAdmin(
             id=order.id,
             user_id=order.user_id,
             status=order.status,
@@ -219,21 +224,21 @@ async def get_orders(
     "/orders/{order_id}/status",
     summary="Update order status",
     description="Update the status of an order (e.g., from 'pending' to 'processing', 'shipped', or 'delivered').",
-    status_code=status.HTTP_204_NO_CONTENT,
 )
 async def update_order_status(
     order_id: UUID,
-    status_update: OrderStatusUpdate,
+    status_update: OrderStatusUpdateRequest,
     admin_service: AdminServiceDep,
-) -> None:
+) -> OrderActionResponse:
     """Update an order's status."""
     await admin_service.update_order_status(order_id=order_id, new_status=status_update.status)
+    return OrderActionResponse(message="Order status updated successfully.", order_id=order_id)
 
 
 # -------------------------- Review management ------------------------ #
 @router.get(
     "/reviews",
-    response_model=Page[ReviewAdminRead],
+    response_model=Page[ReviewAdmin],
     summary="List all reviews (Admin)",
     description="Retrieve paginated list of all reviews across all products and users with optional filtering by status, rating, user, and product. Includes moderation information. Admin access required.",
 )
@@ -249,7 +254,7 @@ async def get_reviews(
         ReviewAdminSortByField, Query(description="Field to sort by")
     ] = ReviewAdminSortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
-) -> Page[ReviewAdminRead]:
+) -> Page[ReviewAdmin]:
     """Get all reviews with optional filters, sorting, and pagination."""
     reviews, total = await admin_service.get_reviews(
         page=page,
@@ -263,7 +268,7 @@ async def get_reviews(
     )
     # Manually construct DTOs with relationship data
     review_items = [
-        ReviewAdminRead(
+        ReviewAdmin(
             id=review.id,
             rating=review.rating,
             comment=review.comment,
@@ -282,9 +287,9 @@ async def get_reviews(
     return build_page(items=review_items, page=page, size=page_size, total=total)
 
 
-@router.post(
+@router.patch(
     "/reviews/{review_id}/approve",
-    response_model=ReviewAdminRead,
+    response_model=ReviewAdmin,
     summary="Approve review",
     description="Approve a pending review to make it publicly visible on the product page.",
 )
@@ -292,28 +297,18 @@ async def approve_review(
     review_id: UUID,
     admin_service: AdminServiceDep,
     current_user: CurrentUserDep,
-) -> ReviewAdminRead:
+) -> ReviewActionResponse:
     """Approve a review."""
     review = await admin_service.approve_review(review_id=review_id, moderator_id=current_user.id)
-    return ReviewAdminRead(
-        id=review.id,
-        rating=review.rating,
-        comment=review.comment,
-        user_id=review.user_id,
-        product_id=review.product_id,
-        created_at=review.created_at,
-        user_email=review.user.email,
-        product_name=review.product.name,
-        status=review.status,
-        moderated_at=review.moderated_at,
-        moderated_by=review.moderated_by,
-        updated_at=review.updated_at,
+    return ReviewActionResponse(
+        message="Review approved successfully.",
+        review_id=review.id,
     )
 
 
 @router.patch(
-    "/reviews/{review_id}",
-    response_model=ReviewAdminRead,
+    "/reviews/{review_id}/reject",
+    response_model=ReviewActionResponse,
     summary="Reject review",
     description="Reject a review and prevent it from being displayed publicly. Use for reviews that violate guidelines or are inappropriate.",
 )
@@ -321,22 +316,12 @@ async def reject_review(
     review_id: UUID,
     admin_service: AdminServiceDep,
     current_user: CurrentUserDep,
-) -> ReviewAdminRead:
+) -> ReviewActionResponse:
     """Reject a review."""
     review = await admin_service.reject_review(review_id=review_id, moderator_id=current_user.id)
-    return ReviewAdminRead(
-        id=review.id,
-        rating=review.rating,
-        comment=review.comment,
-        user_id=review.user_id,
-        product_id=review.product_id,
-        created_at=review.created_at,
-        user_email=review.user.email,
-        product_name=review.product.name,
-        status=review.status,
-        moderated_at=review.moderated_at,
-        moderated_by=review.moderated_by,
-        updated_at=review.updated_at,
+    return ReviewActionResponse(
+        message="Review rejected successfully.",
+        review_id=review.id,
     )
 
 
@@ -359,7 +344,7 @@ async def delete_review(
 
 @router.get(
     "/products",
-    response_model=Page[ProductAdminRead],
+    response_model=Page[ProductAdmin],
     summary="Get all products",
     description="Retrieve paginated list of all products with optional filtering by stock levels and active status.",
 )
@@ -392,7 +377,7 @@ async def get_products(
         ProductSortByField, Query(description="Sort by field")
     ] = ProductSortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.ASC,
-) -> Page[ProductAdminRead]:
+) -> Page[ProductAdmin]:
     """Get all products with optional filters, sorting, and pagination."""
     products, total = await admin_service.get_products(
         page=page,
@@ -413,7 +398,7 @@ async def get_products(
 
 @router.get(
     "/products/low-stock",
-    response_model=Page[ProductRead],
+    response_model=Page[ProductPublic],
     summary="Get low stock products",
     description="Retrieve products with stock levels below the specified threshold for inventory monitoring and restocking alerts.",
 )
@@ -425,7 +410,7 @@ async def get_low_stock_products(
     is_active: Annotated[
         bool | None, Query(description="Filter by active status: true, false, or omit for all")
     ] = None,
-) -> Page[ProductRead]:
+) -> Page[ProductPublic]:
     """Get low stock product alerts."""
     products, total = await admin_service.get_low_stock_products(
         threshold=threshold, is_active=is_active, page=page, page_size=page_size
@@ -435,7 +420,7 @@ async def get_low_stock_products(
 
 @router.get(
     "/products/top-moving",
-    response_model=list[ProductRead],
+    response_model=list[ProductPublic],
     summary="Get top-moving products",
     description="Retrieve top-selling products within a specified time frame to identify bestsellers and trends.",
 )
@@ -443,6 +428,6 @@ async def get_top_moving_products(
     admin_service: AdminServiceDep,
     limit: int = Query(10, ge=1, description="Number of top products to retrieve"),
     days: int = Query(30, ge=1, le=365, description="Time frame in days to consider for top sales"),
-) -> list[ProductRead]:
+) -> list[ProductPublic]:
     """Get top-moving products."""
     return await admin_service.get_top_selling_products(limit=limit, days=days)

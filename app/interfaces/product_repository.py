@@ -50,26 +50,14 @@ class ProductRepository(GenericRepository[Product], ABC):
         ...
 
     @abstractmethod
-    async def find_active_by_slug(self, slug: str) -> Product | None:
-        """Find a single active product by slug.
+    async def find_by_slug(self, slug: str) -> Product | None:
+        """Find a single product by slug.
 
         Args:
             slug (str): Product slug.
 
         Returns:
-            Product | None: Active product or none.
-        """
-        ...
-
-    @abstractmethod
-    async def find_active_by_id(self, product_id: UUID) -> Product | None:
-        """Find a single active product by ID.
-
-        Args:
-            product_id (UUID): Product ID.
-
-        Returns:
-            Product | None: Active product or none.
+            Product | None: Product or none.
         """
         ...
 

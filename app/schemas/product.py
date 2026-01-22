@@ -19,12 +19,11 @@ class ProductBase(BaseModel):
     category_id: UUID | None = None
     description: str | None = Field(None, max_length=2000)
     image_url: HttpUrl | None = Field(None, max_length=500)
+    is_active: bool = True
 
 
 class ProductCreate(ProductBase):
     """Schema for creating a Product."""
-
-    is_active: bool = True
 
     model_config = ConfigDict(
         frozen=True,
@@ -42,36 +41,6 @@ class ProductCreate(ProductBase):
     )
 
 
-class ProductRead(ProductBase, UUIDMixin):
-    """Schema for reading a Product."""
-
-    slug: str = Field(..., max_length=100)
-    sku: str = Field(..., max_length=100)
-    created_at: datetime
-
-    model_config = ConfigDict(frozen=True)
-
-
-class ProductAdminRead(ProductRead):
-    """Schema for reading a Product in admin context."""
-
-    updated_at: datetime
-
-    model_config = ConfigDict(frozen=True)
-
-
-class ProductDetailRead(ProductRead):
-    """Schema for reading a Product."""
-
-    average_rating: float | None = Field(
-        None, ge=1, le=5, description="Average rating from reviews (1-5)"
-    )
-    review_count: int = Field(0, ge=0, description="Total number of reviews")
-    in_stock: bool
-
-    model_config = ConfigDict(frozen=True)
-
-
 class ProductUpdate(BaseModel):
     """Schema for updating a Product."""
 
@@ -82,6 +51,36 @@ class ProductUpdate(BaseModel):
     image_url: HttpUrl | None = Field(None, max_length=500)
     category_id: UUID | None = None
     is_active: bool | None = None
+
+    model_config = ConfigDict(frozen=True)
+
+
+class ProductPublic(ProductBase, UUIDMixin):
+    """Schema for reading a Product."""
+
+    slug: str = Field(..., max_length=100)
+    sku: str = Field(..., max_length=100)
+    created_at: datetime
+
+    model_config = ConfigDict(frozen=True)
+
+
+class ProductAdmin(ProductPublic):
+    """Schema for reading a Product in admin context."""
+
+    updated_at: datetime
+
+    model_config = ConfigDict(frozen=True)
+
+
+class ProductDetail(ProductPublic):
+    """Schema for reading a Product."""
+
+    average_rating: float | None = Field(
+        None, ge=1, le=5, description="Average rating from reviews (1-5)"
+    )
+    review_count: int = Field(0, ge=0, description="Total number of reviews")
+    in_stock: bool
 
     model_config = ConfigDict(frozen=True)
 

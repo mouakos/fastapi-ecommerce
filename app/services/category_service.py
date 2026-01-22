@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import HttpUrl
 
-from app.core.exceptions import CategoryNotFoundError, SelfReferenceError
+from app.core.exceptions import CategoryNotFoundError, CategorySelfReferenceError
 from app.core.logger import logger
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.category import Category
@@ -44,7 +44,7 @@ class CategoryService:
         """
         category = await self.uow.categories.find_by_id(category_id)
         if not category:
-            raise CategoryNotFoundError(category_id)
+            raise CategoryNotFoundError(category_id=category_id)
         return category
 
     async def get_category_by_slug(
@@ -94,9 +94,7 @@ class CategoryService:
 
         new_category = Category(slug=slug, **category_data)
         created_category = await self.uow.categories.add(new_category)
-        logger.info(
-            "category_created", category_id=str(created_category.id), name=created_category.name
-        )
+        logger.info("category_created", category_id=str(created_category.id))
         return created_category
 
     async def update_category(
@@ -115,14 +113,14 @@ class CategoryService:
 
         Raises:
             CategoryNotFoundError: If the category or new parent category does not exist.
-            SelfReferenceError: If trying to set itself as parent.
+            CategorySelfReferenceError: If trying to set itself as parent.
         """
         category = await self.get_category_by_id(category_id)
 
         if data.parent_id:
             # Prevent setting itself as parent
             if data.parent_id == category_id:
-                raise SelfReferenceError(entity="Category", field="parent")
+                raise CategorySelfReferenceError(category_id=category_id)
             # Ensure the new parent category exists
             _ = await self.get_category_by_id(data.parent_id)
 

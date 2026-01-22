@@ -50,8 +50,9 @@ class PaymentService:
 
         if order.status != OrderStatus.PENDING:
             raise InvalidOrderStatusError(
-                message="Checkout session can only be created for orders in 'pending' status.",
+                order_id=order_id,
                 current_status=order.status.value,
+                expected_status=OrderStatus.PENDING.value,
             )
 
         # Create Stripe PaymentIntent
@@ -104,7 +105,6 @@ class PaymentService:
         """
         if not stripe_signature:
             raise WebhookValidationError(reason="Missing Stripe signature")
-        event = None
         try:
             event = stripe.Webhook.construct_event(  # type: ignore [no-untyped-call]
                 payload, stripe_signature, settings.stripe_webhook_secret
@@ -122,6 +122,8 @@ class PaymentService:
         elif event_type == "payment_intent.payment_failed":
             transaction_intent = event["data"]["object"]
             await self._handle_failed_payment(transaction_intent)
+        else:
+            logger.info("stripe_webhook_ignored", event_type=event_type)
 
     async def _handle_successful_payment(
         self,
@@ -135,8 +137,24 @@ class PaymentService:
         Args:
             transaction_intent (dict[str, Any]): Stripe payment intent object from webhook.
         """
-        user_id = UUID(transaction_intent["metadata"]["user_id"])
-        transaction_id = transaction_intent["id"]
+        transaction_id = transaction_intent.get("id")
+        if not transaction_id:
+            logger.warning("stripe_webhook_missing_intent_id")
+            return
+
+        raw_user_id = (transaction_intent.get("metadata") or {}).get("user_id")
+        if not raw_user_id:
+            logger.warning("stripe_webhook_missing_user_id", transaction_id=transaction_id)
+            return
+        try:
+            user_id = UUID(raw_user_id)
+        except (TypeError, ValueError):
+            logger.warning(
+                "stripe_webhook_invalid_user_id",
+                transaction_id=transaction_id,
+                raw_user_id=str(raw_user_id),
+            )
+            return
 
         # Find existing payment record (created during checkout)
         payment = await self.uow.payments.find_by_transaction_id(transaction_id=transaction_id)
@@ -158,19 +176,48 @@ class PaymentService:
             )
             return  # Already processed, do nothing
 
-        # Update payment status to SUCCESS
-        payment.status = PaymentStatus.SUCCESS
-        await self.uow.payments.update(payment)
-
-        # Get order and verify ownership
-        order = await self.uow.orders.find_user_order(payment.order_id, user_id)
+        order = await self.uow.orders.find_by_id(payment.order_id)
         if not order:
             logger.warning(
                 "order_not_found_for_payment",
                 order_id=str(payment.order_id),
                 user_id=str(user_id),
+                transaction_id=payment.transaction_id,
             )
-            return  # Ignore if order not found
+            return
+
+        if order.user_id != user_id:
+            logger.warning(
+                "payment_user_mismatch",
+                order_id=str(order.id),
+                user_id=str(user_id),
+                order_user_id=str(order.user_id),
+                transaction_id=payment.transaction_id,
+            )
+            return
+
+        # Update payment status to SUCCESS
+        payment.status = PaymentStatus.SUCCESS
+        await self.uow.payments.update(payment)
+
+        if order.status == OrderStatus.PAID:
+            logger.info(
+                "order_already_paid",
+                order_id=str(order.id),
+                user_id=str(user_id),
+                transaction_id=payment.transaction_id,
+            )
+            return
+
+        if order.status != OrderStatus.PENDING:
+            logger.warning(
+                "order_not_payable",
+                order_id=str(order.id),
+                user_id=str(user_id),
+                current_status=order.status.value,
+                transaction_id=payment.transaction_id,
+            )
+            return
 
         order.status = OrderStatus.PAID
         order.paid_at = utcnow()
@@ -192,8 +239,17 @@ class PaymentService:
         Args:
             transaction_intent (dict[str, Any]): Stripe payment intent object from webhook.
         """
-        transaction_id = transaction_intent["id"]
-        user_id = UUID(transaction_intent["metadata"]["user_id"])
+        transaction_id = transaction_intent.get("id")
+        if not transaction_id:
+            logger.warning("stripe_webhook_missing_intent_id")
+            return
+
+        raw_user_id = (transaction_intent.get("metadata") or {}).get("user_id")
+        user_id: UUID | None
+        try:
+            user_id = UUID(raw_user_id) if raw_user_id else None
+        except (TypeError, ValueError):
+            user_id = None
 
         # Find existing payment record (created during checkout)
         payment = await self.uow.payments.find_by_transaction_id(transaction_id=transaction_id)
@@ -201,7 +257,7 @@ class PaymentService:
             logger.warning(
                 "payment_not_found",
                 transaction_id=transaction_id,
-                user_id=str(user_id),
+                user_id=str(user_id) if user_id else None,
             )
             return  # Ignore unknown payments
 
@@ -210,6 +266,6 @@ class PaymentService:
         logger.warning(
             "payment_failed",
             order_id=str(payment.order_id),
-            user_id=str(user_id),
+            user_id=str(user_id) if user_id else None,
             transaction_id=payment.transaction_id,
         )

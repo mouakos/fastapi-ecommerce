@@ -7,6 +7,7 @@ from app.core.exceptions import (
     EmptyCartError,
     InsufficientStockError,
     OrderNotFoundError,
+    ProductInactiveError,
 )
 from app.core.logger import logger
 from app.interfaces.unit_of_work import UnitOfWork
@@ -36,30 +37,34 @@ class OrderService:
             AddressNotFoundError: If billing or shipping address does not exist.
             EmptyCartError: If the cart is empty.
             InsufficientStockError: If any product is out of stock.
+            ProductInactiveError: If any product in the cart is inactive.
         """
         # Validate addresses
         billing_address = await self.uow.addresses.find_user_address(
             data.billing_address_id, user_id
         )
-        if not billing_address or billing_address.user_id != user_id:
+        if not billing_address:
             raise AddressNotFoundError(address_id=data.billing_address_id, user_id=user_id)
 
         shipping_address = await self.uow.addresses.find_user_address(
             data.shipping_address_id, user_id
         )
-        if not shipping_address or shipping_address.user_id != user_id:
+        if not shipping_address:
             raise AddressNotFoundError(address_id=data.shipping_address_id, user_id=user_id)
 
         # Validate cart
-        cart = await self.uow.carts.find_user_cart(user_id)
-        if not cart or not cart.items:
-            raise EmptyCartError()
+        cart = await self.uow.carts.get_or_create(user_id=user_id, session_id=None)
+        if not cart.items:
+            raise EmptyCartError(cart_id=cart.id)
 
         # Validate stock
         for item in cart.items:
+            if not item.product.is_active:
+                raise ProductInactiveError(product_id=item.product_id)
+
             if item.quantity > item.product.stock:
                 raise InsufficientStockError(
-                    product_name=item.product_name,
+                    product_id=item.product_id,
                     requested=item.quantity,
                     available=item.product.stock,
                 )
@@ -87,7 +92,7 @@ class OrderService:
             )
             created_order.items.append(order_item)
 
-            # Reduce stock
+            # TODO: Reduce stock after payment confirmation
             item.product.stock -= item.quantity
             await self.uow.products.update(item.product)
 

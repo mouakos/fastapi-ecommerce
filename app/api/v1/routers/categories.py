@@ -6,27 +6,27 @@ from uuid import UUID
 from fastapi import APIRouter, status
 
 from app.api.v1.dependencies import AdminRoleDep, CategoryServiceDep
-from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
+from app.schemas.category import CategoryCreate, CategoryPublic, CategoryUpdate
 
 router = APIRouter()
 
 
 @router.get(
     "",
-    response_model=list[CategoryRead],
+    response_model=list[CategoryPublic],
     summary="Get all categories",
     description="Retrieve all product categories with their hierarchy information.",
 )
 async def get_categories(
     category_service: CategoryServiceDep,
-) -> list[CategoryRead]:
+) -> list[CategoryPublic]:
     """Get all categories."""
     return await category_service.get_categories()
 
 
 @router.post(
     "",
-    response_model=CategoryRead,
+    response_model=CategoryPublic,
     status_code=status.HTTP_201_CREATED,
     summary="Create category",
     description="Create a new product category. Admin access required.",
@@ -34,38 +34,38 @@ async def get_categories(
 )
 async def create_category(
     data: CategoryCreate, category_service: CategoryServiceDep
-) -> CategoryRead:
+) -> CategoryPublic:
     """Create a new category."""
     return await category_service.create_category(data)
 
 
 @router.get(
     "/id/{category_id}",
-    response_model=CategoryRead,
+    response_model=CategoryPublic,
     summary="Get category by ID",
     description="Retrieve a specific category using its UUID.",
 )
 async def get_category_by_id(
     category_id: UUID, category_service: CategoryServiceDep
-) -> CategoryRead:
+) -> CategoryPublic:
     """Get a category by its ID."""
     return await category_service.get_category_by_id(category_id)
 
 
 @router.get(
     "/slug/{slug}",
-    response_model=CategoryRead,
+    response_model=CategoryPublic,
     summary="Get category by slug",
     description="Retrieve a specific category using its URL-friendly slug.",
 )
-async def get_category_by_slug(slug: str, category_service: CategoryServiceDep) -> CategoryRead:
+async def get_category_by_slug(slug: str, category_service: CategoryServiceDep) -> CategoryPublic:
     """Get a category by its slug."""
     return await category_service.get_category_by_slug(slug)
 
 
 @router.patch(
     "/{category_id}",
-    response_model=CategoryRead,
+    response_model=CategoryPublic,
     summary="Update category",
     description="Update an existing category's information. Admin access required.",
     dependencies=[AdminRoleDep],
@@ -74,7 +74,7 @@ async def update_category(
     category_id: UUID,
     data: CategoryUpdate,
     category_service: CategoryServiceDep,
-) -> CategoryRead:
+) -> CategoryPublic:
     """Update a category by its ID."""
     return await category_service.update_category(category_id, data)
 

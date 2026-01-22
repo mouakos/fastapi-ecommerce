@@ -31,7 +31,7 @@ Exception Hierarchy by HTTP Status Code:
     ├── ReviewNotFoundError
     ├── AddressNotFoundError
     ├── CategoryNotFoundError
-    ├── WishlistItemNotFoundError
+    ├── ProductNotInWishlistError
     └── ProductNotInCartError
 
 409 Conflict - Resource Conflicts:
@@ -88,70 +88,59 @@ class AppError(Exception):
 class ValidationError(AppError):
     """Business validation error."""
 
-    def __init__(self, message: str, field: str | None = None) -> None:
+    def __init__(
+        self, message: str = "Invalid request", error_code: str = "invalid_request"
+    ) -> None:
         """Initialize ValidationError."""
-        details = {"field": field} if field else {}
         super().__init__(
             message=message,
             status_code=400,
-            error_code="VALIDATION_ERROR",
-            details=details,
+            error_code=error_code,
         )
 
 
 class ResourceLimitError(ValidationError):
     """Resource limit exceeded."""
 
-    def __init__(self, resource: str, limit: int, current: int | None = None) -> None:
+    def __init__(self, resource: str, limit: int, current: int) -> None:
         """Initialize ResourceLimitError."""
         message = f"You cannot have more than {limit} {resource.lower()}."
-        super().__init__(message=message)
-        self.error_code = "RESOURCE_LIMIT_EXCEEDED"
-        self.details = {"resource": resource, "limit": limit}
-        if current is not None:
-            self.details["current"] = current
+        super().__init__(message=message, error_code="resource_limit_exceeded")
+        self.details = {"resource": resource, "limit": limit, "current": current}
 
 
-class SelfReferenceError(ValidationError):
-    """Entity cannot reference itself."""
+class CategorySelfReferenceError(ValidationError):
+    """Category cannot be its own parent."""
 
-    def __init__(self, entity: str, field: str = "parent") -> None:
-        """Initialize SelfReferenceError."""
+    def __init__(self, category_id: UUID) -> None:
+        """Initialize CategorySelfReferenceError."""
         super().__init__(
-            message=f"{entity} cannot be its own {field}.",
-            field=field,
+            message="Category cannot be its own parent.",
+            error_code="category_self_reference",
         )
+        self.details["category_id"] = str(category_id)
 
 
 class InsufficientStockError(ValidationError):
     """Product out of stock."""
 
-    def __init__(self, product_name: str, requested: int, available: int) -> None:
+    def __init__(self, product_id: UUID, requested: int, available: int) -> None:
         """Initialize InsufficientStockError."""
-        message = f"Insufficient stock for '{product_name}'. Requested: {requested}, Available: {available}."
-        super().__init__(message=message)
-        self.error_code = "INSUFFICIENT_STOCK"
-        self.details = {
-            "product": product_name,
-            "requested": requested,
-            "available": available,
-        }
+        message = "Product has insufficient stock."
+        super().__init__(message=message, error_code="insufficient_stock")
+        self.details["product_id"] = str(product_id)
+        self.details["requested"] = requested
+        self.details["available"] = available
 
 
 class ProductInactiveError(ValidationError):
     """Product is not available for purchase."""
 
-    def __init__(self, product_name: str | None = None) -> None:
+    def __init__(self, product_id: UUID) -> None:
         """Initialize ProductInactiveError."""
-        message = (
-            f"Product '{product_name}' is not available."
-            if product_name
-            else "Product is not available."
-        )
-        super().__init__(message=message)
-        self.error_code = "PRODUCT_INACTIVE"
-        if product_name:
-            self.details["product"] = product_name
+        message = "Product is not available for purchase."
+        super().__init__(message=message, error_code="product_inactive")
+        self.details["product_id"] = str(product_id)
 
 
 class InvalidCartSessionError(ValidationError):  # TODO
@@ -159,15 +148,16 @@ class InvalidCartSessionError(ValidationError):  # TODO
 
     def __init__(self, message: str = "Session ID is required for guest cart operations.") -> None:
         """Initialize InvalidCartSessionError."""
-        super().__init__(message=message)
+        super().__init__(message=message, error_code="invalid_cart_session")
 
 
 class EmptyCartError(ValidationError):
     """Cart is empty."""
 
-    def __init__(self) -> None:
+    def __init__(self, cart_id: UUID) -> None:
         """Initialize EmptyCartError."""
-        super().__init__(message="Cart is empty.")
+        super().__init__(message="Cart is empty.", error_code="empty_cart")
+        self.details["cart_id"] = str(cart_id)
 
 
 class WebhookValidationError(ValidationError):  # TODO
@@ -176,18 +166,39 @@ class WebhookValidationError(ValidationError):  # TODO
     def __init__(self, reason: str) -> None:
         """Initialize WebhookValidationError."""
         message = f"Webhook validation failed: {reason}"
-        super().__init__(message=message)
-        self.error_code = "WEBHOOK_VALIDATION_ERROR"
+        super().__init__(message=message, error_code="webhook_validation_error")
         self.details["reason"] = reason
 
 
 class InvalidOrderStatusError(ValidationError):
     """Order status is invalid for the requested operation."""
 
-    def __init__(self, message: str, current_status: str) -> None:
+    def __init__(self, order_id: UUID, current_status: str, expected_status: str) -> None:
         """Initialize InvalidOrderStatusError."""
-        super().__init__(message=message)
-        self.error_code = "INVALID_ORDER_STATUS"
+        super().__init__(
+            message="Invalid order status for the requested operation.",
+            error_code="invalid_order_status",
+        )
+        self.details["order_id"] = str(order_id)
+        self.details["current_status"] = current_status
+        self.details["expected_status"] = expected_status
+
+
+class OrderStatusTransitionError(ValidationError):
+    """Order status transition is not allowed."""
+
+    def __init__(
+        self,
+        *,
+        order_id: UUID,
+        current_status: str,
+        requested_status: str,
+    ) -> None:
+        """Initialize OrderStatusTransitionError."""
+        msg = f"Order status transition from {current_status} to {requested_status} is not allowed."
+        super().__init__(message=msg, error_code="order_status_transition_not_allowed")
+        self.details["order_id"] = str(order_id)
+        self.details["requested_status"] = requested_status
         self.details["current_status"] = current_status
 
 
@@ -204,7 +215,7 @@ class AuthenticationError(AppError):
         super().__init__(
             message=message,
             status_code=401,
-            error_code="AUTHENTICATION_FAILED",
+            error_code="authentication_failed",
         )
 
 
@@ -240,21 +251,29 @@ class PasswordMismatchError(AuthenticationError):
 class AuthorizationError(AppError):
     """Authorization failed."""
 
-    def __init__(self, message: str = "You don't have permission to perform this action.") -> None:
+    def __init__(
+        self,
+        message: str = "You don't have permission to perform this action.",
+        error_code: str = "authorization_failed",
+    ) -> None:
         """Initialize AuthorizationError."""
         super().__init__(
             message=message,
             status_code=403,
-            error_code="AUTHORIZATION_FAILED",
+            error_code=error_code,
         )
 
 
 class SelfActionError(AuthorizationError):
     """Cannot perform action on own account."""
 
-    def __init__(self, action: str = "this action") -> None:
+    def __init__(self, user_id: UUID, action: str = "perform this action") -> None:
         """Initialize SelfActionError."""
-        super().__init__(message=f"You cannot perform {action} on your own account.")
+        super().__init__(
+            message=f"You cannot {action} on your own account.",
+            error_code="self_action_forbidden",
+        )
+        self.details["user_id"] = str(user_id)
 
 
 # ============================================================================
@@ -268,105 +287,110 @@ class NotFoundError(AppError):
     def __init__(
         self,
         resource: str,
-        identifier: UUID | str | None = None,
         message: str | None = None,
+        error_code: str = "resource_not_found",
     ) -> None:
         """Initialize NotFoundError."""
         msg = message or f"{resource} not found."
-        details = {"resource": resource}
-        if identifier:
-            details["identifier"] = str(identifier)
         super().__init__(
             message=msg,
             status_code=404,
-            error_code="RESOURCE_NOT_FOUND",
-            details=details,
+            error_code=error_code,
         )
+        self.details["resource"] = resource
 
 
 class UserNotFoundError(NotFoundError):
     """User not found exception."""
 
-    def __init__(self, user_id: UUID | None = None) -> None:
+    def __init__(self, user_id: UUID) -> None:
         """Initialize UserNotFoundError."""
-        super().__init__(resource="User", identifier=user_id)
+        super().__init__(resource="User", error_code="user_not_found")
+        self.details["user_id"] = str(user_id)
 
 
 class ProductNotFoundError(NotFoundError):
     """Product not found exception."""
 
-    def __init__(self, product_id: UUID | None = None, slug: str | None = None) -> None:
+    def __init__(self, *, product_id: UUID | None = None, slug: str | None = None) -> None:
         """Initialize ProductNotFoundError."""
-        identifier = product_id if product_id else slug
-        super().__init__(resource="Product", identifier=identifier)
+        super().__init__(resource="Product", error_code="product_not_found")
+        if product_id is not None:
+            self.details["product_id"] = str(product_id)
+        if slug is not None:
+            self.details["slug"] = slug
 
 
 class OrderNotFoundError(NotFoundError):
     """Order not found exception."""
 
-    def __init__(self, order_id: UUID | None = None, user_id: UUID | None = None) -> None:
+    def __init__(self, *, order_id: UUID, user_id: UUID | None = None) -> None:
         """Initialize OrderNotFoundError."""
-        message = "Order not found for the specified user." if user_id else None
-        super().__init__(resource="Order", identifier=order_id, message=message)
-        if user_id:
+        super().__init__(resource="Order", error_code="order_not_found")
+        self.details["order_id"] = str(order_id)
+        if user_id is not None:
             self.details["user_id"] = str(user_id)
 
 
 class ReviewNotFoundError(NotFoundError):
     """Review not found exception."""
 
-    def __init__(self, *, review_id: UUID | None = None, user_id: UUID | None = None) -> None:
+    def __init__(self, *, review_id: UUID, user_id: UUID | None = None) -> None:
         """Initialize ReviewNotFoundError."""
-        message = "Review not found for the specified user." if user_id else None
-        super().__init__(resource="Review", identifier=review_id, message=message)
-        if user_id:
+        super().__init__(resource="Review", error_code="review_not_found")
+        self.details["review_id"] = str(review_id)
+        if user_id is not None:
             self.details["user_id"] = str(user_id)
 
 
 class AddressNotFoundError(NotFoundError):
     """Address not found exception."""
 
-    def __init__(self, address_id: UUID | None = None, user_id: UUID | None = None) -> None:
+    def __init__(self, *, address_id: UUID, user_id: UUID) -> None:
         """Initialize AddressNotFoundError."""
-        message = "Address not found for the specified user." if user_id else None
-        super().__init__(resource="Address", identifier=address_id, message=message)
-        if user_id:
-            self.details["user_id"] = str(user_id)
+        super().__init__(resource="Address", error_code="address_not_found")
+        self.details["address_id"] = str(address_id)
+        self.details["user_id"] = str(user_id)
 
 
 class CategoryNotFoundError(NotFoundError):
     """Category not found exception."""
 
-    def __init__(self, category_id: UUID | None = None, slug: str | None = None) -> None:
+    def __init__(self, *, category_id: UUID | None = None, slug: str | None = None) -> None:
         """Initialize CategoryNotFoundError."""
-        identifier = category_id if category_id else slug
-        super().__init__(resource="Category", identifier=identifier)
+        super().__init__(resource="Category", error_code="category_not_found")
+        if category_id is not None:
+            self.details["category_id"] = str(category_id)
+        if slug is not None:
+            self.details["slug"] = slug
 
 
-class WishlistItemNotFoundError(NotFoundError):  # TODO
-    """Wishlist item not found exception."""
+class ProductNotInWishlistError(NotFoundError):
+    """Product is not in the user's wishlist."""
 
-    def __init__(self, product_id: UUID | None = None, user_id: UUID | None = None) -> None:
-        """Initialize WishlistItemNotFoundError."""
+    def __init__(self, *, product_id: UUID, user_id: UUID) -> None:
+        """Initialize ProductNotInWishlistError."""
         super().__init__(
             resource="Wishlist item",
-            identifier=product_id,
             message="Product not found in wishlist.",
+            error_code="product_not_in_wishlist",
         )
-        if user_id:
-            self.details["user_id"] = str(user_id)
+        self.details["product_id"] = str(product_id)
+        self.details["user_id"] = str(user_id)
 
 
-class ProductNotInCartError(NotFoundError):  # TODO
-    """Product not found in cart."""
+class ProductNotInCartError(NotFoundError):
+    """Product is not in the user's cart."""
 
-    def __init__(self, product_id: UUID | None = None) -> None:
+    def __init__(self, *, product_id: UUID, cart_id: UUID) -> None:
         """Initialize ProductNotInCartError."""
         super().__init__(
-            resource="Product in cart",
-            identifier=product_id,
+            resource="Cart item",
             message="Product not found in cart.",
+            error_code="product_not_in_cart",
         )
+        self.details["product_id"] = str(product_id)
+        self.details["cart_id"] = str(cart_id)
 
 
 # ============================================================================
@@ -377,30 +401,61 @@ class ProductNotInCartError(NotFoundError):  # TODO
 class DuplicateResourceError(AppError):
     """Resource already exists."""
 
-    def __init__(self, resource: str, field: str, value: str) -> None:
+    def __init__(
+        self,
+        *,
+        resource: str,
+        message: str = "Resource already exists.",
+        error_code: str = "duplicate_resource",
+    ) -> None:
         """Initialize DuplicateResourceError."""
         super().__init__(
-            message=f"{resource} with {field}='{value}' already exists.",
+            message=message,
             status_code=409,
-            error_code="DUPLICATE_RESOURCE",
-            details={"resource": resource, "field": field, "value": value},
+            error_code=error_code,
+            details={"resource": resource},
         )
+
+
+class DuplicateUserError(DuplicateResourceError):
+    """User with this email already exists."""
+
+    def __init__(self, *, email: str) -> None:
+        """Initialize DuplicateUserError."""
+        super().__init__(
+            resource="User",
+            message="User with this email already exists.",
+            error_code="duplicate_user",
+        )
+        self.details["email"] = email
 
 
 class DuplicateReviewError(DuplicateResourceError):
     """User already reviewed this product."""
 
-    def __init__(self, product_id: UUID | None = None, user_id: UUID | None = None) -> None:
+    def __init__(self, *, product_id: UUID, user_id: UUID) -> None:
         """Initialize DuplicateReviewError."""
         super().__init__(
             resource="Review",
-            field="product",
-            value=str(product_id) if product_id else "this product",
+            message="Product already reviewed by user.",
+            error_code="duplicate_review",
         )
-        self.message = "You have already reviewed this product."
-        self.error_code = "DUPLICATE_REVIEW"
-        if user_id:
-            self.details["user_id"] = str(user_id)
+        self.details["product_id"] = str(product_id)
+        self.details["user_id"] = str(user_id)
+
+
+class DuplicateWishlistItemError(DuplicateResourceError):
+    """Product already in user's wishlist."""
+
+    def __init__(self, *, product_id: UUID, user_id: UUID) -> None:
+        """Initialize DuplicateWishlistItemError."""
+        super().__init__(
+            resource="Wishlist item",
+            message="Product already in wishlist.",
+            error_code="duplicate_wishlist_item",
+        )
+        self.details["product_id"] = str(product_id)
+        self.details["user_id"] = str(user_id)
 
 
 # ============================================================================
@@ -416,6 +471,6 @@ class PaymentGatewayError(AppError):  # TODO
         super().__init__(
             message=f"{gateway} error: {message}",
             status_code=502,
-            error_code="PAYMENT_GATEWAY_ERROR",
+            error_code="payment_gateway_error",
             details={"gateway": gateway, "error": message},
         )

@@ -45,10 +45,13 @@ class WishlistRepository(GenericRepository[WishlistItem], ABC):
         ...
 
     @abstractmethod
-    async def delete_by_user_id(self, user_id: UUID) -> None:
+    async def delete_by_user_id(self, user_id: UUID) -> int:
         """Delete all wishlist items for a user.
 
         Args:
             user_id (UUID): User ID.
+
+        Returns:
+            int: Number of deleted items.
         """
         ...

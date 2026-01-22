@@ -6,28 +6,28 @@ from uuid import UUID
 from fastapi import APIRouter, status
 
 from app.api.v1.dependencies import AddressServiceDep, CurrentUserDep
-from app.schemas.address import AddressCreate, AddressRead, AddressUpdate
+from app.schemas.address import AddressCreate, AddressPublic, AddressUpdate
 
 router = APIRouter()
 
 
 @router.get(
     "",
-    response_model=list[AddressRead],
+    response_model=list[AddressPublic],
     summary="List user addresses",
     description="Retrieve all delivery and billing addresses associated with the current user.",
 )
 async def get_addresses(
     current_user: CurrentUserDep,
     address_service: AddressServiceDep,
-) -> list[AddressRead]:
+) -> list[AddressPublic]:
     """List all addresses for the current user."""
     return await address_service.get_addresses(current_user.id)
 
 
 @router.post(
     "",
-    response_model=AddressRead,
+    response_model=AddressPublic,
     status_code=status.HTTP_201_CREATED,
     summary="Add new address",
     description="Create a new delivery or billing address for the current user.",
@@ -36,14 +36,14 @@ async def create_address(
     data: AddressCreate,
     current_user: CurrentUserDep,
     address_service: AddressServiceDep,
-) -> AddressRead:
+) -> AddressPublic:
     """Add a new address to the currently authenticated user's account."""
     return await address_service.create_address(current_user.id, data)
 
 
 @router.patch(
     "/{address_id}",
-    response_model=AddressRead,
+    response_model=AddressPublic,
     summary="Update address",
     description="Update an existing address. Only the address owner can modify it.",
 )
@@ -52,14 +52,14 @@ async def update_address(
     data: AddressUpdate,
     current_user: CurrentUserDep,
     address_service: AddressServiceDep,
-) -> AddressRead:
+) -> AddressPublic:
     """Update an existing address. Only the owner can update their own address."""
     return await address_service.update_address(address_id, current_user.id, data)
 
 
 @router.patch(
     "/{address_id}/default-shipping",
-    response_model=AddressRead,
+    response_model=AddressPublic,
     summary="Set address as default shipping",
     description="Mark an address as the default shipping address for the user.",
 )
@@ -67,14 +67,14 @@ async def set_default_shipping_address(
     address_id: UUID,
     current_user: CurrentUserDep,
     address_service: AddressServiceDep,
-) -> AddressRead:
+) -> AddressPublic:
     """Set an address as the default shipping address for the current user."""
     return await address_service.set_default_shipping_address(address_id, current_user.id)
 
 
 @router.patch(
     "/{address_id}/default-billing",
-    response_model=AddressRead,
+    response_model=AddressPublic,
     summary="Set address as default billing",
     description="Mark an address as the default billing address for the user.",
 )
@@ -82,7 +82,7 @@ async def set_default_billing_address(
     address_id: UUID,
     current_user: CurrentUserDep,
     address_service: AddressServiceDep,
-) -> AddressRead:
+) -> AddressPublic:
     """Set an address as the default billing address for the current user."""
     return await address_service.set_default_billing_address(address_id, current_user.id)
 

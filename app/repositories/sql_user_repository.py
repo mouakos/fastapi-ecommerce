@@ -28,6 +28,7 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
         Returns:
             User | None: User or none.
         """
+        email = email.lower().strip()
         stmt = select(User).where(User.email == email)
         result = await self._session.exec(stmt)
         return result.first()

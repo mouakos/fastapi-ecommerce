@@ -40,21 +40,16 @@ class ReviewService:
 
         existing = await self.uow.reviews.find_user_product_review(user_id, data.product_id)
         if existing:
-            raise DuplicateReviewError()
+            raise DuplicateReviewError(product_id=data.product_id, user_id=user_id)
 
         review_data = data.model_dump()
-        new_review = Review(
-            user_id=user_id,
-            **review_data,
-            status=ReviewStatus.PENDING,
-        )
+        new_review = Review(user_id=user_id, **review_data)
         created_review = await self.uow.reviews.add(new_review)
         logger.info(
             "review_created",
             review_id=str(created_review.id),
             user_id=str(user_id),
             product_id=str(data.product_id),
-            rating=data.rating,
         )
         return created_review
 
@@ -88,7 +83,7 @@ class ReviewService:
         if not product:
             raise ProductNotFoundError(product_id=product_id)
 
-        total, reviews = await self.uow.reviews.find_all(
+        reviews, total = await self.uow.reviews.find_all(
             page=page,
             page_size=page_size,
             status=ReviewStatus.APPROVED,
@@ -97,7 +92,7 @@ class ReviewService:
             sort_by=sort_by,
             sort_order=sort_order,
         )
-        return total, reviews
+        return reviews, total
 
     async def get_review(self, review_id: UUID, user_id: UUID) -> Review:
         """Get a review.
@@ -110,7 +105,7 @@ class ReviewService:
             Review: The review with the specified ID.
 
         Raises:
-            ReviewNotFoundError: If the review is not found or not approved.
+            ReviewNotFoundError: If the review is not found.
         """
         review = await self.uow.reviews.find_user_review(review_id, user_id)
         if not review:

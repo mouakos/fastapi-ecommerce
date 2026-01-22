@@ -42,7 +42,25 @@ class UserUpdate(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class UserRead(UUIDMixin):
+class UserRoleUpdateRequest(BaseModel):
+    """Schema for updating a user's role."""
+
+    role: UserRole = Field(..., description="New role: 'user' or 'admin'")
+
+    model_config = ConfigDict(frozen=True)
+
+
+class UserPasswordUpdateRequest(BaseModel):
+    """Schema for updating user password."""
+
+    old_password: str = Field(..., min_length=6, max_length=255)
+    new_password: str = Field(..., min_length=6, max_length=255)
+    confirm_password: str = Field(..., min_length=6, max_length=255)
+
+    model_config = ConfigDict(frozen=True)
+
+
+class UserPublic(UUIDMixin):
     """Schema for reading user information."""
 
     email: EmailStr = Field(..., max_length=255)
@@ -55,7 +73,7 @@ class UserRead(UUIDMixin):
     model_config = ConfigDict(frozen=True)
 
 
-class UserAdminRead(UserRead):
+class UserAdmin(UserPublic):
     """Schema for reading user information in admin context."""
 
     created_at: datetime
@@ -64,24 +82,6 @@ class UserAdminRead(UserRead):
     total_spent: Decimal = Field(
         ..., description="Total amount spent by this user", ge=0, decimal_places=2, max_digits=10
     )
-
-    model_config = ConfigDict(frozen=True)
-
-
-class UserRoleUpdate(BaseModel):
-    """Schema for updating a user's role."""
-
-    role: UserRole = Field(..., description="New role: 'user' or 'admin'")
-
-    model_config = ConfigDict(frozen=True)
-
-
-class UserPasswordUpdate(BaseModel):
-    """Schema for updating user password."""
-
-    old_password: str = Field(..., min_length=6, max_length=255)
-    new_password: str = Field(..., min_length=6, max_length=255)
-    confirm_password: str = Field(..., min_length=6, max_length=255)
 
     model_config = ConfigDict(frozen=True)
 
@@ -118,3 +118,20 @@ class UserSortByField(StrEnum):
     EMAIL = "email"
     ROLE = "role"
     CREATED_AT = "created_at"
+
+
+class UserActionResponse(BaseModel):
+    """Schema for user action responses."""
+
+    message: str
+    user_id: UUID
+
+    model_config = ConfigDict(
+        frozen=True,
+        json_schema_extra={
+            "example": {
+                "message": "User updated successfully.",
+                "user_id": "123e4567-e89b-12d3-a456-426614174000",
+            }
+        },
+    )

@@ -13,8 +13,8 @@ from app.schemas.product import (
     ProductAutocompleteResponse,
     ProductAvailabilityFilter,
     ProductCreate,
-    ProductDetailRead,
-    ProductRead,
+    ProductDetail,
+    ProductPublic,
     ProductSortByField,
     ProductUpdate,
 )
@@ -48,7 +48,7 @@ async def get_autocomplete_suggestions(
 
 @router.get(
     "",
-    response_model=Page[ProductRead],
+    response_model=Page[ProductPublic],
     summary="Get all products",
     description="Retrieve paginated list of products with advanced filtering by category, price range, rating, and availability. Supports search and sorting.",
 )
@@ -78,7 +78,7 @@ async def get_products(
         ProductSortByField, Query(description="Sort by field")
     ] = ProductSortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.ASC,
-) -> Page[ProductRead]:
+) -> Page[ProductPublic]:
     """Get all products with optional filters, sorting, and pagination."""
     products, total = await product_service.get_products(
         page=page,
@@ -98,18 +98,16 @@ async def get_products(
 
 @router.post(
     "",
-    response_model=ProductDetailRead,
+    response_model=ProductDetail,
     status_code=status.HTTP_201_CREATED,
     summary="Create product",
     description="Create a new product. Admin access required.",
     dependencies=[AdminRoleDep],
 )
-async def create_product(
-    data: ProductCreate, product_service: ProductServiceDep
-) -> ProductDetailRead:
+async def create_product(data: ProductCreate, product_service: ProductServiceDep) -> ProductDetail:
     """Create a new product."""
     product = await product_service.create_product(data)
-    return ProductDetailRead(
+    return ProductDetail(
         **product.model_dump(),
         review_count=await product_service.get_product_review_count(product.id),
         average_rating=await product_service.get_product_average_rating(product.id),
@@ -118,16 +116,14 @@ async def create_product(
 
 @router.get(
     "/id/{product_id}",
-    response_model=ProductDetailRead,
+    response_model=ProductDetail,
     summary="Get product by ID",
     description="Retrieve detailed information about a specific product using its UUID.",
 )
-async def get_product_by_id(
-    product_id: UUID, product_service: ProductServiceDep
-) -> ProductDetailRead:
+async def get_product_by_id(product_id: UUID, product_service: ProductServiceDep) -> ProductDetail:
     """Retrieve a product by its ID."""
     product = await product_service.get_product_by_id(product_id)
-    return ProductDetailRead(
+    return ProductDetail(
         **product.model_dump(),
         review_count=await product_service.get_product_review_count(product_id),
         average_rating=await product_service.get_product_average_rating(product_id),
@@ -136,14 +132,14 @@ async def get_product_by_id(
 
 @router.get(
     "/slug/{slug}",
-    response_model=ProductDetailRead,
+    response_model=ProductDetail,
     summary="Get product by slug",
     description="Retrieve detailed information about a specific product using its URL-friendly slug.",
 )
-async def get_product_by_slug(slug: str, product_service: ProductServiceDep) -> ProductDetailRead:
+async def get_product_by_slug(slug: str, product_service: ProductServiceDep) -> ProductDetail:
     """Retrieve a product by its slug."""
     product = await product_service.get_product_by_slug(slug)
-    return ProductDetailRead(
+    return ProductDetail(
         **product.model_dump(),
         review_count=await product_service.get_product_review_count(product.id),
         average_rating=await product_service.get_product_average_rating(product.id),
@@ -152,17 +148,17 @@ async def get_product_by_slug(slug: str, product_service: ProductServiceDep) -> 
 
 @router.patch(
     "/{product_id}",
-    response_model=ProductDetailRead,
+    response_model=ProductDetail,
     summary="Update product",
     description="Update an existing product's information. Admin access required.",
     dependencies=[AdminRoleDep],
 )
 async def update_product(
     product_id: UUID, data: ProductUpdate, product_service: ProductServiceDep
-) -> ProductDetailRead:
+) -> ProductDetail:
     """Update a product by its ID."""
     product = await product_service.update_product(product_id, data)
-    return ProductDetailRead(
+    return ProductDetail(
         **product.model_dump(),
         review_count=await product_service.get_product_review_count(product_id),
         average_rating=await product_service.get_product_average_rating(product_id),

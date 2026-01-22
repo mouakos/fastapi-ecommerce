@@ -61,12 +61,15 @@ class SqlWishlistRepository(SqlGenericRepository[WishlistItem], WishlistReposito
         result = await self._session.exec(stmt)
         return result.first()
 
-    async def delete_by_user_id(self, user_id: UUID) -> None:
+    async def delete_by_user_id(self, user_id: UUID) -> int:
         """Delete all wishlist items for a user.
 
         Args:
             user_id (UUID): User ID.
+
+        Returns:
+            int: Number of deleted items.
         """
         stmt = delete(WishlistItem).where(WishlistItem.user_id == user_id)  # type: ignore  [arg-type]
-        await self._session.exec(stmt)
-        await self._session.flush()
+        result = await self._session.exec(stmt)
+        return result.rowcount or 0

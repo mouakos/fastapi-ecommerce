@@ -16,8 +16,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
         """Handle all custom application errors."""
         logger.warning(
-            "application_error",
-            error_code=exc.error_code,
+            f"{exc.error_code}",
             status_code=exc.status_code,
             message=exc.message,
             details=exc.details,
@@ -42,8 +41,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         """Handle FastAPI/Pydantic request validation errors."""
         errors = exc.errors()
         logger.warning(
-            "validation_error",
-            error_code="VALIDATION_ERROR",
+            "request_validation_error",
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             message="Request validation failed.",
             details={"errors": errors},
@@ -54,7 +52,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             content={
                 "error": {
-                    "error_code": "VALIDATION_ERROR",
+                    "error_code": "request_validation_error",
                     "message": "Request validation failed.",
                     "details": {"errors": errors},
                 }
@@ -65,8 +63,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError) -> JSONResponse:
         """Handle SQLAlchemy exceptions globally."""
         logger.error(
-            "sqlalchemy_exception",
-            error_code="DATABASE_ERROR",
+            "database_error",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message="A database error occurred.",
             details={"exception": str(exc)},
@@ -77,7 +74,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
                 "error": {
-                    "error_code": "DATABASE_ERROR",
+                    "error_code": "database_error",
                     "message": "A database error occurred.",
                     "details": None,
                 }
@@ -88,8 +85,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
         """Handle unhandled exceptions globally."""
         logger.error(
-            "unhandled_exception",
-            error_code="INTERNAL_SERVER_ERROR",
+            "internal_server_error",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message="An unexpected error occurred.",
             details={"exception": str(exc)},
@@ -101,7 +97,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
                 "error": {
-                    "error_code": "INTERNAL_SERVER_ERROR",
+                    "error_code": "internal_server_error",
                     "message": "An unexpected error occurred.",
                     "details": None,
                 }

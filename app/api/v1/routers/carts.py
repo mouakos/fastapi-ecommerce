@@ -10,26 +10,30 @@ from app.api.v1.dependencies import (
     CartSessionIdOrCreateDep,
     OptionalCurrentUserDep,
 )
-from app.schemas.cart import CartItemCreate, CartItemUpdate, CartRead
+from app.schemas.cart import (
+    AddToCartRequest,
+    CartActionResponse,
+    CartPublic,
+    UpdateQuantityRequest,
+)
 
 router = APIRouter()
 
 
 @router.get(
     "",
-    response_model=CartRead,
+    response_model=CartPublic,
     summary="Get cart",
-    description="Retrieve the current cart contents for authenticated users or session-based guests. Creates a new cart if none exists.",
+    description="Retrieve the current cart contents for authenticated users or session-based guests.",
 )
 async def get_cart(
     session_id: CartSessionIdOrCreateDep,
     current_user: OptionalCurrentUserDep,
     cart_service: CartServiceDep,
-) -> CartRead:
+) -> CartPublic:
     """Get the current user's cart or session cart."""
-    return await cart_service.get_or_create_cart(
-        user_id=current_user.id if current_user else None,
-        session_id=session_id,
+    return await cart_service.get_cart(
+        user_id=current_user.id if current_user else None, session_id=session_id
     )
 
 
@@ -39,13 +43,13 @@ async def get_cart(
     summary="Clear cart",
     description="Remove all items from the cart. This action cannot be undone.",
 )
-async def clear_cart_items(
+async def clear_cart(
     session_id: CartSessionIdOrCreateDep,
     current_user: OptionalCurrentUserDep,
     cart_service: CartServiceDep,
 ) -> None:
     """Clear all items from the cart."""
-    await cart_service.clear_cart_items(
+    await cart_service.clear_cart(
         user_id=current_user.id if current_user else None,
         session_id=session_id,
     )
@@ -53,61 +57,71 @@ async def clear_cart_items(
 
 @router.post(
     "/items",
-    response_model=CartRead,
-    summary="Add item to cart",
-    description="Add a product to the cart with the specified quantity. If the item already exists, the quantities will be combined.",
+    response_model=CartActionResponse,
+    summary="Add product to cart",
+    description="Add a product to the cart with the specified quantity. If the product already exists, the quantities will be combined.",
 )
-async def add_item_to_cart(
-    data: CartItemCreate,
+async def add_product_to_cart(
+    data: AddToCartRequest,
     session_id: CartSessionIdOrCreateDep,
     current_user: OptionalCurrentUserDep,
     cart_service: CartServiceDep,
-) -> CartRead:
-    """Add an item to the cart."""
-    return await cart_service.add_cart_item(
+) -> CartActionResponse:
+    """Add a product to the cart."""
+    await cart_service.add_product_to_cart(
         user_id=current_user.id if current_user else None,
         session_id=session_id,
-        data=data,
+        product_id=data.product_id,
+        quantity=data.quantity,
+    )
+    return CartActionResponse(
+        message="Product added to cart successfully.", product_id=data.product_id
     )
 
 
 @router.patch(
     "/items/{product_id}",
-    response_model=CartRead,
-    summary="Update cart item quantity",
+    response_model=CartActionResponse,
+    summary="Update product quantity",
     description="Update the quantity of a specific product in the cart. Set quantity to 0 to remove the item.",
 )
-async def update_item_in_cart(
+async def update_product_quantity(
     product_id: UUID,
-    data: CartItemUpdate,
+    data: UpdateQuantityRequest,
     session_id: CartSessionIdOrCreateDep,
     current_user: OptionalCurrentUserDep,
     cart_service: CartServiceDep,
-) -> CartRead:
-    """Update the quantity of a cart item."""
-    return await cart_service.update_cart_item(
+) -> CartActionResponse:
+    """Update the quantity of a product in the cart."""
+    await cart_service.update_product_quantity(
         user_id=current_user.id if current_user else None,
         session_id=session_id,
         product_id=product_id,
-        data=data,
+        quantity=data.quantity,
+    )
+    return CartActionResponse(
+        message="Product updated in cart successfully.", product_id=product_id
     )
 
 
 @router.delete(
     "/items/{product_id}",
-    response_model=CartRead,
-    summary="Remove item from cart",
+    response_model=CartActionResponse,
+    summary="Remove product from cart",
     description="Remove a specific product from the cart completely, regardless of quantity.",
 )
-async def remove_item_from_cart(
+async def remove_product_from_cart(
     product_id: UUID,
     session_id: CartSessionIdOrCreateDep,
     current_user: OptionalCurrentUserDep,
     cart_service: CartServiceDep,
-) -> CartRead:
-    """Remove an item from the cart."""
-    return await cart_service.remove_cart_item(
+) -> CartActionResponse:
+    """Remove a product from the cart."""
+    await cart_service.remove_product_from_cart(
         user_id=current_user.id if current_user else None,
         session_id=session_id,
         product_id=product_id,
+    )
+    return CartActionResponse(
+        message="Product removed from cart successfully.", product_id=product_id
     )

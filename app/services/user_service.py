@@ -3,17 +3,21 @@
 from uuid import UUID
 
 from app.core.exceptions import (
-    DuplicateResourceError,
+    DuplicateUserError,
     IncorrectPasswordError,
     InvalidCredentialsError,
     PasswordMismatchError,
     UserNotFoundError,
 )
 from app.core.logger import logger
-from app.core.security import create_access_token, hash_password, verify_password
+from app.core.security import hash_password, verify_password
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.user import User
-from app.schemas.user import Login, Token, UserCreate, UserPasswordUpdate, UserUpdate
+from app.schemas.user import (
+    UserCreate,
+    UserPasswordUpdateRequest,
+    UserUpdate,
+)
 
 
 class UserService:
@@ -37,7 +41,7 @@ class UserService:
         """
         user = await self.uow.users.find_by_id(user_id)
         if not user:
-            raise UserNotFoundError(user_id)
+            raise UserNotFoundError(user_id=user_id)
         return user
 
     async def create_user(self, data: UserCreate) -> User:
@@ -50,51 +54,50 @@ class UserService:
             User: The created user.
 
         Raises:
-            DuplicateResourceError: If a user with this email already exists.
+            DuplicateUserError: If a user with this email already exists.
         """
-        user = await self.uow.users.find_by_email(data.email)
+        email = data.email.lower().strip()
+        user = await self.uow.users.find_by_email(email)
 
         if user:
-            raise DuplicateResourceError(
-                resource="User",
-                field="email",
-                value=data.email,
-            )
-
+            raise DuplicateUserError(email=data.email)
         hashed_password = hash_password(data.password)
-        user_data = data.model_dump(exclude={"password"})
+        user_data = data.model_dump(exclude={"password", "email"})
 
-        new_user = User(hashed_password=hashed_password, **user_data)
+        new_user = User(hashed_password=hashed_password, email=email, **user_data)
+
         created_user = await self.uow.users.add(new_user)
+
         logger.info("user_registered", user_id=str(created_user.id), email=created_user.email)
         return created_user
 
-    async def login(self, data: Login) -> tuple[Token, User]:
+    async def authenticate_user(self, *, email: str, password: str) -> User:
         """Authenticate a user and generate JWT access token.
 
         Args:
-            data (Login): Login credentials (email and password).
+            email (str): User email.
+            password (str): User password.
 
         Returns:
-            tuple[Token, User]: JWT access token and authenticated user object.
+            User: Authenticated user object.
 
         Raises:
             InvalidCredentialsError: If email or password is incorrect.
         """
-        user = await self.uow.users.find_by_email(data.email)
-        if not user or not verify_password(data.password, user.hashed_password):
+        email = email.lower().strip()
+        user = await self.uow.users.find_by_email(email)
+        if not user or not verify_password(password, user.hashed_password):
             raise InvalidCredentialsError()
 
-        token = create_access_token({"sub": str(user.id)})
         logger.info("user_logged_in", user_id=str(user.id), email=user.email)
-        return Token(access_token=token), user
+        return user
 
-    async def update_user_password(self, user_id: UUID, data: UserPasswordUpdate) -> None:
+    async def update_user_password(self, user_id: UUID, data: UserPasswordUpdateRequest) -> None:
         """Update user password with verification of current password.
 
         Args:
             user_id (UUID): ID of the user.
-            data (UserPasswordUpdate): Old password, new password, and confirmation.
+            data (UserPasswordUpdateRequest): Old password, new password, and confirmation.
 
         Raises:
             UserNotFoundError: If user not found.
@@ -132,7 +135,9 @@ class UserService:
         for key, value in user_data.items():
             setattr(user, key, value)
 
-        return await self.uow.users.update(user)
+        user = await self.uow.users.update(user)
+        logger.info("user_updated", user_id=str(user_id))
+        return user
 
     async def delete_user(self, user_id: UUID) -> None:
         """Delete a user by its ID.

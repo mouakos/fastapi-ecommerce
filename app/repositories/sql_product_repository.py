@@ -37,7 +37,7 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
         min_rating: float | None = None,
         is_active: bool | None = None,
         availability: str = "all",
-        sort_by: str = "id",
+        sort_by: str = "created_at",
         sort_order: str = "asc",
     ) -> tuple[list[Product], int]:
         """Find all products with optional filters, sorting, and pagination.
@@ -132,29 +132,16 @@ class SqlProductRepository(SqlGenericRepository[Product], ProductRepository):
 
         return products, total
 
-    async def find_active_by_slug(self, slug: str) -> Product | None:
-        """Find a single active product by slug.
+    async def find_by_slug(self, slug: str) -> Product | None:
+        """Find a single product by slug.
 
         Args:
             slug (str): Product slug.
 
         Returns:
-            Product | None: Active product or none.
+            Product | None: Product or none.
         """
-        stmt = select(Product).where((Product.slug == slug) & (Product.is_active))
-        result = await self._session.exec(stmt)
-        return result.first()
-
-    async def find_active_by_id(self, product_id: UUID) -> Product | None:
-        """Find a single active product by ID.
-
-        Args:
-            product_id (UUID): Product ID.
-
-        Returns:
-            Product | None: Active product or none.
-        """
-        stmt = select(Product).where((Product.id == product_id) & (Product.is_active))
+        stmt = select(Product).where(Product.slug == slug)
         result = await self._session.exec(stmt)
         return result.first()
 

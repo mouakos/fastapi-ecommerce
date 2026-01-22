@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, HttpUrl, computed_field
 from app.schemas.common import UUIDMixin
 
 
-class CartItemCreate(BaseModel):
+class AddToCartRequest(BaseModel):
     """Schema for creating a new cart item."""
 
     product_id: UUID
@@ -17,14 +17,14 @@ class CartItemCreate(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class CartItemUpdate(BaseModel):
+class UpdateQuantityRequest(BaseModel):
     """Schema for updating a cart item."""
 
     quantity: int = Field(..., ge=0)
     model_config = ConfigDict(frozen=True)
 
 
-class CartItemRead(BaseModel):
+class CartItemPublic(BaseModel):
     """Schema for reading cart items."""
 
     product_id: UUID
@@ -33,7 +33,7 @@ class CartItemRead(BaseModel):
         ..., description="Price per unit of the product", decimal_places=2, max_digits=10
     )
     product_name: str = Field(..., max_length=255)
-    image_url: HttpUrl | None
+    product_image_url: HttpUrl | None
 
     @computed_field(return_type=Decimal)
     def subtotal(self) -> Decimal:
@@ -43,11 +43,11 @@ class CartItemRead(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class CartRead(UUIDMixin):
+class CartPublic(UUIDMixin):
     """Schema for reading cart."""
 
     user_id: UUID | None = None
-    items: list[CartItemRead] = []
+    items: list[CartItemPublic]
 
     @computed_field(return_type=Decimal)
     def subtotal(self) -> Decimal:
@@ -60,3 +60,20 @@ class CartRead(UUIDMixin):
         return sum(item.quantity for item in self.items)
 
     model_config = ConfigDict(frozen=True)
+
+
+class CartActionResponse(BaseModel):
+    """Schema for cart action responses."""
+
+    message: str
+    product_id: UUID
+
+    model_config = ConfigDict(
+        frozen=True,
+        json_schema_extra={
+            "example": {
+                "message": "Product added to cart successfully.",
+                "product_id": "123e4567-e89b-12d3-a456-426614174000",
+            }
+        },
+    )

@@ -96,7 +96,7 @@ class ProductService:
         Raises:
             ProductNotFoundError: If the product is not found.
         """
-        product = await self.uow.products.find_active_by_id(product_id)
+        product = await self.uow.products.find_by_id(product_id)
         if not product:
             raise ProductNotFoundError(product_id=product_id)
         return product
@@ -138,7 +138,7 @@ class ProductService:
         Raises:
             ProductNotFoundError: If the product is not found.
         """
-        product = await self.uow.products.find_active_by_slug(slug)
+        product = await self.uow.products.find_by_slug(slug)
         if not product:
             raise ProductNotFoundError(slug=slug)
 
@@ -175,12 +175,7 @@ class ProductService:
         new_product = Product(slug=slug, sku=sku, **product_data)
 
         created_product = await self.uow.products.add(new_product)
-        logger.info(
-            "product_created",
-            product_id=str(created_product.id),
-            name=created_product.name,
-            sku=sku,
-        )
+        logger.info("product_created", product_id=str(created_product.id))
         return created_product
 
     async def update_product(

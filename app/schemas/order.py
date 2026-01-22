@@ -20,7 +20,7 @@ class OrderCreate(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class OrderItemRead(BaseModel):
+class OrderItemPublic(BaseModel):
     """Schema for reading order items."""
 
     product_id: UUID
@@ -32,19 +32,19 @@ class OrderItemRead(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class OrderRead(UUIDMixin):
+class OrderPublic(UUIDMixin):
     """Schema for reading orders."""
 
     order_number: str = Field(..., description="Unique order number", max_length=100)
     total_amount: Decimal = Field(..., max_digits=10, decimal_places=2)
     status: OrderStatus
-    items: list[OrderItemRead]
+    items: list[OrderItemPublic]
     created_at: datetime
 
     model_config = ConfigDict(frozen=True)
 
 
-class OrderAdminRead(UUIDMixin):
+class OrderAdmin(UUIDMixin):
     """Schema for reading order information in admin context."""
 
     user_id: UUID
@@ -64,7 +64,7 @@ class OrderAdminRead(UUIDMixin):
     model_config = ConfigDict(frozen=True)
 
 
-class OrderStatusUpdate(BaseModel):
+class OrderStatusUpdateRequest(BaseModel):
     """Schema for updating an order's status."""
 
     status: OrderStatus = Field(
@@ -81,3 +81,19 @@ class OrderSortByField(StrEnum):
     TOTAL_AMOUNT = "total_amount"
     STATUS = "status"
     CREATED_AT = "created_at"
+
+
+class OrderActionResponse(BaseModel):
+    """Schema for order action responses."""
+
+    message: str
+    order_id: UUID
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "message": "Order status updated successfully.",
+                "order_id": "123e4567-e89b-12d3-a456-426614174000",
+            }
+        }
+    )

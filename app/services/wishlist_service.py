@@ -3,10 +3,11 @@
 from uuid import UUID
 
 from app.core.exceptions import (
+    DuplicateWishlistItemError,
     InsufficientStockError,
     ProductInactiveError,
     ProductNotFoundError,
-    WishlistItemNotFoundError,
+    ProductNotInWishlistError,
 )
 from app.core.logger import logger
 from app.interfaces.unit_of_work import UnitOfWork
@@ -21,8 +22,10 @@ class WishlistService:
         """Initialize the service with a wishlist repository."""
         self.uow = uow
 
-    async def add_wishlist_item(self, user_id: UUID, product_id: UUID) -> None:
-        """Add a product to the user's wishlist (idempotent).
+    async def add_product_to_wishlist(self, user_id: UUID, product_id: UUID) -> None:
+        """Add a product to the user's wishlist.
+
+        If the product is already in the wishlist, it will not be added again.
 
         Args:
             user_id (UUID): ID of the user.
@@ -35,11 +38,13 @@ class WishlistService:
         if not product:
             raise ProductNotFoundError(product_id=product_id)
 
-        wishlist_item = await self.uow.wishlists.find_item(user_id, product_id)
-        if not wishlist_item:
-            new_wishlist_item = WishlistItem(user_id=user_id, product_id=product_id)
-            await self.uow.wishlists.add(new_wishlist_item)
-            logger.info("wishlist_item_added", user_id=str(user_id), product_id=str(product_id))
+        wishlist_item = await self.uow.wishlists.find_item(user_id, product.id)
+        if wishlist_item:
+            raise DuplicateWishlistItemError(product_id=product_id, user_id=user_id)
+
+        new_wishlist_item = WishlistItem(user_id=user_id, product_id=product.id)
+        logger.info("product_added_to_wishlist", user_id=str(user_id), product_id=str(product.id))
+        await self.uow.wishlists.add(new_wishlist_item)
 
     async def get_wishlist_items(
         self, user_id: UUID, page: int = 1, page_size: int = 10
@@ -56,7 +61,7 @@ class WishlistService:
         """
         return await self.uow.wishlists.find_all(page=page, page_size=page_size, user_id=user_id)
 
-    async def remove_wishlist_item(self, user_id: UUID, product_id: UUID) -> None:
+    async def remove_product_from_wishlist(self, user_id: UUID, product_id: UUID) -> None:
         """Remove a product from the user's wishlist.
 
         Args:
@@ -64,23 +69,25 @@ class WishlistService:
             product_id (UUID): Product ID.
 
         Raises:
-            WishlistItemNotFoundError: If product is not in wishlist.
+            ProductNotInWishlistError: If product is not in wishlist.
         """
         wishlist_item = await self.uow.wishlists.find_item(user_id, product_id)
         if not wishlist_item:
-            raise WishlistItemNotFoundError(product_id=product_id, user_id=user_id)
+            raise ProductNotInWishlistError(product_id=product_id, user_id=user_id)
 
         await self.uow.wishlists.delete(wishlist_item)
-        logger.info("wishlist_item_removed", user_id=str(user_id), product_id=str(product_id))
+        logger.info(
+            "product_removed_from_wishlist", user_id=str(user_id), product_id=str(product_id)
+        )
 
-    async def clear_wishlist_items(self, user_id: UUID) -> None:
+    async def clear_wishlist(self, user_id: UUID) -> None:
         """Clear all wishlist items for a user.
 
         Args:
             user_id (UUID): User ID.
         """
-        await self.uow.wishlists.delete_by_user_id(user_id)
-        logger.info("wishlist_cleared", user_id=str(user_id))
+        count = await self.uow.wishlists.delete_by_user_id(user_id)
+        logger.info("wishlist_cleared", user_id=str(user_id), deleted_count=count)
 
     async def get_wishlist_item_count(self, user_id: UUID) -> int:
         """Get the total number of wishlist items for a user.
@@ -93,38 +100,35 @@ class WishlistService:
         """
         return await self.uow.wishlists.count(user_id=user_id)
 
-    async def move_wishlist_item_to_cart(self, user_id: UUID, product_id: UUID) -> None:
-        """Move a product from wishlist to cart and remove from wishlist.
+    async def add_product_from_wishlist_to_cart(self, user_id: UUID, product_id: UUID) -> None:
+        """Add a product from wishlist to cart.
 
         Adds product to cart with quantity of 1, or increments quantity if already in cart.
 
         Args:
             user_id (UUID): ID of the user.
-            product_id (UUID): ID of the product to move.
+            product_id (UUID): ID of the product to add.
 
         Raises:
-            ProductNotFoundError: If product is not found.
-            WishlistItemNotFoundError: If product is not in wishlist.
+            ProductNotInWishlistError: If product is not in wishlist.
             ProductInactiveError: If product is inactive.
             InsufficientStockError: If product is out of stock.
         """
-        product = await self.uow.products.find_by_id(product_id)
-        if not product:
-            raise ProductNotFoundError(product_id=product_id)
-
-        if not product.is_active:
-            raise ProductInactiveError(product_name=product.name)
-
-        if product.stock < 1:
-            raise InsufficientStockError(
-                product_name=product.name,
-                requested=1,
-                available=product.stock,
-            )
-
         wishlist_item = await self.uow.wishlists.find_item(user_id, product_id)
         if not wishlist_item:
-            raise WishlistItemNotFoundError(product_id=product_id, user_id=user_id)
+            raise ProductNotInWishlistError(product_id=product_id, user_id=user_id)
+
+        # Check product availability
+        if not wishlist_item.product.is_active:
+            raise ProductInactiveError(product_id=product_id)
+
+        # Check stock
+        if wishlist_item.product.stock < 1:
+            raise InsufficientStockError(
+                product_id=product_id,
+                requested=1,
+                available=wishlist_item.product.stock,
+            )
 
         # Add to cart
         user_cart = await self.uow.carts.find_user_cart(user_id)
@@ -132,6 +136,7 @@ class WishlistService:
             user_cart = Cart(user_id=user_id)
             await self.uow.carts.add(user_cart)
 
+        # Check if item already in cart
         cart_item = await self.uow.carts.find_cart_item(user_cart.id, product_id)
         if cart_item:
             cart_item.quantity += 1
@@ -140,14 +145,16 @@ class WishlistService:
                 cart_id=user_cart.id,
                 product_id=product_id,
                 quantity=1,
-                product_name=product.name,
-                product_image_url=product.image_url,
-                unit_price=product.price,
+                product_name=wishlist_item.product.name,
+                product_image_url=wishlist_item.product.image_url,
+                unit_price=wishlist_item.product.price,
             )
             user_cart.items.append(new_cart_item)
 
         await self.uow.carts.update(user_cart)
-
-        # Remove from wishlist
-        await self.uow.wishlists.delete(wishlist_item)
-        logger.info("wishlist_item_moved_to_cart", user_id=str(user_id), product_id=str(product_id))
+        logger.info(
+            "product_added_from_wishlist_to_cart",
+            user_id=str(user_id),
+            product_id=str(product_id),
+            cart_id=str(user_cart.id),
+        )

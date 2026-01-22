@@ -4,19 +4,20 @@
 from fastapi import APIRouter, status
 
 from app.api.v1.dependencies import CartServiceDep, CartSessionIdDep, UserServiceDep
-from app.schemas.user import Login, Token, UserCreate, UserRead
+from app.core.security import create_access_token
+from app.schemas.user import Login, Token, UserCreate, UserPublic
 
 router = APIRouter()
 
 
 @router.post(
     "/register",
-    response_model=UserRead,
+    response_model=UserPublic,
     status_code=status.HTTP_201_CREATED,
     summary="Register user",
     description="Create a new user account with email and password. Email must be unique and password must meet security requirements.",
 )
-async def register(data: UserCreate, user_service: UserServiceDep) -> UserRead:
+async def register(data: UserCreate, user_service: UserServiceDep) -> UserPublic:
     """Register a new user."""
     return await user_service.create_user(data)
 
@@ -34,7 +35,7 @@ async def login(
     cart_service: CartServiceDep,
 ) -> Token:
     """Authenticate user and return access token."""
-    token, user = await user_service.login(data)
+    user = await user_service.authenticate_user(email=data.email, password=data.password)
     if session_id:
         await cart_service.merge_carts(user.id, session_id)
-    return token
+    return Token(access_token=create_access_token({"sub": str(user.id)}))

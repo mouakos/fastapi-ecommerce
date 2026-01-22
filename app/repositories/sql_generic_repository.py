@@ -76,10 +76,7 @@ class SqlGenericRepository(GenericRepository[T_model]):
         Returns:
             T_model: The updated record.
         """
-        self._session.add(record)
-        await self._session.flush()
-        await self._session.refresh(record)
-        return record
+        return await self.add(record)
 
     async def delete(self, record: T_model) -> None:
         """Delete a record.

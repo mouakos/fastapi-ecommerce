@@ -4,8 +4,8 @@ from decimal import Decimal
 from uuid import UUID
 
 from app.core.exceptions import (
-    InvalidOrderStatusError,
     OrderNotFoundError,
+    OrderStatusTransitionError,
     ReviewNotFoundError,
     SelfActionError,
     UserNotFoundError,
@@ -187,24 +187,27 @@ class AdminService:
 
         Args:
             order_id (UUID): ID of the order to update.
-            new_status (OrderStatus): New status (PENDING, PAID, SHIPPED, DELIVERED, CANCELED).
+            new_status (OrderStatus): New status.
 
         Raises:
             OrderNotFoundError: If order not found.
-            InvalidTransitionError: If status transition is invalid.
+            OrderStatusTransitionError: If status transition is invalid.
         """
         order = await self.uow.orders.find_by_id(order_id)
         if not order:
             raise OrderNotFoundError(order_id=order_id)
 
         # validate status transition
-        is_valid_transition = is_valid_order_status_transition(order.status, new_status)
-        message = f"Order status transition from {order.status} to {new_status} is not allowed."
+        current_status = order.status
+        is_valid_transition = is_valid_order_status_transition(current_status, new_status)
         if not is_valid_transition:
-            raise InvalidOrderStatusError(message=message, current_status=order.status.value)
+            raise OrderStatusTransitionError(
+                order_id=order_id,
+                current_status=current_status.value,
+                requested_status=new_status.value,
+            )
 
-        # perform status update
-        order.status = new_status
+        # track timestamps for known statuses
         if new_status == OrderStatus.SHIPPED:
             order.shipped_at = utcnow()
         elif new_status == OrderStatus.PAID:
@@ -214,11 +217,20 @@ class AdminService:
         elif new_status == OrderStatus.DELIVERED:
             order.delivered_at = utcnow()
         else:
-            raise InvalidOrderStatusError(message=message, current_status=order.status.value)
+            raise OrderStatusTransitionError(
+                order_id=order_id,
+                current_status=current_status.value,
+                requested_status=new_status.value,
+            )
 
         order.status = new_status
         await self.uow.orders.update(order)
-        logger.info("order_status_updated", order_id=str(order_id), new_status=new_status.value)
+        logger.info(
+            "order_status_updated",
+            order_id=str(order_id),
+            old_status=current_status.value,
+            new_status=new_status.value,
+        )
 
     # ----------------------------- User Related Admin Services ----------------------------- #
     async def get_users(
@@ -295,7 +307,7 @@ class AdminService:
             raise UserNotFoundError(user_id=user_id)
 
         if user_id == current_user_id:
-            raise SelfActionError(action="changing your own role")
+            raise SelfActionError(user_id=current_user_id, action="change your own role")
 
         if user.role == new_role:
             return

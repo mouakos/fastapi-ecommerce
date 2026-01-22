@@ -43,7 +43,7 @@ class ReviewUpdate(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class ReviewRead(ReviewBase, UUIDMixin):
+class ReviewPublic(ReviewBase, UUIDMixin):
     """Schema for reading a review."""
 
     user_id: UUID
@@ -54,7 +54,7 @@ class ReviewRead(ReviewBase, UUIDMixin):
     model_config = ConfigDict(frozen=True)
 
 
-class ReviewAdminRead(ReviewRead):
+class ReviewAdmin(ReviewPublic):
     """Schema for reading review information in admin context."""
 
     user_email: str = Field(..., max_length=255)
@@ -79,3 +79,19 @@ class ReviewSortByField(StrEnum):
 
     RATING = "rating"
     CREATED_AT = "created_at"
+
+
+class ReviewActionResponse(BaseModel):
+    """Schema for review action responses."""
+
+    message: str
+    review_id: UUID
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "message": "Review submitted successfully.",
+                "review_id": "123e4567-e89b-12d3-a456-426614174000",
+            }
+        }
+    )

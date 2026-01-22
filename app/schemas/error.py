@@ -24,7 +24,7 @@ class ErrorResponse(BaseModel):
                 "error": {
                     "message": "User not found.",
                     "error_code": "RESOURCE_NOT_FOUND",
-                    "details": {"resource": "User", "identifier": "123e4567..."},
+                    "details": {"resource": "User", "user_id": "123e4567..."},
                 }
             }
         }

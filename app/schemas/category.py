@@ -35,15 +35,6 @@ class CategoryCreate(CategoryBase):
     )
 
 
-class CategoryRead(CategoryBase, UUIDMixin):
-    """Schema for reading category information."""
-
-    slug: str = Field(..., max_length=100)
-    created_at: datetime
-
-    model_config = ConfigDict(frozen=True)
-
-
 class CategoryUpdate(BaseModel):
     """Schema for updating an existing category."""
 
@@ -51,5 +42,14 @@ class CategoryUpdate(BaseModel):
     parent_id: UUID | None = None
     description: str | None = Field(None, max_length=500)
     image_url: HttpUrl | None = Field(None, max_length=500)
+
+    model_config = ConfigDict(frozen=True)
+
+
+class CategoryPublic(CategoryBase, UUIDMixin):
+    """Schema for reading category information."""
+
+    slug: str = Field(..., max_length=100)
+    created_at: datetime
 
     model_config = ConfigDict(frozen=True)
