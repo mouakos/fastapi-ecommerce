@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
-from app.models.order import OrderStatus
+from app.models.order import OrderAddressKind, OrderStatus
 from app.schemas.common import TwoDecimalBaseModel, UUIDMixin
 
 
@@ -60,7 +60,7 @@ class OrderAddressPublic(BaseModel):
     postal_code: str
     country: str
     phone_number: str | None
-    kind: str
+    kind: OrderAddressKind
 
     model_config = ConfigDict(frozen=True)
 
@@ -73,29 +73,10 @@ class OrderDetail(OrderPublic):
     model_config = ConfigDict(frozen=True)
 
 
-class OrderAdmin(UUIDMixin, TwoDecimalBaseModel):
-    """Schema for reading order information in admin context."""
-
-    user_id: UUID
-    user_email: str
-    order_number: str
-    total_amount: Decimal = Field(..., max_digits=10)
-    status: OrderStatus
-    created_at: datetime
-    updated_at: datetime
-    shipped_at: datetime | None
-    paid_at: datetime | None
-    canceled_at: datetime | None
-    delivered_at: datetime | None
-
-    model_config = ConfigDict(frozen=True)
-
-
 class OrderSortByField(StrEnum):
     """Fields to sort orders by."""
 
     TOTAL_AMOUNT = "total_amount"
-    STATUS = "status"
     CREATED_AT = "created_at"
 
 

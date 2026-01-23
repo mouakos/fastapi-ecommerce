@@ -22,7 +22,7 @@ from app.schemas.analytics import (
 from app.schemas.common import Page, SortOrder
 from app.schemas.order import (
     OrderActionResponse,
-    OrderAdmin,
+    OrderPublic,
     OrderSortByField,
 )
 from app.schemas.product import (
@@ -182,7 +182,7 @@ async def update_user_role(
 # ------------------------ Order management ------------------------ #
 @router.get(
     "/orders",
-    response_model=Page[OrderAdmin],
+    response_model=Page[OrderPublic],
     summary="List all orders",
     description="Retrieve paginated list of all orders across all users with optional filtering by status and user, plus sorting options.",
 )
@@ -197,7 +197,7 @@ async def get_orders(
         OrderSortByField, Query(description="Field to sort by")
     ] = OrderSortByField.CREATED_AT,
     sort_order: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.DESC,
-) -> Page[OrderAdmin]:
+) -> Page[OrderPublic]:
     """Get all orders with optional filters, sorting, and pagination."""
     orders, total = await admin_service.get_orders(
         page=page,
@@ -207,24 +207,7 @@ async def get_orders(
         sort_by=sort_by.value,
         sort_order=sort_order.value,
     )
-    orders_dto = [
-        OrderAdmin(
-            id=order.id,
-            user_id=order.user_id,
-            status=order.status,
-            total_amount=order.total_amount,
-            created_at=order.created_at,
-            updated_at=order.updated_at,
-            order_number=order.order_number,
-            user_email=order.user.email,
-            shipped_at=order.shipped_at,
-            delivered_at=order.delivered_at,
-            paid_at=order.paid_at,
-            canceled_at=order.canceled_at,
-        )
-        for order in orders
-    ]
-    return build_page(items=orders_dto, page=page, size=page_size, total=total)
+    return build_page(items=orders, page=page, size=page_size, total=total)  # type: ignore [arg-type]
 
 
 @router.patch(
