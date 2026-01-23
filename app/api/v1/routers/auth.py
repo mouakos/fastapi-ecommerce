@@ -3,6 +3,7 @@
 # mypy: disable-error-code=return-value
 from fastapi import APIRouter, status
 
+from app.api.jwt_bearer import revoke_token
 from app.api.v1.dependencies import (
     CartServiceDep,
     CartSessionIdDep,
@@ -11,7 +12,7 @@ from app.api.v1.dependencies import (
 )
 from app.core.config import auth_settings
 from app.core.security import create_access_token, create_refresh_token
-from app.schemas.user import Login, Token, UserCreate, UserPublic
+from app.schemas.user import Login, Token, UserActionResponse, UserCreate, UserPublic
 
 router = APIRouter()
 
@@ -59,7 +60,7 @@ async def login(
     "/refresh-token",
     response_model=Token,
     summary="Refresh access token",
-    description="Generate a new access token using a valid refresh token.",
+    description="Generate a new access token and refresh token using a valid refresh token. The old refresh token will be revoked.",
 )
 async def get_new_access_token(
     token_data: RefreshTokenDep,
@@ -69,9 +70,26 @@ async def get_new_access_token(
     payload = {"sub": str(token_data.user_id)}
     new_access_token = create_access_token(payload)
     new_refresh_token = create_refresh_token(payload)
+
+    # Revoke the old refresh token
+    await revoke_token(token_data.jti)
+
     expired_in = auth_settings.jwt_access_token_exp_minutes * 60  # in seconds
     return Token(
         access_token=new_access_token,
         refresh_token=new_refresh_token,
         expires_in=expired_in,
     )
+
+
+@router.post(
+    "/logout",
+    summary="Revoke refresh token",
+    description="Revoke a refresh token to prevent further use.",
+)
+async def revoke_refresh_token(
+    token_data: RefreshTokenDep,
+) -> UserActionResponse:
+    """Revoke a refresh token to prevent further use."""
+    await revoke_token(token_data.jti)
+    return UserActionResponse(message="Logout successful.", user_id=token_data.user_id)

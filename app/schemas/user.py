@@ -126,6 +126,7 @@ class TokenData(BaseModel):
 
     user_id: UUID
     type: Literal["access", "refresh"]
+    jti: str = Field(..., description="JWT ID claim for token identification.")
 
     model_config = ConfigDict(frozen=True)
 

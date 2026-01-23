@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import jwt
 from pwdlib import PasswordHash
@@ -47,7 +47,7 @@ def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = 
     expire = datetime.now(UTC) + (
         expires_delta or timedelta(minutes=auth_settings.jwt_access_token_exp_minutes)
     )
-    to_encode.update({"exp": expire, "type": "access"})
+    to_encode.update({"exp": expire, "type": "access", "jti": str(uuid4())})
     return jwt.encode(
         to_encode, auth_settings.jwt_secret_key, algorithm=auth_settings.jwt_algorithm
     )
@@ -68,7 +68,7 @@ def create_refresh_token(data: dict[str, Any], expires_delta: timedelta | None =
     expire = datetime.now(UTC) + (
         expires_delta or timedelta(days=auth_settings.jwt_refresh_token_exp_days)
     )
-    to_encode.update({"exp": expire, "type": "refresh"})
+    to_encode.update({"exp": expire, "type": "refresh", "jti": str(uuid4())})
     return jwt.encode(
         to_encode, auth_settings.jwt_secret_key, algorithm=auth_settings.jwt_algorithm
     )
@@ -90,7 +90,7 @@ def decode_token(token: str) -> TokenData | None:
             algorithms=[auth_settings.jwt_algorithm],
             options={"verify_signature": True, "verify_exp": True},
         )
-        return TokenData(user_id=UUID(payload["sub"]), type=payload["type"])
+        return TokenData(user_id=UUID(payload["sub"]), type=payload["type"], jti=payload["jti"])
     except jwt.ExpiredSignatureError:
         logger.info("token_expired")
         return None

@@ -1,5 +1,7 @@
 """Redis client setup using aioredis."""
 
+from typing import Any
+
 from redis.asyncio import ConnectionPool, Redis, RedisError
 
 from app.core.config import settings
@@ -53,6 +55,27 @@ class RedisClient:
                 "Redis client not initialized. Call connect() first or use lifespan."
             )
         return self._client
+
+    async def get(self, key: str) -> Any:  # noqa: ANN401
+        """Get a value from Redis by key.
+
+        Args:
+            key (str): The key to retrieve.
+
+        Returns:
+            Any: The value associated with the key, or None if not found.
+        """
+        return await self.client.get(key)
+
+    async def set(self, key: str, value: str, expire: int | None = None) -> None:
+        """Set a value in Redis with an optional expiration time.
+
+        Args:
+            key (str): The key to set.
+            value (str): The value to associate with the key.
+            expire (int | None, optional): Expiration time in seconds. Defaults to None.
+        """
+        await self.client.set(name=key, value=value, ex=expire)
 
 
 redis_client = RedisClient()

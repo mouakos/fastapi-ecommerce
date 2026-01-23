@@ -22,15 +22,21 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: ARG001
     logger.info("application_starting", environment=settings.environment)
     await init_db()
 
+    is_redis_connected = False
+    try:
+        await redis_client.connect()
+        init_redis_caching(redis_client.client)
+        is_redis_connected = True
+    except Exception:
+        pass
+
     if settings.cache_enabled:
-        try:
-            await redis_client.connect()
+        if is_redis_connected:
             init_redis_caching(redis_client.client)
-            logger.info("cache_ready", backend="redis")
-        except Exception as exc:
-            logger.error("cache_redis_init_failed", error=str(exc))
+            logger.info("redis_caching_initialized")
+        else:
             init_in_memory_caching()
-            logger.info("cache_ready", backend="inmemory")
+            logger.info("in_memory_caching_initialized")
 
     logger.info("application_ready", version=settings.app_version)
     yield
