@@ -11,7 +11,7 @@ from app.core.exceptions import (
 )
 from app.core.logger import logger
 from app.interfaces.unit_of_work import UnitOfWork
-from app.models.order import Order, OrderItem, OrderStatus
+from app.models.order import Order, OrderAddress, OrderAddressKind, OrderItem, OrderStatus
 from app.schemas.order import OrderCreate
 from app.utils.order import generate_order_number
 
@@ -79,6 +79,22 @@ class OrderService:
             order_number=generate_order_number(),
         )
         created_order = await self.uow.orders.add(new_order)
+
+        # Snapshot shipping/billing addresses for historical accuracy
+        new_order.addresses.append(
+            OrderAddress(
+                order_id=created_order.id,
+                kind=OrderAddressKind.BILLING,
+                **billing_address.model_dump(exclude={"id"}),
+            )
+        )
+        new_order.addresses.append(
+            OrderAddress(
+                order_id=created_order.id,
+                kind=OrderAddressKind.SHIPPING,
+                **shipping_address.model_dump(exclude={"id"}),
+            )
+        )
 
         # Create order items + reduce stock
         for item in cart.items:

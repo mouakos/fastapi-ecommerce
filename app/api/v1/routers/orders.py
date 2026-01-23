@@ -9,7 +9,7 @@ from fastapi import APIRouter, Query
 from app.api.v1.dependencies import CurrentUserDep, OrderServiceDep
 from app.models.order import OrderStatus
 from app.schemas.common import Page, SortOrder
-from app.schemas.order import OrderCreate, OrderPublic, OrderSortByField
+from app.schemas.order import OrderCreate, OrderDetail, OrderPublic, OrderSortByField
 from app.utils.pagination import build_page
 
 router = APIRouter()
@@ -61,14 +61,14 @@ async def create_order(
 
 @router.get(
     "/{order_id}",
-    response_model=OrderPublic,
+    response_model=OrderDetail,
     summary="Get order details",
-    description="Retrieve detailed information about a specific order including items, addresses, and payment status. Only the order owner can access this endpoint.",
+    description="Retrieve detailed information about a specific order.",
 )
 async def get_order(
     order_id: UUID,
     current_user: CurrentUserDep,
     order_service: OrderServiceDep,
-) -> OrderPublic:
+) -> OrderDetail:
     """Get an order by its ID for the current user."""
     return await order_service.get_order(order_id, current_user.id)

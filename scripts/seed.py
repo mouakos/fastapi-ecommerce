@@ -36,7 +36,7 @@ from app.db.database import AsyncSessionLocal, async_engine
 from app.models.address import Address
 from app.models.cart import Cart, CartItem
 from app.models.category import Category
-from app.models.order import Order, OrderItem, OrderStatus
+from app.models.order import Order, OrderAddress, OrderAddressKind, OrderItem, OrderStatus
 from app.models.payment import Payment, PaymentStatus
 from app.models.product import Product
 from app.models.review import Review, ReviewStatus
@@ -232,6 +232,8 @@ async def _seed_data(
     cart_model = cast(type[Cart], ctx["Cart"])
     cart_item_model = cast(type[CartItem], ctx["CartItem"])
     order_model = cast(type[Order], ctx["Order"])
+    order_address_model = cast(type[OrderAddress], ctx["OrderAddress"])
+    order_address_kind = cast(type[OrderAddressKind], ctx["OrderAddressKind"])
     order_item_model = cast(type[OrderItem], ctx["OrderItem"])
     order_status = cast(type[OrderStatus], ctx["OrderStatus"])
     payment_model = cast(type[Payment], ctx["Payment"])
@@ -478,14 +480,43 @@ async def _seed_data(
 
                 order = order_model(
                     user_id=user.id,
-                    shipping_address_id=shipping_addr.id,
-                    billing_address_id=billing_addr.id,
                     status=status_choice,
                     total_amount=_money("0.00"),
                     order_number=order_number,
                 )
                 session.add(order)
                 await session.flush()
+
+                session.add(
+                    order_address_model(
+                        order_id=order.id,
+                        kind=order_address_kind.SHIPPING,
+                        full_name=shipping_addr.full_name,
+                        company=shipping_addr.company,
+                        line1=shipping_addr.line1,
+                        line2=shipping_addr.line2,
+                        city=shipping_addr.city,
+                        state=shipping_addr.state,
+                        postal_code=shipping_addr.postal_code,
+                        country=shipping_addr.country,
+                        phone_number=shipping_addr.phone_number,
+                    )
+                )
+                session.add(
+                    order_address_model(
+                        order_id=order.id,
+                        kind=order_address_kind.BILLING,
+                        full_name=billing_addr.full_name,
+                        company=billing_addr.company,
+                        line1=billing_addr.line1,
+                        line2=billing_addr.line2,
+                        city=billing_addr.city,
+                        state=billing_addr.state,
+                        postal_code=billing_addr.postal_code,
+                        country=billing_addr.country,
+                        phone_number=billing_addr.phone_number,
+                    )
+                )
 
                 chosen_products = random.sample(
                     in_stock_products,
@@ -658,6 +689,8 @@ async def run(argv: Sequence[str] | None = None) -> None:
         "Cart": Cart,
         "CartItem": CartItem,
         "Order": Order,
+        "OrderAddress": OrderAddress,
+        "OrderAddressKind": OrderAddressKind,
         "OrderItem": OrderItem,
         "OrderStatus": OrderStatus,
         "Payment": Payment,

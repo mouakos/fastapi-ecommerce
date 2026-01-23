@@ -35,11 +35,40 @@ class OrderItemPublic(TwoDecimalBaseModel):
 class OrderPublic(UUIDMixin, TwoDecimalBaseModel):
     """Schema for reading orders."""
 
-    order_number: str = Field(..., description="Unique order number", max_length=100)
+    order_number: str
     total_amount: Decimal = Field(..., max_digits=10)
     status: OrderStatus
     items: list[OrderItemPublic]
     created_at: datetime
+    shipped_at: datetime | None
+    paid_at: datetime | None
+    canceled_at: datetime | None
+    delivered_at: datetime | None
+
+    model_config = ConfigDict(frozen=True)
+
+
+class OrderAddressPublic(BaseModel):
+    """Schema for reading order address information."""
+
+    full_name: str
+    company: str | None
+    line1: str
+    line2: str | None
+    city: str
+    state: str | None
+    postal_code: str
+    country: str
+    phone_number: str | None
+    kind: str
+
+    model_config = ConfigDict(frozen=True)
+
+
+class OrderDetail(OrderPublic):
+    """Schema for reading detailed order information."""
+
+    addresses: list[OrderAddressPublic]
 
     model_config = ConfigDict(frozen=True)
 
@@ -48,10 +77,8 @@ class OrderAdmin(UUIDMixin, TwoDecimalBaseModel):
     """Schema for reading order information in admin context."""
 
     user_id: UUID
-    user_email: str = Field(
-        ..., description="Email of the user who placed the order", max_length=255
-    )
-    order_number: str = Field(..., description="Unique order number", max_length=100)
+    user_email: str
+    order_number: str
     total_amount: Decimal = Field(..., max_digits=10)
     status: OrderStatus
     created_at: datetime
