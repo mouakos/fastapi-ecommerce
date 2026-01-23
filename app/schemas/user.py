@@ -3,6 +3,7 @@
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
@@ -113,7 +114,9 @@ class Token(BaseModel):
     """Schema for authentication token response."""
 
     access_token: str
+    refresh_token: str
     token_type: str = "bearer"
+    expires_in: int = Field(..., description="Access token expiration time in seconds.")
 
     model_config = ConfigDict(frozen=True)
 
@@ -122,6 +125,7 @@ class TokenData(BaseModel):
     """Schema for token data."""
 
     user_id: UUID
+    type: Literal["access", "refresh"]
 
     model_config = ConfigDict(frozen=True)
 

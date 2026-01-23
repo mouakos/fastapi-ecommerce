@@ -3,15 +3,21 @@
 # mypy: disable-error-code=return-value
 from fastapi import APIRouter, status
 
-from app.api.v1.dependencies import CartServiceDep, CartSessionIdDep, UserServiceDep
-from app.core.security import create_access_token
+from app.api.v1.dependencies import (
+    CartServiceDep,
+    CartSessionIdDep,
+    RefreshTokenDep,
+    UserServiceDep,
+)
+from app.core.config import auth_settings
+from app.core.security import create_access_token, create_refresh_token
 from app.schemas.user import Login, Token, UserCreate, UserPublic
 
 router = APIRouter()
 
 
 @router.post(
-    "/register",
+    "/sign-up",
     response_model=UserPublic,
     status_code=status.HTTP_201_CREATED,
     summary="Register user",
@@ -23,7 +29,7 @@ async def register(data: UserCreate, user_service: UserServiceDep) -> UserPublic
 
 
 @router.post(
-    "/token",
+    "/access-token",
     response_model=Token,
     summary="Login user",
     description="Authenticate with email and password to receive a JWT access token. If a guest cart session exists, it will be merged with the user's cart.",
@@ -38,4 +44,34 @@ async def login(
     user = await user_service.authenticate_user(email=data.email, password=data.password)
     if session_id:
         await cart_service.merge_carts(user.id, session_id)
-    return Token(access_token=create_access_token({"sub": str(user.id)}))
+
+    payload = {"sub": str(user.id)}
+    expired_in = auth_settings.jwt_access_token_exp_minutes * 60  # in seconds
+
+    return Token(
+        access_token=create_access_token(payload),
+        refresh_token=create_refresh_token(payload),
+        expires_in=expired_in,
+    )
+
+
+@router.get(
+    "/refresh-token",
+    response_model=Token,
+    summary="Refresh access token",
+    description="Generate a new access token using a valid refresh token.",
+)
+async def get_new_access_token(
+    token_data: RefreshTokenDep,
+) -> Token:
+    """Generate a new access token using a valid refresh token."""
+    # Create new access and refresh tokens
+    payload = {"sub": str(token_data.user_id)}
+    new_access_token = create_access_token(payload)
+    new_refresh_token = create_refresh_token(payload)
+    expired_in = auth_settings.jwt_access_token_exp_minutes * 60  # in seconds
+    return Token(
+        access_token=new_access_token,
+        refresh_token=new_refresh_token,
+        expires_in=expired_in,
+    )

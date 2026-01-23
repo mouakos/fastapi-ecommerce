@@ -5,14 +5,14 @@ from typing import Annotated
 from uuid import uuid4
 
 from fastapi import Depends, Request, Response
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.api.jwt_bearer import AccessTokenBearer, RefreshTokenBearer
 from app.core.exceptions import AuthenticationError, AuthorizationError, UserNotFoundError
-from app.core.security import decode_access_token
 from app.db.database import get_session
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.user import User, UserRole
+from app.schemas.user import TokenData
 from app.services.address_service import AddressService
 from app.services.admin_service import AdminService
 from app.services.cart_service import CartService
@@ -25,13 +25,8 @@ from app.services.user_service import UserService
 from app.services.wishlist_service import WishlistService
 from app.uow.sql_unit_of_work import SqlUnitOfWork
 
-oauth_scheme = HTTPBearer(
-    scheme_name="Bearer",
-    auto_error=False,
-    description="JWT Access Token in the Authorization header",
-)
-
-TokenDep = Annotated[HTTPAuthorizationCredentials, Depends(oauth_scheme)]
+AccessTokenDep = Annotated[TokenData, Depends(AccessTokenBearer())]
+RefreshTokenDep = Annotated[TokenData, Depends(RefreshTokenBearer())]
 
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
@@ -109,18 +104,11 @@ AdminServiceDep = Annotated[AdminService, Depends(get_admin_service)]
 
 
 async def get_current_user(
-    credentials: TokenDep,
+    token_data: AccessTokenDep,
     user_service: UserServiceDep,
 ) -> User:
     """Get current authenticated user from JWT token."""
     message = "Could not validate credentials."
-
-    if credentials is None or not credentials.credentials:
-        raise AuthenticationError(message=message)
-
-    token_data = decode_access_token(token=credentials.credentials)
-    if not token_data:
-        raise AuthenticationError(message=message)
     try:
         return await user_service.get_user(token_data.user_id)
     except UserNotFoundError as exc:
@@ -131,13 +119,13 @@ CurrentUserDep = Annotated[User, Depends(get_current_user)]
 
 
 async def get_optional_current_user(
-    credentials: TokenDep,
+    token_data: AccessTokenDep,
     user_service: UserServiceDep,
 ) -> User | None:
     """Get current authenticated user from JWT token, or None if not authenticated."""
     try:
-        return await get_current_user(credentials, user_service)
-    except AuthenticationError:
+        return await user_service.get_user(token_data.user_id)
+    except UserNotFoundError:
         return None
 
 

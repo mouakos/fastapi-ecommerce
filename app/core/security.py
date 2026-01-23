@@ -38,24 +38,44 @@ def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = 
     Args:
         data (dict): payload data to encode.
         expires_delta (timedelta | None, optional): Expiration time as a timedelta.
-            Defaults to defaults to settings.JWT_DEFAULT_EXP_MINUTES.
+            Defaults to defaults to settings.JWT_ACCESS_TOKEN_EXP_MINUTES.
 
     Returns:
         str: The encoded JWT token.
     """
     to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(UTC) + expires_delta
-    else:
-        expire = datetime.now(UTC) + timedelta(minutes=auth_settings.jwt_default_exp_minutes)
-    to_encode.update({"exp": expire})
+    expire = datetime.now(UTC) + (
+        expires_delta or timedelta(minutes=auth_settings.jwt_access_token_exp_minutes)
+    )
+    to_encode.update({"exp": expire, "type": "access"})
     return jwt.encode(
         to_encode, auth_settings.jwt_secret_key, algorithm=auth_settings.jwt_algorithm
     )
 
 
-def decode_access_token(token: str) -> TokenData | None:
-    """Verify and decode a JWT access token..
+def create_refresh_token(data: dict[str, Any], expires_delta: timedelta | None = None) -> str:
+    """Create a new refresh token.
+
+    Args:
+        data (dict): payload data to encode.
+        expires_delta (timedelta | None, optional): Expiration time as a timedelta.
+            Defaults to defaults to settings.JWT_REFRESH_TOKEN_EXP_DAYS.
+
+    Returns:
+        str: The encoded JWT token.
+    """
+    to_encode = data.copy()
+    expire = datetime.now(UTC) + (
+        expires_delta or timedelta(days=auth_settings.jwt_refresh_token_exp_days)
+    )
+    to_encode.update({"exp": expire, "type": "refresh"})
+    return jwt.encode(
+        to_encode, auth_settings.jwt_secret_key, algorithm=auth_settings.jwt_algorithm
+    )
+
+
+def decode_token(token: str) -> TokenData | None:
+    """Verify and decode a JWT token.
 
     Args:
         token (str): The JWT string to verify.
@@ -70,12 +90,7 @@ def decode_access_token(token: str) -> TokenData | None:
             algorithms=[auth_settings.jwt_algorithm],
             options={"verify_signature": True, "verify_exp": True},
         )
-        user_id = payload.get("sub")
-        if user_id:
-            return TokenData(user_id=UUID(user_id))
-
-        logger.warning("token_decoded_missing_user_id")
-        return None
+        return TokenData(user_id=UUID(payload["sub"]), type=payload["type"])
     except jwt.ExpiredSignatureError:
         logger.info("token_expired")
         return None

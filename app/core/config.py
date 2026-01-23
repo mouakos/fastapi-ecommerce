@@ -12,10 +12,15 @@ class AuthConfig(BaseSettings):
         description="Secret key for JWT signing",
         alias="JWT_SECRET_KEY",
     )
-    jwt_default_exp_minutes: int = Field(
+    jwt_access_token_exp_minutes: int = Field(
         default=15,
         description="Access token expiration time in minutes",
-        alias="JWT_DEFAULT_EXP_MINUTES",
+        alias="JWT_ACCESS_TOKEN_EXP_MINUTES",
+    )
+    jwt_refresh_token_exp_days: int = Field(
+        default=7,
+        description="Refresh token expiration time in days",
+        alias="JWT_REFRESH_TOKEN_EXP_DAYS",
     )
     jwt_algorithm: str = Field(
         default="HS256", description="JWT signing algorithm", alias="JWT_ALGORITHM"
