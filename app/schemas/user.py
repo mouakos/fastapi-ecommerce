@@ -83,6 +83,7 @@ class UserPublic(UUIDMixin):
     first_name: str | None = Field(..., max_length=50)
     last_name: str | None = Field(..., max_length=50)
     phone_number: str | None = Field(..., max_length=20)
+    created_at: datetime
 
     model_config = ConfigDict(frozen=True)
 
@@ -90,7 +91,6 @@ class UserPublic(UUIDMixin):
 class UserAdmin(UserPublic, TwoDecimalBaseModel):
     """Schema for reading user information in admin context."""
 
-    created_at: datetime
     updated_at: datetime
     total_orders: int = Field(..., description="Total orders by this user")
     total_spent: Decimal = Field(
@@ -104,7 +104,6 @@ class UserSortByField(StrEnum):
     """Fields to sort users by."""
 
     EMAIL = "email"
-    ROLE = "role"
     CREATED_AT = "created_at"
 
 
