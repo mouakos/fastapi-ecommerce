@@ -4,8 +4,10 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
+from app.schemas.common import TwoDecimalBaseModel
 
-class SalesAnalytics(BaseModel):
+
+class SalesAnalytics(TwoDecimalBaseModel):
     """Schema for sales analytics data."""
 
     total_revenue: Decimal = Field(..., description="Total revenue from all orders")
@@ -16,10 +18,10 @@ class SalesAnalytics(BaseModel):
     delivered_orders: int = Field(..., description="Orders with delivered status")
     cancelled_orders: int = Field(..., description="Orders with cancelled status")
     average_order_value: Decimal = Field(
-        ..., description="Average order value", ge=0, decimal_places=2, max_digits=10
+        ..., description="Average order value", ge=0, max_digits=10
     )
     revenue_last_30_days: Decimal = Field(
-        ..., description="Revenue from last 30 days", ge=0, decimal_places=2, max_digits=10
+        ..., description="Revenue from last 30 days", ge=0, max_digits=10
     )
 
 

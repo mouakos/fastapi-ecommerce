@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, computed_field
 
-from app.schemas.common import UUIDMixin
+from app.schemas.common import TwoDecimalBaseModel, UUIDMixin
 
 
 class AddToCartRequest(BaseModel):
@@ -24,14 +24,12 @@ class UpdateQuantityRequest(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class CartItemPublic(BaseModel):
+class CartItemPublic(TwoDecimalBaseModel):
     """Schema for reading cart items."""
 
     product_id: UUID
     quantity: int
-    unit_price: Decimal = Field(
-        ..., description="Price per unit of the product", decimal_places=2, max_digits=10
-    )
+    unit_price: Decimal = Field(..., description="Price per unit of the product", max_digits=10)
     product_name: str = Field(..., max_length=255)
     product_image_url: HttpUrl | None = Field(..., max_length=500)
 
@@ -43,7 +41,7 @@ class CartItemPublic(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class CartPublic(UUIDMixin):
+class CartPublic(UUIDMixin, TwoDecimalBaseModel):
     """Schema for reading cart."""
 
     user_id: UUID | None = None

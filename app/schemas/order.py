@@ -8,7 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 from app.models.order import OrderStatus
-from app.schemas.common import UUIDMixin
+from app.schemas.common import TwoDecimalBaseModel, UUIDMixin
 
 
 class OrderCreate(BaseModel):
@@ -20,23 +20,23 @@ class OrderCreate(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class OrderItemPublic(BaseModel):
+class OrderItemPublic(TwoDecimalBaseModel):
     """Schema for reading order items."""
 
     product_id: UUID
     quantity: int = Field(..., ge=1)
-    unit_price: Decimal = Field(..., max_digits=10, decimal_places=2)
+    unit_price: Decimal = Field(..., max_digits=10)
     product_name: str = Field(..., max_length=255)
     product_image_url: HttpUrl | None = Field(..., max_length=500)
 
     model_config = ConfigDict(frozen=True)
 
 
-class OrderPublic(UUIDMixin):
+class OrderPublic(UUIDMixin, TwoDecimalBaseModel):
     """Schema for reading orders."""
 
     order_number: str = Field(..., description="Unique order number", max_length=100)
-    total_amount: Decimal = Field(..., max_digits=10, decimal_places=2)
+    total_amount: Decimal = Field(..., max_digits=10)
     status: OrderStatus
     items: list[OrderItemPublic]
     created_at: datetime
@@ -44,7 +44,7 @@ class OrderPublic(UUIDMixin):
     model_config = ConfigDict(frozen=True)
 
 
-class OrderAdmin(UUIDMixin):
+class OrderAdmin(UUIDMixin, TwoDecimalBaseModel):
     """Schema for reading order information in admin context."""
 
     user_id: UUID
@@ -52,7 +52,7 @@ class OrderAdmin(UUIDMixin):
         ..., description="Email of the user who placed the order", max_length=255
     )
     order_number: str = Field(..., description="Unique order number", max_length=100)
-    total_amount: Decimal = Field(..., max_digits=10, decimal_places=2)
+    total_amount: Decimal = Field(..., max_digits=10)
     status: OrderStatus
     created_at: datetime
     updated_at: datetime

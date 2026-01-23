@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, computed_field
 
-from app.schemas.common import UUIDMixin
+from app.schemas.common import TwoDecimalBaseModel, UUIDMixin
 
 
 class ProductBase(BaseModel):
@@ -55,7 +55,7 @@ class ProductUpdate(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class ProductPublic(ProductBase, UUIDMixin):
+class ProductPublic(ProductBase, UUIDMixin, TwoDecimalBaseModel):
     """Schema for reading a Product."""
 
     slug: str = Field(..., max_length=100)

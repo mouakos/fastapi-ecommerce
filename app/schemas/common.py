@@ -1,12 +1,13 @@
 """Common Pydantic Schemas."""
 
+from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
-from typing import TypeVar
+from typing import Any, TypeVar
 from uuid import UUID
 
 import phonenumbers
 import pycountry
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 T = TypeVar("T")
 
@@ -36,6 +37,23 @@ class SortOrder(StrEnum):
 
     ASC = "asc"
     DESC = "desc"
+
+
+TWO_DP = Decimal("0.01")
+
+
+class TwoDecimalBaseModel(BaseModel):
+    """BaseModel that quantizes all Decimal fields to two decimal places."""
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def _quantize_all_decimals(cls, v: Any) -> Any:  # noqa: ANN401
+        """Quantize Decimal fields to two decimal places."""
+        if isinstance(v, Decimal):
+            return v.quantize(TWO_DP, rounding=ROUND_HALF_UP)
+        return v
+
+    model_config = ConfigDict(frozen=True)
 
 
 def validate_country(v: str | None) -> str | None:

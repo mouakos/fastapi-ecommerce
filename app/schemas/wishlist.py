@@ -4,9 +4,9 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
-from app.schemas.common import UUIDMixin
+from app.schemas.common import TwoDecimalBaseModel, UUIDMixin
 
 
 class AddToWishlistRequest(BaseModel):
@@ -17,13 +17,13 @@ class AddToWishlistRequest(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class WishlistItemPublic(UUIDMixin):
+class WishlistItemPublic(UUIDMixin, TwoDecimalBaseModel):
     """Schema for reading a wishlist item."""
 
     product_id: UUID
     product_name: str
     product_slug: str
-    product_price: Decimal
+    product_price: Decimal = Field(max_digits=10)
     product_image_url: str | None
     product_in_stock: bool
     product_is_active: bool

@@ -8,7 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.models.user import UserRole
-from app.schemas.common import UUIDMixin, validate_phone_number
+from app.schemas.common import TwoDecimalBaseModel, UUIDMixin, validate_phone_number
 
 
 class UserCreate(BaseModel):
@@ -87,14 +87,14 @@ class UserPublic(UUIDMixin):
     model_config = ConfigDict(frozen=True)
 
 
-class UserAdmin(UserPublic):
+class UserAdmin(UserPublic, TwoDecimalBaseModel):
     """Schema for reading user information in admin context."""
 
     created_at: datetime
     updated_at: datetime
     total_orders: int = Field(..., description="Total orders by this user")
     total_spent: Decimal = Field(
-        ..., description="Total amount spent by this user", ge=0, decimal_places=2, max_digits=10
+        ..., description="Total amount spent by this user", ge=0, max_digits=10
     )
 
     model_config = ConfigDict(frozen=True)

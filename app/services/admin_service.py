@@ -24,7 +24,6 @@ from app.schemas.analytics import (
     UserAnalytics,
 )
 from app.utils.datetime import utcnow
-from app.utils.order import money_format
 
 
 class AdminService:
@@ -61,15 +60,15 @@ class AdminService:
         revenue_last_30_days = await self.uow.orders.calculate_recent_sales(days=30)
 
         return SalesAnalytics(
-            total_revenue=money_format(total_revenue),
+            total_revenue=total_revenue,
             total_orders=total_orders,
             pending_orders=pending_orders,
             paid_orders=paid_orders,
             shipped_orders=shipped_orders,
             delivered_orders=delivered_orders,
             cancelled_orders=cancelled_orders,
-            average_order_value=money_format(average_order_value),
-            revenue_last_30_days=money_format(revenue_last_30_days),
+            average_order_value=average_order_value,
+            revenue_last_30_days=revenue_last_30_days,
         )
 
     async def get_user_analytics(self) -> UserAnalytics:
@@ -261,7 +260,7 @@ class AdminService:
         Returns:
             Decimal: Total amount spent by the user.
         """
-        return money_format(await self.uow.orders.calculate_user_sales(user_id))
+        return await self.uow.orders.calculate_user_sales(user_id)
 
     async def update_user_role(
         self, current_user_id: UUID, user_id: UUID, new_role: UserRole
