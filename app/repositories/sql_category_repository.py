@@ -1,6 +1,9 @@
 """SQL Category repository implementation."""
 
+from uuid import UUID
+
 from slugify import slugify
+from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -16,16 +19,35 @@ class SqlCategoryRepository(SqlGenericRepository[Category], CategoryRepository):
         """Initialize the repository with a database session."""
         super().__init__(session, Category)
 
-    async def find_by_slug(self, slug: str) -> Category | None:
-        """Find a category by slug.
+    async def find_category_detail_by_id(self, category_id: UUID) -> Category | None:
+        """Find a category by ID, including its hierarchy.
+
+        Args:
+            category_id (UUID): Category ID.
+
+        Returns:
+            Category | None: Category or none, including its hierarchy.
+        """
+        stmt = (
+            select(Category)
+            .where(Category.id == category_id)
+            .options(selectinload(Category.children))  # type: ignore [arg-type]
+        )
+        result = await self._session.exec(stmt)
+        return result.first()
+
+    async def find_category_detail_by_slug(self, slug: str) -> Category | None:
+        """Find a category by slug, including its hierarchy.
 
         Args:
             slug (str): Category slug.
 
         Returns:
-            Category | None: Category or none.
+            Category | None: Category or none, including its hierarchy.
         """
-        stmt = select(Category).where(Category.slug == slug)
+        stmt = (
+            select(Category).where(Category.slug == slug).options(selectinload(Category.children))  # type: ignore [arg-type]
+        )
         result = await self._session.exec(stmt)
         return result.first()
 

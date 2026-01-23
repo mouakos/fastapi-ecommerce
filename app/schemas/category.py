@@ -49,7 +49,15 @@ class CategoryUpdate(BaseModel):
 class CategoryPublic(CategoryBase, UUIDMixin):
     """Schema for reading category information."""
 
-    slug: str = Field(..., max_length=100)
+    slug: str
     created_at: datetime
+
+    model_config = ConfigDict(frozen=True)
+
+
+class CategoryDetail(CategoryPublic):
+    """Schema for reading detailed category information, including hierarchy."""
+
+    children: list[CategoryPublic]
 
     model_config = ConfigDict(frozen=True)

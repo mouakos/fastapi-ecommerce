@@ -42,7 +42,7 @@ class CategoryService:
         Raises:
             CategoryNotFoundError: If the category is not found.
         """
-        category = await self.uow.categories.find_by_id(category_id)
+        category = await self.uow.categories.find_category_detail_by_id(category_id)
         if not category:
             raise CategoryNotFoundError(category_id=category_id)
         return category
@@ -62,7 +62,7 @@ class CategoryService:
         Raises:
             CategoryNotFoundError: If the category is not found.
         """
-        category = await self.uow.categories.find_by_slug(slug)
+        category = await self.uow.categories.find_category_detail_by_slug(slug)
         if not category:
             raise CategoryNotFoundError(slug=slug)
         return category

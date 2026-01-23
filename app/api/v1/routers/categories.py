@@ -9,7 +9,7 @@ from fastapi.params import Depends
 from app.api.cache import cache
 from app.api.rate_limit import rate_limit
 from app.api.v1.dependencies import AdminRoleDep, CategoryServiceDep
-from app.schemas.category import CategoryCreate, CategoryPublic, CategoryUpdate
+from app.schemas.category import CategoryCreate, CategoryDetail, CategoryPublic, CategoryUpdate
 
 router = APIRouter()
 
@@ -47,28 +47,30 @@ async def create_category(
 @router.get(
     "/id/{category_id}",
     dependencies=[Depends(rate_limit(times=300, minutes=1))],
-    response_model=CategoryPublic,
-    summary="Get category by ID",
-    description="Retrieve a specific category using its UUID.",
+    response_model=CategoryDetail,
+    summary="Get category details by ID",
+    description="Retrieve a specific category and its hierarchy information using its UUID.",
 )
 @cache(expire=600)
-async def get_category_by_id(
+async def get_category_detail_by_id(
     category_id: UUID, category_service: CategoryServiceDep
-) -> CategoryPublic:
-    """Get a category by its ID."""
+) -> CategoryDetail:
+    """Get detailed information of a category by its ID."""
     return await category_service.get_category_by_id(category_id)
 
 
 @router.get(
     "/slug/{slug}",
     dependencies=[Depends(rate_limit(times=300, minutes=1))],
-    response_model=CategoryPublic,
-    summary="Get category by slug",
-    description="Retrieve a specific category using its URL-friendly slug.",
+    response_model=CategoryDetail,
+    summary="Get category details by slug",
+    description="Retrieve a specific category and its hierarchy information using its URL-friendly slug.",
 )
 @cache(expire=600)
-async def get_category_by_slug(slug: str, category_service: CategoryServiceDep) -> CategoryPublic:
-    """Get a category by its slug."""
+async def get_category_detail_by_slug(
+    slug: str, category_service: CategoryServiceDep
+) -> CategoryDetail:
+    """Get detailed information of a category by its slug."""
     return await category_service.get_category_by_slug(slug)
 
 
