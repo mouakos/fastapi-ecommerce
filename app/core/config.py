@@ -37,7 +37,7 @@ class Config(BaseSettings):
         default="", alias="DATABASE_URL", description="Database connection URL"
     )
     redis_url: str = Field(
-        default="redis://localhost:6379",
+        default="redis://localhost:6379/0",
         description="Redis connection URL for caching",
         alias="REDIS_URL",
     )
