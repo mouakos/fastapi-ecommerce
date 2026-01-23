@@ -17,11 +17,7 @@ CACHE_DEFAULT_TTL_SECONDS = 60
 
 
 def init_redis_caching() -> None:
-    """Initialize caching backend.
-
-    Args:
-        client (Redis): Redis client instance.
-    """
+    """Initialize caching backend."""
     FastAPICache.init(
         RedisBackend(redis_client.client),
         prefix=CACHE_PREFIX,

@@ -34,7 +34,9 @@ class RedisClient:
             await self._client.ping()
             logger.info("redis_connected_successfully")
         except RedisError as e:
-            logger.error(f"redis_connection_failed: {e}")
+            logger.error(
+                "redis_connection_failed", message="The connection to Redis failed.", details=str(e)
+            )
             raise
 
     async def close(self) -> None:

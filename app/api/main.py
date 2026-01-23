@@ -20,27 +20,21 @@ from app.db.redis_client import redis_client
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: ARG001
     """Lifespan context manager for startup and shutdown events."""
-    logger.info("application_starting", environment=settings.environment)
-    await init_db()
-
-    await redis_client.connect()
-    if settings.cache_enabled:
-        init_redis_caching()
-        logger.info("cache_initialized", cache_type="redis")
-
-        # Uncomment for in-memory caching instead of Redis
-        # init_in_memory_caching()
-        # logger.info("in_memory_cache_initialized")
-
-    if settings.rate_limiting_enabled:
-        await init_redis_rate_limiter()
-
-    logger.info("application_ready", version=settings.app_version)
-    yield
-    logger.info("application_shutting_down")
-    await redis_client.close()
-    await async_engine.dispose()
-    logger.info("application_stopped")
+    try:
+        logger.info("application_starting")
+        await init_db()
+        await redis_client.connect()
+        if settings.cache_enabled:
+            init_redis_caching()
+        if settings.rate_limiting_enabled:
+            await init_redis_rate_limiter()
+        logger.info("application_started")
+        yield
+    finally:
+        logger.info("application_shutting_down")
+        await redis_client.close()
+        await async_engine.dispose()
+        logger.info("application_stopped")
 
 
 app = FastAPI(
