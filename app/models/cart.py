@@ -51,7 +51,7 @@ class CartItem(ModelBase, table=True):
     product_image_url: str | None = Field(default=None, max_length=500)
 
     # Relationships
-    cart: "Cart" = Relationship(back_populates="items", sa_relationship_kwargs={"lazy": "selectin"})
+    cart: "Cart" = Relationship(back_populates="items")
     product: "Product" = Relationship(
         back_populates="cart_items", sa_relationship_kwargs={"lazy": "selectin"}
     )

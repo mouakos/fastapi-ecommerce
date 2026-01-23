@@ -25,9 +25,5 @@ class WishlistItem(ModelBase, table=True):
     created_at: datetime = Field(default_factory=utcnow)
 
     # Relationships
-    user: "User" = Relationship(
-        back_populates="wishlist_items", sa_relationship_kwargs={"lazy": "selectin"}
-    )
-    product: "Product" = Relationship(
-        back_populates="wishlist_items", sa_relationship_kwargs={"lazy": "selectin"}
-    )
+    user: "User" = Relationship(back_populates="wishlist_items")
+    product: "Product" = Relationship(back_populates="wishlist_items")

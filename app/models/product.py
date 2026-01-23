@@ -35,9 +35,7 @@ class Product(ModelBase, TimestampMixin, table=True):
     )
 
     # Relationships
-    category: Optional["Category"] = Relationship(
-        back_populates="products", sa_relationship_kwargs={"lazy": "selectin"}
-    )
+    category: Optional["Category"] = Relationship(back_populates="products")
 
     cart_items: list["CartItem"] = Relationship(
         back_populates="product", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True

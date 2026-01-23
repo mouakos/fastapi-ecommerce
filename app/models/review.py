@@ -57,8 +57,6 @@ class Review(ModelBase, TimestampMixin, table=True):
     # Relationships
     user: "User" = Relationship(
         back_populates="reviews",
-        sa_relationship_kwargs={"lazy": "selectin", "foreign_keys": "[Review.user_id]"},
+        sa_relationship_kwargs={"foreign_keys": "[Review.user_id]"},
     )
-    product: "Product" = Relationship(
-        back_populates="reviews", sa_relationship_kwargs={"lazy": "selectin"}
-    )
+    product: "Product" = Relationship(back_populates="reviews")

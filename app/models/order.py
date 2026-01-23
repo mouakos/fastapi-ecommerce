@@ -65,9 +65,7 @@ class Order(ModelBase, TimestampMixin, table=True):
     delivered_at: datetime | None = Field(default=None)
 
     # Relationships
-    user: "User" = Relationship(
-        back_populates="orders", sa_relationship_kwargs={"lazy": "selectin"}
-    )
+    user: "User" = Relationship(back_populates="orders")
     items: list["OrderItem"] = Relationship(
         back_populates="order", sa_relationship_kwargs={"lazy": "selectin"}, cascade_delete=True
     )
@@ -95,12 +93,8 @@ class OrderItem(ModelBase, table=True):
     product_image_url: str | None = Field(default=None, max_length=500)
 
     # Relationships
-    order: "Order" = Relationship(
-        back_populates="items", sa_relationship_kwargs={"lazy": "selectin"}
-    )
-    product: "Product" = Relationship(
-        back_populates="order_items", sa_relationship_kwargs={"lazy": "selectin"}
-    )
+    order: "Order" = Relationship(back_populates="items")
+    product: "Product" = Relationship(back_populates="order_items")
 
 
 class OrderAddress(AddressBase, table=True):
@@ -126,6 +120,5 @@ class OrderAddress(AddressBase, table=True):
         ),
     )
 
-    order: Order = Relationship(
-        back_populates="addresses", sa_relationship_kwargs={"lazy": "selectin"}
-    )
+    # Relationships
+    order: Order = Relationship(back_populates="addresses")

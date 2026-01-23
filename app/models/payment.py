@@ -49,6 +49,4 @@ class Payment(ModelBase, TimestampMixin, table=True):
     transaction_id: str = Field(max_length=100)
 
     # Relationships
-    order: "Order" = Relationship(
-        back_populates="payments", sa_relationship_kwargs={"lazy": "selectin"}
-    )
+    order: "Order" = Relationship(back_populates="payments")
