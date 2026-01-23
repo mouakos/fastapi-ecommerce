@@ -16,16 +16,16 @@ async def init_redis_rate_limiter() -> None:
 
 
 def rate_limit(
-    *, times: int, milliseconds: int, seconds: int, minutes: int, hours: int
+    *, times: int = 1, milliseconds: int = 0, seconds: int = 0, minutes: int = 0, hours: int = 0
 ) -> Callable[..., Any]:
     """Create a rate limiter dependency.
 
     Args:
-        times (int): Number of allowed requests.
-        milliseconds (int): Time window in milliseconds.
-        seconds (int): Time window in seconds.
-        minutes (int): Time window in minutes.
-        hours (int): Time window in hours.
+        times (int, optional): Number of allowed requests. Defaults to 1.
+        milliseconds (int, optional): Time window in milliseconds. Defaults to 0.
+        seconds (int, optional): Time window in seconds. Defaults to 0.
+        minutes (int, optional): Time window in minutes. Defaults to 0.
+        hours (int, optional): Time window in hours. Defaults to 0.
 
     Returns:
         Callable[..., Any]: A dependency callable to be used via Depends(...).

@@ -5,9 +5,10 @@ from decimal import Decimal
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, Depends, Query, status
 
 from app.api.cache import cache
+from app.api.rate_limit import rate_limit
 from app.api.v1.dependencies import AdminRoleDep, ProductServiceDep
 from app.schemas.common import Page, SortOrder
 from app.schemas.product import (
@@ -26,6 +27,7 @@ router = APIRouter()
 
 @router.get(
     "/autocomplete",
+    dependencies=[Depends(rate_limit(times=300, minutes=1))],
     response_model=ProductAutocompleteResponse,
     summary="Get product name suggestions",
     description="Retrieve autocomplete suggestions for product names based on search query. Returns up to 10 matching product names.",
@@ -51,6 +53,7 @@ async def get_autocomplete_suggestions(
 @router.get(
     "",
     response_model=Page[ProductPublic],
+    dependencies=[Depends(rate_limit(times=300, minutes=1))],
     summary="Get all products",
     description="Retrieve paginated list of products with advanced filtering by category, price range, rating, and availability. Supports search and sorting.",
 )
@@ -119,6 +122,7 @@ async def create_product(data: ProductCreate, product_service: ProductServiceDep
 
 @router.get(
     "/id/{product_id}",
+    dependencies=[Depends(rate_limit(times=300, minutes=1))],
     response_model=ProductDetail,
     summary="Get product by ID",
     description="Retrieve detailed information about a specific product using its UUID.",
@@ -136,6 +140,7 @@ async def get_product_by_id(product_id: UUID, product_service: ProductServiceDep
 
 @router.get(
     "/slug/{slug}",
+    dependencies=[Depends(rate_limit(times=300, minutes=1))],
     response_model=ProductDetail,
     summary="Get product by slug",
     description="Retrieve detailed information about a specific product using its URL-friendly slug.",

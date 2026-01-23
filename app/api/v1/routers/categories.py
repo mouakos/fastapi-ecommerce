@@ -4,8 +4,10 @@
 from uuid import UUID
 
 from fastapi import APIRouter, status
+from fastapi.params import Depends
 
 from app.api.cache import cache
+from app.api.rate_limit import rate_limit
 from app.api.v1.dependencies import AdminRoleDep, CategoryServiceDep
 from app.schemas.category import CategoryCreate, CategoryPublic, CategoryUpdate
 
@@ -14,6 +16,7 @@ router = APIRouter()
 
 @router.get(
     "",
+    dependencies=[Depends(rate_limit(times=300, minutes=1))],
     response_model=list[CategoryPublic],
     summary="Get all categories",
     description="Retrieve all product categories with their hierarchy information.",
@@ -43,6 +46,7 @@ async def create_category(
 
 @router.get(
     "/id/{category_id}",
+    dependencies=[Depends(rate_limit(times=300, minutes=1))],
     response_model=CategoryPublic,
     summary="Get category by ID",
     description="Retrieve a specific category using its UUID.",
@@ -57,6 +61,7 @@ async def get_category_by_id(
 
 @router.get(
     "/slug/{slug}",
+    dependencies=[Depends(rate_limit(times=300, minutes=1))],
     response_model=CategoryPublic,
     summary="Get category by slug",
     description="Retrieve a specific category using its URL-friendly slug.",
