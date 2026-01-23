@@ -7,6 +7,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query, status
 
+from app.api.cache import cache_if_enabled
 from app.api.v1.dependencies import AdminRoleDep, ProductServiceDep
 from app.schemas.common import Page, SortOrder
 from app.schemas.product import (
@@ -29,6 +30,7 @@ router = APIRouter()
     summary="Get product name suggestions",
     description="Retrieve autocomplete suggestions for product names based on search query. Returns up to 10 matching product names.",
 )
+@cache_if_enabled(expire=10)
 async def get_autocomplete_suggestions(
     product_service: ProductServiceDep,
     query: Annotated[
@@ -52,6 +54,7 @@ async def get_autocomplete_suggestions(
     summary="Get all products",
     description="Retrieve paginated list of products with advanced filtering by category, price range, rating, and availability. Supports search and sorting.",
 )
+@cache_if_enabled(expire=30)
 async def get_products(
     product_service: ProductServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
@@ -120,6 +123,7 @@ async def create_product(data: ProductCreate, product_service: ProductServiceDep
     summary="Get product by ID",
     description="Retrieve detailed information about a specific product using its UUID.",
 )
+@cache_if_enabled(expire=60)
 async def get_product_by_id(product_id: UUID, product_service: ProductServiceDep) -> ProductDetail:
     """Retrieve a product by its ID."""
     product = await product_service.get_product_by_id(product_id)
@@ -136,6 +140,7 @@ async def get_product_by_id(product_id: UUID, product_service: ProductServiceDep
     summary="Get product by slug",
     description="Retrieve detailed information about a specific product using its URL-friendly slug.",
 )
+@cache_if_enabled(expire=60)
 async def get_product_by_slug(slug: str, product_service: ProductServiceDep) -> ProductDetail:
     """Retrieve a product by its slug."""
     product = await product_service.get_product_by_slug(slug)

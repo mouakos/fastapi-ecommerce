@@ -36,6 +36,16 @@ class Config(BaseSettings):
     database_url: str = Field(
         default="", alias="DATABASE_URL", description="Database connection URL"
     )
+    redis_url: str = Field(
+        default="redis://localhost:6379",
+        description="Redis connection URL for caching",
+        alias="REDIS_URL",
+    )
+    cache_enabled: bool = Field(
+        default=True,
+        description="Enable API caching (Redis if available, else in-memory).",
+        alias="CACHE_ENABLED",
+    )
     stripe_webhook_secret: str = Field(
         default="", description="Stripe webhook secret", alias="STRIPE_WEBHOOK_SECRET"
     )

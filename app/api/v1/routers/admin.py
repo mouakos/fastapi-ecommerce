@@ -7,6 +7,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query, status
 
+from app.api.cache import cache_if_enabled
 from app.api.v1.dependencies import AdminRoleDep, AdminServiceDep, CurrentUserDep
 from app.models.order import OrderStatus
 from app.models.review import ReviewStatus
@@ -44,6 +45,7 @@ router = APIRouter(dependencies=[AdminRoleDep])
     summary="Get dashboard overview",
     description="Retrieve comprehensive admin dashboard with sales, user, product, and review statistics in one request.",
 )
+@cache_if_enabled(expire=30)
 async def get_dashboard(
     admin_service: AdminServiceDep,
 ) -> AdminDashboard:
@@ -58,6 +60,7 @@ async def get_dashboard(
     summary="Get sales analytics",
     description="Retrieve detailed sales metrics including total revenue, order counts, and trends over time.",
 )
+@cache_if_enabled(expire=30)
 async def get_sales_analytics(
     admin_service: AdminServiceDep,
 ) -> SalesAnalytics:
@@ -71,6 +74,7 @@ async def get_sales_analytics(
     summary="Get user analytics",
     description="Retrieve user metrics including total registrations, growth rates, and active user statistics.",
 )
+@cache_if_enabled(expire=60)
 async def get_user_analytics(
     admin_service: AdminServiceDep,
 ) -> UserAnalytics:
@@ -84,6 +88,7 @@ async def get_user_analytics(
     summary="Get product analytics",
     description="Retrieve product metrics including inventory levels, stock status, and catalog analytics.",
 )
+@cache_if_enabled(expire=60)
 async def get_product_analytics(
     admin_service: AdminServiceDep,
 ) -> ProductAnalytics:
@@ -97,6 +102,7 @@ async def get_product_analytics(
     summary="Get review analytics",
     description="Retrieve review metrics including approval rates, average ratings, and pending review counts.",
 )
+@cache_if_enabled(expire=60)
 async def get_review_analytics(
     admin_service: AdminServiceDep,
 ) -> ReviewAnalytics:
@@ -111,6 +117,7 @@ async def get_review_analytics(
     summary="Get all users",
     description="Retrieve paginated list of all users with optional filtering by name, email, or role.",
 )
+@cache_if_enabled(expire=10)
 async def get_users(
     admin_service: AdminServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
@@ -179,6 +186,7 @@ async def update_user_role(
     summary="List all orders",
     description="Retrieve paginated list of all orders across all users with optional filtering by status and user, plus sorting options.",
 )
+@cache_if_enabled(expire=10)
 async def get_orders(
     admin_service: AdminServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
@@ -240,6 +248,7 @@ async def mark_order_as_shipped(
     summary="List all reviews",
     description="Retrieve paginated list of all reviews across all products and users with optional filtering by status, rating, user, and product. Includes moderation information.",
 )
+@cache_if_enabled(expire=10)
 async def get_reviews(
     admin_service: AdminServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
@@ -346,6 +355,7 @@ async def delete_review(
     summary="Get all products",
     description="Retrieve paginated list of all products with optional filtering by stock levels and active status.",
 )
+@cache_if_enabled(expire=10)
 async def get_products(
     admin_service: AdminServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
@@ -400,6 +410,7 @@ async def get_products(
     summary="Get low stock products",
     description="Retrieve products with stock levels below the specified threshold for inventory monitoring and restocking alerts.",
 )
+@cache_if_enabled(expire=30)
 async def get_low_stock_products(
     admin_service: AdminServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
@@ -422,6 +433,7 @@ async def get_low_stock_products(
     summary="Get top-moving products",
     description="Retrieve top-selling products within a specified time frame to identify bestsellers and trends.",
 )
+@cache_if_enabled(expire=60)
 async def get_top_moving_products(
     admin_service: AdminServiceDep,
     limit: int = Query(10, ge=1, description="Number of top products to retrieve"),

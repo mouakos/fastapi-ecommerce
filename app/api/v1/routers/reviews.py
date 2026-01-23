@@ -6,6 +6,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query, status
 
+from app.api.cache import cache_if_enabled
 from app.api.v1.dependencies import CurrentUserDep, ReviewServiceDep
 from app.models.review import ReviewStatus
 from app.schemas.common import Page, SortOrder
@@ -66,6 +67,7 @@ async def create_review(
     summary="Get product reviews",
     description="Retrieve all approved reviews for a specific product with pagination support.",
 )
+@cache_if_enabled(expire=60)
 async def get_product_reviews(
     product_id: UUID,
     review_service: ReviewServiceDep,

@@ -14,3 +14,5 @@ stripe
 pycountry
 phonenumbers
 loguru
+redis
+fastapi-cache2[redis]

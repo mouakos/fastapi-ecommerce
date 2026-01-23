@@ -5,6 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, status
 
+from app.api.cache import cache_if_enabled
 from app.api.v1.dependencies import AdminRoleDep, CategoryServiceDep
 from app.schemas.category import CategoryCreate, CategoryPublic, CategoryUpdate
 
@@ -17,6 +18,7 @@ router = APIRouter()
     summary="Get all categories",
     description="Retrieve all product categories with their hierarchy information.",
 )
+@cache_if_enabled(expire=1800)
 async def get_categories(
     category_service: CategoryServiceDep,
 ) -> list[CategoryPublic]:
@@ -45,6 +47,7 @@ async def create_category(
     summary="Get category by ID",
     description="Retrieve a specific category using its UUID.",
 )
+@cache_if_enabled(expire=600)
 async def get_category_by_id(
     category_id: UUID, category_service: CategoryServiceDep
 ) -> CategoryPublic:
@@ -58,6 +61,7 @@ async def get_category_by_id(
     summary="Get category by slug",
     description="Retrieve a specific category using its URL-friendly slug.",
 )
+@cache_if_enabled(expire=600)
 async def get_category_by_slug(slug: str, category_service: CategoryServiceDep) -> CategoryPublic:
     """Get a category by its slug."""
     return await category_service.get_category_by_slug(slug)

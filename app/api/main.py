@@ -6,12 +6,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from app.api.cache import init_in_memory_caching, init_redis_caching
 from app.api.exception_handlers import register_exception_handlers
 from app.api.middleware import register_middleware
 from app.api.v1.routers import router
 from app.core.config import settings
 from app.core.logger import logger
 from app.db.database import async_engine, init_db
+from app.db.redis_client import redis_client
 
 
 @asynccontextmanager
@@ -19,9 +21,21 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: ARG001
     """Lifespan context manager for startup and shutdown events."""
     logger.info("application_starting", environment=settings.environment)
     await init_db()
+
+    if settings.cache_enabled:
+        try:
+            await redis_client.connect()
+            init_redis_caching(redis_client.client)
+            logger.info("cache_ready", backend="redis")
+        except Exception as exc:
+            logger.error("cache_redis_init_failed", error=str(exc))
+            init_in_memory_caching()
+            logger.info("cache_ready", backend="inmemory")
+
     logger.info("application_ready", version=settings.app_version)
     yield
     logger.info("application_shutting_down")
+    await redis_client.close()
     await async_engine.dispose()
     logger.info("application_stopped")
 
