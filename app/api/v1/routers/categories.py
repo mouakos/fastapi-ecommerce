@@ -48,7 +48,7 @@ async def create_category(
     "/id/{category_id}",
     dependencies=[Depends(rate_limit(times=300, minutes=1))],
     response_model=CategoryDetail,
-    summary="Get category details by ID",
+    summary="Get category detail by ID",
     description="Retrieve a specific category and its hierarchy information using its UUID.",
 )
 @cache(expire=600)
@@ -63,7 +63,7 @@ async def get_category_detail_by_id(
     "/slug/{slug}",
     dependencies=[Depends(rate_limit(times=300, minutes=1))],
     response_model=CategoryDetail,
-    summary="Get category details by slug",
+    summary="Get category detail by slug",
     description="Retrieve a specific category and its hierarchy information using its URL-friendly slug.",
 )
 @cache(expire=600)

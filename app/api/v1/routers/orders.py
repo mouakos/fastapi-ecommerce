@@ -62,10 +62,10 @@ async def create_order(
 @router.get(
     "/{order_id}",
     response_model=OrderDetail,
-    summary="Get order details",
+    summary="Get order detail",
     description="Retrieve detailed information about a specific order.",
 )
-async def get_order(
+async def get_order_detail(
     order_id: UUID,
     current_user: CurrentUserDep,
     order_service: OrderServiceDep,
