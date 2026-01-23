@@ -62,7 +62,7 @@ async def change_user_password(
     await user_service.update_user_password(current_user.id, data)
 
     # Revoke all tokens associated with the user
-    await revoke_token(token_data.jti)
+    await revoke_token(token_data.jti, token_data.exp)
 
     return UserActionResponse(message="Password updated successfully.", user_id=current_user.id)
 
@@ -82,4 +82,4 @@ async def delete_user(
     await user_service.delete_user(current_user.id)
 
     # Revoke all tokens associated with the user
-    await revoke_token(token_data.jti)
+    await revoke_token(token_data.jti, token_data.exp)

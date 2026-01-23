@@ -5,11 +5,11 @@ from abc import ABC, abstractmethod
 from fastapi import Request
 from fastapi.security import HTTPBearer
 
-from app.core.config import auth_settings
 from app.core.exceptions import AuthenticationError
 from app.core.security import decode_token
 from app.db.redis_client import redis_client
 from app.schemas.auth import TokenData
+from app.utils.datetime import utcnow
 
 
 class TokenBearer(HTTPBearer, ABC):
@@ -65,15 +65,17 @@ class RefreshTokenBearer(TokenBearer):
             raise AuthenticationError(message="Invalid refresh token.")
 
 
-async def revoke_token(jti: str) -> None:
+async def revoke_token(jti: str, exp: int) -> None:
     """Revoke a JWT token by adding its JTI to a blacklist.
 
     Args:
         jti (str): The JWT ID to revoke.
+        exp (int): The expiration time of the token as a UNIX timestamp.
     """
     # Store the revoked JTI in Redis with an expiration time
-    jti_expiry = auth_settings.jwt_refresh_token_exp_days * 24 * 3600
-    await redis_client.set(jti, value="", expire=jti_expiry)
+    jti_expiry = max(0, exp - int(utcnow().timestamp()))
+    if jti_expiry > 0:
+        await redis_client.set(jti, value="", expire=jti_expiry)
 
 
 async def is_token_revoked(jti: str) -> bool:

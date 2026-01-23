@@ -1,6 +1,6 @@
 """Security utilities for handling passwords and JWT tokens."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -10,6 +10,7 @@ from pwdlib import PasswordHash
 from app.core.config import auth_settings
 from app.core.logger import logger
 from app.schemas.auth import TokenData
+from app.utils.datetime import utcnow
 
 password_hash = PasswordHash.recommended()
 
@@ -44,7 +45,7 @@ def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = 
         str: The encoded JWT token.
     """
     to_encode = data.copy()
-    expire = datetime.now(UTC) + (
+    expire = utcnow() + (
         expires_delta or timedelta(minutes=auth_settings.jwt_access_token_exp_minutes)
     )
     to_encode.update({"exp": expire, "type": "access", "jti": str(uuid4())})
@@ -65,9 +66,7 @@ def create_refresh_token(data: dict[str, Any], expires_delta: timedelta | None =
         str: The encoded JWT token.
     """
     to_encode = data.copy()
-    expire = datetime.now(UTC) + (
-        expires_delta or timedelta(days=auth_settings.jwt_refresh_token_exp_days)
-    )
+    expire = utcnow() + (expires_delta or timedelta(days=auth_settings.jwt_refresh_token_exp_days))
     to_encode.update({"exp": expire, "type": "refresh", "jti": str(uuid4())})
     return jwt.encode(
         to_encode, auth_settings.jwt_secret_key, algorithm=auth_settings.jwt_algorithm
@@ -90,7 +89,12 @@ def decode_token(token: str) -> TokenData | None:
             algorithms=[auth_settings.jwt_algorithm],
             options={"verify_signature": True, "verify_exp": True},
         )
-        return TokenData(user_id=UUID(payload["sub"]), type=payload["type"], jti=payload["jti"])
+        return TokenData(
+            user_id=UUID(payload["sub"]),
+            type=payload["type"],
+            jti=payload["jti"],
+            exp=payload["exp"],
+        )
     except jwt.ExpiredSignatureError:
         logger.info("token_expired")
         return None

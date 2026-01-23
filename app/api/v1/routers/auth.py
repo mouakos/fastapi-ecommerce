@@ -75,7 +75,7 @@ async def get_new_access_token(
     new_refresh_token = create_refresh_token(payload)
 
     # Revoke the old refresh token
-    await revoke_token(token_data.jti)
+    await revoke_token(token_data.jti, token_data.exp)
 
     expired_in = auth_settings.jwt_access_token_exp_minutes * 60  # in seconds
     return Token(
@@ -94,5 +94,5 @@ async def revoke_refresh_token(
     token_data: RefreshTokenDep,
 ) -> UserActionResponse:
     """Revoke a refresh token to prevent further use."""
-    await revoke_token(token_data.jti)
+    await revoke_token(token_data.jti, token_data.exp)
     return UserActionResponse(message="Logout successful.", user_id=token_data.user_id)

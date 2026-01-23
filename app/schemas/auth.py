@@ -32,5 +32,6 @@ class TokenData(BaseModel):
     user_id: UUID
     type: Literal["access", "refresh"]
     jti: str = Field(..., description="JWT ID claim for token identification.")
+    exp: int = Field(..., description="Expiration time as a UNIX timestamp.")
 
     model_config = ConfigDict(frozen=True)
