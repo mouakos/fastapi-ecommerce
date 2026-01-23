@@ -9,7 +9,7 @@ from pwdlib import PasswordHash
 
 from app.core.config import auth_settings
 from app.core.logger import logger
-from app.schemas.user import TokenData
+from app.schemas.auth import TokenData
 
 password_hash = PasswordHash.recommended()
 

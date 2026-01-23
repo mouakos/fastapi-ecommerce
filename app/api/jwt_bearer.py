@@ -9,7 +9,7 @@ from app.core.config import auth_settings
 from app.core.exceptions import AuthenticationError
 from app.core.security import decode_token
 from app.db.redis_client import redis_client
-from app.schemas.user import TokenData
+from app.schemas.auth import TokenData
 
 
 class TokenBearer(HTTPBearer, ABC):

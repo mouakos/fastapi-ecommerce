@@ -13,7 +13,8 @@ from app.api.v1.dependencies import (
 )
 from app.core.config import auth_settings
 from app.core.security import create_access_token, create_refresh_token
-from app.schemas.user import Login, Token, UserActionResponse, UserCreate, UserPublic
+from app.schemas.auth import Login, Token
+from app.schemas.user import UserActionResponse, UserCreate, UserPublic
 
 router = APIRouter()
 

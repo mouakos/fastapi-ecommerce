@@ -12,7 +12,7 @@ from app.core.exceptions import AuthenticationError, AuthorizationError, UserNot
 from app.db.database import get_session
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.user import User, UserRole
-from app.schemas.user import TokenData
+from app.schemas.auth import TokenData
 from app.services.address_service import AddressService
 from app.services.admin_service import AdminService
 from app.services.cart_service import CartService

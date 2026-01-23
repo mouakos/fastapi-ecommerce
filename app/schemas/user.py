@@ -3,7 +3,6 @@
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
@@ -97,36 +96,6 @@ class UserAdmin(UserPublic):
     total_spent: Decimal = Field(
         ..., description="Total amount spent by this user", ge=0, decimal_places=2, max_digits=10
     )
-
-    model_config = ConfigDict(frozen=True)
-
-
-class Login(BaseModel):
-    """Schema for user login."""
-
-    email: EmailStr
-    password: str
-
-    model_config = ConfigDict(frozen=True)
-
-
-class Token(BaseModel):
-    """Schema for authentication token response."""
-
-    access_token: str
-    refresh_token: str
-    token_type: str = "bearer"
-    expires_in: int = Field(..., description="Access token expiration time in seconds.")
-
-    model_config = ConfigDict(frozen=True)
-
-
-class TokenData(BaseModel):
-    """Schema for token data."""
-
-    user_id: UUID
-    type: Literal["access", "refresh"]
-    jti: str = Field(..., description="JWT ID claim for token identification.")
 
     model_config = ConfigDict(frozen=True)
 
