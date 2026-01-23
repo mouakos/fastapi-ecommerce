@@ -1,9 +1,10 @@
 """User authentication API routes for registration and login."""
 
 # mypy: disable-error-code=return-value
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 
 from app.api.jwt_bearer import revoke_token
+from app.api.rate_limit import rate_limit
 from app.api.v1.dependencies import (
     CartServiceDep,
     CartSessionIdDep,
@@ -31,6 +32,7 @@ async def register(data: UserCreate, user_service: UserServiceDep) -> UserPublic
 
 @router.post(
     "/access-token",
+    dependencies=[Depends(rate_limit(times=5, seconds=60))],
     response_model=Token,
     summary="Login user",
     description="Authenticate with email and password to receive a JWT access token. If a guest cart session exists, it will be merged with the user's cart.",

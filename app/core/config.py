@@ -51,6 +51,11 @@ class Config(BaseSettings):
         description="Enable API caching (Redis if available, else in-memory).",
         alias="CACHE_ENABLED",
     )
+    rate_limiting_enabled: bool = Field(
+        default=True,
+        description="Enable rate limiting for API requests.",
+        alias="RATE_LIMITING_ENABLED",
+    )
     stripe_webhook_secret: str = Field(
         default="", description="Stripe webhook secret", alias="STRIPE_WEBHOOK_SECRET"
     )

@@ -16,3 +16,4 @@ phonenumbers
 loguru
 redis
 fastapi-cache2[redis]
+fastapi-limiter

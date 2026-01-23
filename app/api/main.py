@@ -6,9 +6,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from app.api.cache import init_in_memory_caching, init_redis_caching
+from app.api.cache import init_in_memory_caching, init_redis_caching  # noqa: F401
 from app.api.exception_handlers import register_exception_handlers
 from app.api.middleware import register_middleware
+from app.api.rate_limit import init_redis_rate_limiter
 from app.api.v1.routers import router
 from app.core.config import settings
 from app.core.logger import logger
@@ -22,21 +23,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: ARG001
     logger.info("application_starting", environment=settings.environment)
     await init_db()
 
-    is_redis_connected = False
-    try:
-        await redis_client.connect()
-        init_redis_caching(redis_client.client)
-        is_redis_connected = True
-    except Exception:
-        pass
-
+    await redis_client.connect()
     if settings.cache_enabled:
-        if is_redis_connected:
-            init_redis_caching(redis_client.client)
-            logger.info("redis_caching_initialized")
-        else:
-            init_in_memory_caching()
-            logger.info("in_memory_caching_initialized")
+        init_redis_caching()
+        logger.info("cache_initialized", cache_type="redis")
+
+        # Uncomment for in-memory caching instead of Redis
+        # init_in_memory_caching()
+        # logger.info("in_memory_cache_initialized")
+
+    if settings.rate_limiting_enabled:
+        await init_redis_rate_limiter()
 
     logger.info("application_ready", version=settings.app_version)
     yield

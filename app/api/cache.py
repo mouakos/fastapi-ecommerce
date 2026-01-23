@@ -6,10 +6,9 @@ from typing import TypeVar, cast
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.backends.redis import RedisBackend
-from fastapi_cache.decorator import cache
-from redis.asyncio import Redis
 
 from app.core.config import settings
+from app.db.redis_client import redis_client
 
 F = TypeVar("F", bound=Callable[..., object])
 
@@ -17,14 +16,14 @@ CACHE_PREFIX = "e-commerce"
 CACHE_DEFAULT_TTL_SECONDS = 60
 
 
-def init_redis_caching(client: Redis) -> None:  # type: ignore [no-any-unimported]
+def init_redis_caching() -> None:
     """Initialize caching backend.
 
     Args:
         client (Redis): Redis client instance.
     """
     FastAPICache.init(
-        RedisBackend(client),
+        RedisBackend(redis_client.client),
         prefix=CACHE_PREFIX,
         expire=CACHE_DEFAULT_TTL_SECONDS,
     )
@@ -39,7 +38,7 @@ def init_in_memory_caching() -> None:
     )
 
 
-def cache_if_enabled(*, expire: int | None = None) -> Callable[[F], F]:
+def cache(*, expire: int | None = None) -> Callable[[F], F]:
     """Conditionally cache a route handler.
 
     When `CACHE_ENABLED=false`, this decorator is a no-op (no caching at all).
@@ -51,5 +50,7 @@ def cache_if_enabled(*, expire: int | None = None) -> Callable[[F], F]:
             return func
 
         return _noop
+
+    from fastapi_cache.decorator import cache
 
     return cast(Callable[[F], F], cache(expire=expire))
