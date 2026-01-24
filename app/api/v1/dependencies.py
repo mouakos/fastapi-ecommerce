@@ -8,7 +8,12 @@ from fastapi import Depends, Request, Response
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.api.jwt_bearer import AccessTokenBearer, RefreshTokenBearer
-from app.core.exceptions import AuthenticationError, AuthorizationError, UserNotFoundError
+from app.core.exceptions import (
+    AuthenticationError,
+    AuthorizationError,
+    InactiveUserError,
+    UserNotFoundError,
+)
 from app.db.database import get_session
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.user import User, UserRole
@@ -108,14 +113,23 @@ async def get_current_user(
     user_service: UserServiceDep,
 ) -> User:
     """Get current authenticated user from JWT token."""
-    message = "Could not validate credentials."
     try:
-        return await user_service.get_user(token_data.user_id)
+        user = await user_service.get_user(token_data.user_id)
     except UserNotFoundError as exc:
-        raise AuthenticationError(message=message) from exc
+        raise AuthenticationError(message="Could not validate credentials.") from exc
+    return user
 
 
-CurrentUserDep = Annotated[User, Depends(get_current_user)]
+async def get_current_active_user(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> User:
+    """Get current active user."""
+    if not current_user.is_active:
+        raise InactiveUserError(user_id=current_user.id)
+    return current_user
+
+
+CurrentUserDep = Annotated[User, Depends(get_current_active_user)]
 
 
 async def get_optional_current_user(
@@ -124,7 +138,8 @@ async def get_optional_current_user(
 ) -> User | None:
     """Get current authenticated user from JWT token, or None if not authenticated."""
     try:
-        return await user_service.get_user(token_data.user_id)
+        user = await user_service.get_user(token_data.user_id)
+        return user if user.is_active else None
     except UserNotFoundError:
         return None
 

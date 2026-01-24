@@ -29,7 +29,7 @@ class Review(ModelBase, TimestampMixin, table=True):
     __tablename__ = "reviews"
     __table_args__ = (UniqueConstraint("user_id", "product_id", name="uix_user_product_review"),)
 
-    user_id: UUID = Field(default=None, foreign_key="users.id", index=True, ondelete="CASCADE")
+    user_id: UUID = Field(foreign_key="users.id", index=True)
     product_id: UUID = Field(
         default=None, foreign_key="products.id", index=True, ondelete="CASCADE"
     )

@@ -40,7 +40,7 @@ class Order(ModelBase, TimestampMixin, table=True):
     """Order model for storing order information."""
 
     __tablename__ = "orders"
-    user_id: UUID = Field(foreign_key="users.id", index=True, ondelete="CASCADE")
+    user_id: UUID = Field(foreign_key="users.id", index=True)
     status: OrderStatus = Field(
         default=OrderStatus.PENDING,
         sa_column=Column(

@@ -1,5 +1,6 @@
 """User model for storing user information."""
 
+from datetime import datetime
 from enum import StrEnum
 from typing import TYPE_CHECKING, Optional
 
@@ -49,6 +50,10 @@ class User(ModelBase, TimestampMixin, table=True):
         ),
     )
     is_superuser: bool = Field(default=False)
+    is_active: bool = Field(default=True, index=True)
+    last_login: datetime | None = Field(default=None)
+    deleted_at: datetime | None = Field(default=None, index=True)
+    newsletter_subscribed: bool = Field(default=False)
 
     # Relationships
     addresses: list["Address"] = Relationship(

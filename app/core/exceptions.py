@@ -199,6 +199,15 @@ class PasswordMismatchError(ValidationError):
         )
 
 
+class InactiveUserError(ValidationError):
+    """User account is inactive."""
+
+    def __init__(self, user_id: UUID) -> None:
+        """Initialize InactiveUserError."""
+        super().__init__(message="User account is inactive.", error_code="inactive_user")
+        self.details["user_id"] = str(user_id)
+
+
 # ============================================================================
 # 401 UNAUTHORIZED - AUTHENTICATION ERRORS
 # ============================================================================

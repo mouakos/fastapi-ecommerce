@@ -18,6 +18,7 @@ from app.schemas.user import (
     UserPasswordUpdateRequest,
     UserUpdate,
 )
+from app.utils.datetime import utcnow
 
 
 class UserService:
@@ -89,7 +90,11 @@ class UserService:
         if not user or not verify_password(password, user.hashed_password):
             raise InvalidCredentialsError()
 
+        user.last_login = utcnow()
+        await self.uow.users.update(user)
+
         logger.info("user_logged_in", user_id=str(user.id), email=user.email)
+
         return user
 
     async def update_user_password(self, user_id: UUID, data: UserPasswordUpdateRequest) -> None:
@@ -140,7 +145,7 @@ class UserService:
         return user
 
     async def delete_user(self, user_id: UUID) -> None:
-        """Delete a user by its ID.
+        """Deactivate a user account and anonymize PII.
 
         Args:
             user_id (UUID): User ID.
@@ -149,5 +154,28 @@ class UserService:
             UserNotFoundError: If the user does not exist.
         """
         user = await self.get_user(user_id)
-        await self.uow.users.delete(user)
-        logger.info("user_deleted", user_id=str(user_id))
+
+        # Idempotent: if already deactivated, do nothing.
+        if not user.is_active and user.deleted_at is not None:
+            return
+
+        # Remove addresses (PII). Orders keep snapshots in order_addresses.
+        for address in list(user.addresses):
+            await self.uow.addresses.delete(address)
+
+        # Remove carts (non-essential).
+        cart = await self.uow.carts.find_user_cart(user.id)
+        if cart:
+            await self.uow.carts.delete(cart)
+
+        # Deactivate + anonymize core PII.
+        user.is_active = False
+        user.first_name = None
+        user.last_name = None
+        user.phone_number = None
+        user.email = f"deleted+{user.id}@example.invalid"
+        user.hashed_password = hash_password(f"deleted:{user.id}:{utcnow().isoformat()}")
+        user.deleted_at = utcnow()
+
+        await self.uow.users.update(user)
+        logger.info("user_deactivated", user_id=str(user_id))

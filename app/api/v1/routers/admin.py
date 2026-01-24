@@ -143,15 +143,7 @@ async def get_users(
     )
     users_dto = [
         UserAdmin(
-            id=user.id,
-            email=user.email,
-            is_superuser=user.is_superuser,
-            role=user.role,
-            first_name=user.first_name,
-            last_name=user.last_name,
-            phone_number=user.phone_number,
-            created_at=user.created_at,
-            updated_at=user.updated_at,
+            **user.model_dump(),
             total_orders=await admin_service.count_user_orders(user.id),
             total_spent=await admin_service.get_user_total_spent(user.id),
         )

@@ -46,6 +46,7 @@ class UserUpdate(BaseModel):
     first_name: str | None = Field(None, min_length=2, max_length=50)
     last_name: str | None = Field(None, min_length=2, max_length=50)
     phone_number: str | None = Field(None, max_length=20)
+    newsletter_subscribed: bool | None = None
 
     @field_validator("phone_number")
     @classmethod
@@ -77,13 +78,16 @@ class UserPasswordUpdateRequest(BaseModel):
 class UserPublic(UUIDMixin):
     """Schema for reading user information."""
 
-    email: EmailStr = Field(..., max_length=255)
+    email: EmailStr
     is_superuser: bool
     role: UserRole
-    first_name: str | None = Field(..., max_length=50)
-    last_name: str | None = Field(..., max_length=50)
-    phone_number: str | None = Field(..., max_length=20)
+    first_name: str | None
+    last_name: str | None
+    phone_number: str | None
+    newsletter_subscribed: bool
     created_at: datetime
+    last_login: datetime | None
+    is_active: bool
 
     model_config = ConfigDict(frozen=True)
 
@@ -92,10 +96,9 @@ class UserAdmin(UserPublic, TwoDecimalBaseModel):
     """Schema for reading user information in admin context."""
 
     updated_at: datetime
-    total_orders: int = Field(..., description="Total orders by this user")
-    total_spent: Decimal = Field(
-        ..., description="Total amount spent by this user", ge=0, max_digits=10
-    )
+    deleted_at: datetime | None
+    total_orders: int
+    total_spent: Decimal
 
     model_config = ConfigDict(frozen=True)
 
