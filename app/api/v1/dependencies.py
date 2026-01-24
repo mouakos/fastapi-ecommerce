@@ -5,15 +5,16 @@ from typing import Annotated
 from uuid import uuid4
 
 from fastapi import Depends, Request, Response
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.api.jwt_bearer import AccessTokenBearer, RefreshTokenBearer
 from app.core.exceptions import (
     AuthenticationError,
     AuthorizationError,
     InactiveUserError,
     UserNotFoundError,
 )
+from app.core.security import TokenType, decode_token, is_token_revoked
 from app.db.database import get_session
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.user import User, UserRole
@@ -30,11 +31,11 @@ from app.services.user_service import UserService
 from app.services.wishlist_service import WishlistService
 from app.uow.sql_unit_of_work import SqlUnitOfWork
 
-AccessTokenDep = Annotated[TokenData, Depends(AccessTokenBearer())]
-RefreshTokenDep = Annotated[TokenData, Depends(RefreshTokenBearer())]
-
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
+TokenDep = Annotated[str, Depends(oauth2_scheme)]
+RequestFormDep = Annotated[OAuth2PasswordRequestForm, Depends()]
 
 
 async def get_uow(session: SessionDep) -> AsyncGenerator[UnitOfWork, None]:
@@ -108,11 +109,59 @@ ReviewServiceDep = Annotated[ReviewService, Depends(get_review_service)]
 AdminServiceDep = Annotated[AdminService, Depends(get_admin_service)]
 
 
+async def get_access_token_data(
+    token: TokenDep,
+) -> TokenData:
+    """Get access token data from JWT token."""
+    token_data = decode_token(token)
+    if not token_data:
+        raise AuthenticationError(message="Could not validate credentials.")
+
+    if token_data.type != TokenType.ACCESS:
+        raise AuthenticationError(message="Invalid access token.")
+
+    if await is_token_revoked(token_data.jti):
+        raise AuthenticationError(message="Token has been revoked.")
+
+    return token_data
+
+
+REFRESH_TOKEN_COOKIE = "refresh_token"
+
+
+async def get_refresh_token_data(
+    request: Request,
+) -> TokenData:
+    """Get refresh token data from JWT token in cookies."""
+    refresh_token = request.cookies.get(REFRESH_TOKEN_COOKIE)
+    if not refresh_token:
+        raise AuthenticationError(message="Refresh token not found.")
+
+    token_data = decode_token(refresh_token)
+    if not token_data:
+        raise AuthenticationError(message="Could not validate credentials.")
+
+    if token_data.type != TokenType.REFRESH:
+        raise AuthenticationError(message="Invalid refresh token.")
+
+    if await is_token_revoked(token_data.jti):
+        raise AuthenticationError(message="Token has been revoked.")
+
+    return token_data
+
+
+RefreshTokenDataDep = Annotated[TokenData, Depends(get_refresh_token_data)]
+AccessTokenDataDep = Annotated[TokenData, Depends(get_access_token_data)]
+
+
 async def get_current_user(
-    token_data: AccessTokenDep,
+    token_data: AccessTokenDataDep,
     user_service: UserServiceDep,
 ) -> User:
     """Get current authenticated user from JWT token."""
+    if await is_token_revoked(token_data.jti):
+        raise AuthenticationError(message="Token has been revoked.")
+
     try:
         user = await user_service.get_user(token_data.user_id)
     except UserNotFoundError as exc:
@@ -129,22 +178,38 @@ async def get_current_active_user(
     return current_user
 
 
-CurrentUserDep = Annotated[User, Depends(get_current_active_user)]
-
-
 async def get_optional_current_user(
-    token_data: AccessTokenDep,
+    token_data: AccessTokenDataDep,
     user_service: UserServiceDep,
 ) -> User | None:
     """Get current authenticated user from JWT token, or None if not authenticated."""
     try:
-        user = await user_service.get_user(token_data.user_id)
+        user = await get_current_user(token_data, user_service)
         return user if user.is_active else None
-    except UserNotFoundError:
+    except AuthenticationError:
         return None
 
 
+CurrentUserDep = Annotated[User, Depends(get_current_active_user)]
 OptionalCurrentUserDep = Annotated[User | None, Depends(get_optional_current_user)]
+
+
+class RoleChecker:
+    """Dependency to check if the current user has one of the allowed roles."""
+
+    def __init__(self, allowed_roles: list[UserRole]) -> None:
+        """Initialize the RoleChecker with allowed roles."""
+        self.allowed_roles = allowed_roles
+
+    def __call__(self, current_user: CurrentUserDep) -> bool:
+        """Check if the current user has one of the allowed roles."""
+        if current_user.role in self.allowed_roles:
+            return True
+
+        raise AuthorizationError()
+
+
+AdminRoleDep = Depends(RoleChecker([UserRole.ADMIN]))
 
 # Cart session constants
 CART_SESSION_COOKIE = "cart_session_id"
@@ -188,21 +253,3 @@ def get_or_create_cart_session_id(request: Request, response: Response) -> str:
 
 CartSessionIdDep = Annotated[str | None, Depends(get_cart_session_id)]
 CartSessionIdOrCreateDep = Annotated[str, Depends(get_or_create_cart_session_id)]
-
-
-class RoleChecker:
-    """Dependency to check if the current user has one of the allowed roles."""
-
-    def __init__(self, allowed_roles: list[UserRole]) -> None:
-        """Initialize the RoleChecker with allowed roles."""
-        self.allowed_roles = allowed_roles
-
-    def __call__(self, current_user: CurrentUserDep) -> bool:
-        """Check if the current user has one of the allowed roles."""
-        if current_user.role in self.allowed_roles:
-            return True
-
-        raise AuthorizationError()
-
-
-AdminRoleDep = Depends(RoleChecker([UserRole.ADMIN]))

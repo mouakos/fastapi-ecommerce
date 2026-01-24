@@ -1,6 +1,7 @@
 """Security utilities for handling passwords and JWT tokens."""
 
 from datetime import timedelta
+from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -9,8 +10,17 @@ from pwdlib import PasswordHash
 
 from app.core.config import auth_settings
 from app.core.logger import logger
+from app.db.redis_client import redis_client
 from app.schemas.auth import TokenData
 from app.utils.datetime import utcnow
+
+
+class TokenType(StrEnum):
+    """Enumeration for token types."""
+
+    ACCESS = "access"
+    REFRESH = "refresh"
+
 
 password_hash = PasswordHash.recommended()
 
@@ -48,7 +58,7 @@ def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = 
     expire = utcnow() + (
         expires_delta or timedelta(minutes=auth_settings.jwt_access_token_exp_minutes)
     )
-    to_encode.update({"exp": expire, "type": "access", "jti": str(uuid4())})
+    to_encode.update({"exp": expire, "type": TokenType.ACCESS.value, "jti": str(uuid4())})
     return jwt.encode(
         to_encode, auth_settings.jwt_secret_key, algorithm=auth_settings.jwt_algorithm
     )
@@ -67,7 +77,7 @@ def create_refresh_token(data: dict[str, Any], expires_delta: timedelta | None =
     """
     to_encode = data.copy()
     expire = utcnow() + (expires_delta or timedelta(days=auth_settings.jwt_refresh_token_exp_days))
-    to_encode.update({"exp": expire, "type": "refresh", "jti": str(uuid4())})
+    to_encode.update({"exp": expire, "type": TokenType.REFRESH.value, "jti": str(uuid4())})
     return jwt.encode(
         to_encode, auth_settings.jwt_secret_key, algorithm=auth_settings.jwt_algorithm
     )
@@ -104,3 +114,28 @@ def decode_token(token: str) -> TokenData | None:
     except jwt.PyJWTError as exc:
         logger.warning("jwt_decode_error", error=str(exc), exc_info=True)
         return None
+
+
+async def revoke_token(jti: str, exp: int) -> None:
+    """Revoke a JWT token by adding its JTI to a blacklist.
+
+    Args:
+        jti (str): The JWT ID to revoke.
+        exp (int): The expiration time of the token as a UNIX timestamp.
+    """
+    # Store the revoked JTI in Redis with an expiration time
+    jti_expiry = max(0, exp - int(utcnow().timestamp()))
+    if jti_expiry > 0:
+        await redis_client.set(jti, value="", expire=jti_expiry)
+
+
+async def is_token_revoked(jti: str) -> bool:
+    """Check if a JWT token has been revoked.
+
+    Args:
+        jti (str): The JWT ID to check.
+
+    Returns:
+        bool: True if the token is revoked, False otherwise.
+    """
+    return await redis_client.get(jti) is not None

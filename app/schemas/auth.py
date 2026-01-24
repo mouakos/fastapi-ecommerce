@@ -1,25 +1,16 @@
 """Schemas for authentication operations."""
 
-from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, Field
 
-
-class Login(BaseModel):
-    """Schema for user login."""
-
-    email: EmailStr
-    password: str
-
-    model_config = ConfigDict(frozen=True)
+from app.core.security import TokenType
 
 
 class Token(BaseModel):
     """Schema for authentication token response."""
 
     access_token: str
-    refresh_token: str
     token_type: str = "bearer"
     expires_in: int = Field(..., description="Access token expiration time in seconds.")
 
@@ -30,7 +21,7 @@ class TokenData(BaseModel):
     """Schema for token data."""
 
     user_id: UUID
-    type: Literal["access", "refresh"]
+    type: TokenType
     jti: str = Field(..., description="JWT ID claim for token identification.")
     exp: int = Field(..., description="Expiration time as a UNIX timestamp.")
 

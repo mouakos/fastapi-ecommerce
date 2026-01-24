@@ -3,13 +3,13 @@
 # mypy: disable-error-code=return-value
 from fastapi import APIRouter, status
 
-from app.api.jwt_bearer import revoke_token
 from app.api.v1.dependencies import (
-    AccessTokenDep,
+    AccessTokenDataDep,
     CurrentUserDep,
-    RefreshTokenDep,
+    RefreshTokenDataDep,
     UserServiceDep,
 )
+from app.core.security import revoke_token
 from app.schemas.user import (
     UserActionResponse,
     UserPasswordUpdateRequest,
@@ -57,13 +57,13 @@ async def change_user_password(
     data: UserPasswordUpdateRequest,
     current_user: CurrentUserDep,
     user_service: UserServiceDep,
-    token_data: AccessTokenDep,
+    refresh_token_data: RefreshTokenDataDep,
 ) -> UserActionResponse:
     """Change the password of the currently authenticated user."""
     await user_service.update_user_password(current_user.id, data)
 
-    # Revoke all tokens associated with the user
-    await revoke_token(token_data.jti, token_data.exp)
+    # Revoke refresh token after password change
+    await revoke_token(refresh_token_data.jti, refresh_token_data.exp)
 
     return UserActionResponse(message="Password updated successfully.", user_id=current_user.id)
 
@@ -77,10 +77,12 @@ async def change_user_password(
 async def delete_user(
     current_user: CurrentUserDep,
     user_service: UserServiceDep,
-    token_data: RefreshTokenDep,  # TODO: Should this be AccessTokenDep?
+    access_token_data: AccessTokenDataDep,
+    refresh_token_data: RefreshTokenDataDep,
 ) -> None:
     """Delete the current user's account."""
     await user_service.delete_user(current_user.id)
 
     # Revoke all tokens associated with the user
-    await revoke_token(token_data.jti, token_data.exp)
+    await revoke_token(access_token_data.jti, access_token_data.exp)
+    await revoke_token(refresh_token_data.jti, refresh_token_data.exp)
