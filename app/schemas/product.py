@@ -20,6 +20,7 @@ class ProductBase(BaseModel):
     description: str | None = Field(None, max_length=2000)
     image_url: HttpUrl | None = Field(None, max_length=500)
     is_active: bool = True
+    discount_percentage: int = Field(0, ge=0, le=100)
 
 
 class ProductCreate(ProductBase):
@@ -36,6 +37,7 @@ class ProductCreate(ProductBase):
                 "description": "This is a sample product description.",
                 "image_url": "https://example.com/image.png",
                 "is_active": True,
+                "discount_percentage": 10,
             }
         },
     )
@@ -51,7 +53,7 @@ class ProductUpdate(BaseModel):
     image_url: HttpUrl | None = Field(None, max_length=500)
     category_id: UUID | None = None
     is_active: bool | None = None
-
+    discount_percentage: int | None = Field(None, ge=0, le=100)
     model_config = ConfigDict(frozen=True)
 
 

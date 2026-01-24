@@ -30,6 +30,7 @@ class Product(ModelBase, TimestampMixin, table=True):
     sku: str = Field(unique=True, index=True, max_length=100)
     image_url: str | None = Field(default=None, max_length=500)
     is_active: bool = Field(default=True)
+    discount_percentage: int = Field(default=0, ge=0, le=100)
     category_id: UUID | None = Field(default=None, foreign_key="categories.id", index=True)
 
     # Relationships

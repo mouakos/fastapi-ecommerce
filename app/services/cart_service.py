@@ -1,6 +1,7 @@
 """Service layer for cart operations."""
 
 # mypy: disable-error-code=return-value
+from decimal import Decimal
 from uuid import UUID
 
 from app.core.exceptions import (
@@ -68,8 +69,6 @@ class CartService:
             raise ProductInactiveError(product_id=product.id)
 
         item = await self.uow.carts.find_cart_item(cart.id, product_id)
-        if not item:
-            raise ProductNotInCartError(product_id=product_id, cart_id=cart.id)
 
         current_qty = item.quantity if item else 0
         new_qty = current_qty + quantity
@@ -80,13 +79,14 @@ class CartService:
             )
 
         if item:
-            item.quantity += quantity
+            item.quantity = new_qty
         else:
+            unit_price = product.price * Decimal.from_float(1 - product.discount_percentage / 100)
             new_item = CartItem(
                 cart_id=cart.id,
                 product_id=product.id,
-                quantity=quantity,
-                unit_price=product.price,
+                quantity=new_qty,
+                unit_price=unit_price,
                 product_name=product.name,
                 product_image_url=product.image_url,
             )
@@ -95,7 +95,7 @@ class CartService:
                 "product_added_to_cart",
                 cart_id=str(cart.id),
                 product_id=str(product.id),
-                quantity=quantity,
+                quantity=new_qty,
             )
 
         await self.uow.carts.update(cart)
