@@ -4,6 +4,7 @@ from uuid import UUID
 
 from app.core.exceptions import (
     DuplicateUserError,
+    InactiveUserError,
     IncorrectPasswordError,
     InvalidCredentialsError,
     PasswordMismatchError,
@@ -84,11 +85,19 @@ class UserService:
 
         Raises:
             InvalidCredentialsError: If email or password is incorrect.
+            InactiveUserError: If the user account is inactive.
         """
         email = email.lower().strip()
         user = await self.uow.users.find_by_email(email)
-        if not user or not verify_password(password, user.hashed_password):
+        if (
+            not user
+            or not verify_password(password, user.hashed_password)
+            or user.deleted_at is not None
+        ):
             raise InvalidCredentialsError()
+
+        if not user.is_active:
+            raise InactiveUserError(user_id=user.id)
 
         user.last_login = utcnow()
         await self.uow.users.update(user)

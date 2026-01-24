@@ -122,6 +122,12 @@ async def get_users(
     admin_service: AdminServiceDep,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
+    is_active: Annotated[
+        bool | None, Query(description="Filter by active status: true, false, or omit for all")
+    ] = None,
+    is_deleted: Annotated[
+        bool | None, Query(description="Filter by deleted status: true, false, or omit for all")
+    ] = None,
     search: str | None = Query(None, description="Search by last name, first name or email"),
     role: Annotated[
         UserRole | None, Query(description="Filter by role: 'customer' or 'admin'")
@@ -138,8 +144,10 @@ async def get_users(
         page_size=page_size,
         search=search,
         role=role,
+        is_active=is_active,
         sort_by=sort_by.value,
         sort_order=sort_order.value,
+        is_deleted=is_deleted,
     )
     users_dto = [
         UserAdmin(

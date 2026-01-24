@@ -209,6 +209,8 @@ class AdminService:
     # ----------------------------- User Related Admin Services ----------------------------- #
     async def get_users(
         self,
+        is_active: bool | None = None,
+        is_deleted: bool | None = None,
         role: UserRole | None = None,
         search: str | None = None,
         sort_by: str = "created_at",
@@ -219,6 +221,8 @@ class AdminService:
         """Get all users in the system with optional filters, sorting, and pagination.
 
         Args:
+            is_active (bool | None, optional): Filter by active status. Defaults to None.
+            is_deleted (bool | None, optional): Filter by deleted status. Defaults to None.
             role (UserRole | None, optional): Filter by user role. Defaults to None.
             search (str | None, optional): Search query for name or email. Defaults to None.
             sort_by (str, optional): Field to sort by. Defaults to "created_at".
@@ -233,7 +237,9 @@ class AdminService:
         users, total = await self.uow.users.find_all(
             page=page,
             page_size=page_size,
+            is_deleted=is_deleted,
             role=role,
+            is_active=is_active,
             search=search,
             sort_by=sort_by,
             sort_order=sort_order,

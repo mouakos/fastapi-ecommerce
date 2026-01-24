@@ -205,6 +205,7 @@ async def _ensure_superuser(
         hashed_password=hash_password(settings.superuser_password),
         is_superuser=True,
         role=user_role.ADMIN,
+        is_active=True,
         first_name="Admin",
         last_name="User",
     )
@@ -319,6 +320,8 @@ async def _seed_data(
     if "users" in targets:
         logger.info("seed_users_start")
         for _ in range(seed_counts.users):
+            is_active = random.random() > 0.04
+            now = utcnow()
             users.append(
                 user_model(
                     email=faker.unique.email().lower(),
@@ -328,6 +331,12 @@ async def _seed_data(
                     phone_number=faker.msisdn()[:20],
                     role=user_role.USER,
                     is_superuser=False,
+                    is_active=is_active,
+                    newsletter_subscribed=random.random() < 0.35,
+                    last_login=(now - timedelta(days=random.randint(0, 60))) if is_active else None,
+                    deleted_at=(now - timedelta(days=random.randint(0, 60)))
+                    if not is_active
+                    else None,
                 )
             )
         session.add_all(users)
@@ -717,4 +726,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    finally:
+        asyncio.run(async_engine.dispose())

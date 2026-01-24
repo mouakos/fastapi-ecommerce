@@ -51,6 +51,8 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
         self,
         *,
         role: UserRole | None = None,
+        is_active: bool | None = None,
+        is_deleted: bool | None = None,
         search: str | None = None,
         sort_by: str = "created_at",
         sort_order: str = "desc",
@@ -61,6 +63,8 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
 
         Args:
             role (UserRole | None, optional): Filter by user role. Defaults to None.
+            is_active (bool | None, optional): Filter by active status. Defaults to None.
+            is_deleted (bool | None, optional): Filter by deleted status. Defaults to None.
             search (str | None, optional): Search query for email. Defaults to None.
             sort_by (str, optional): Field to sort by. Defaults to "created_at".
             sort_order (str, optional): Sort order, either "asc" or "desc". Defaults to "desc".
@@ -80,6 +84,17 @@ class SqlUserRepository(SqlGenericRepository[User], UserRepository):
         if search:
             search_pattern = f"%{search}%"
             stmt = stmt.where(User.email.ilike(search_pattern))  # type: ignore [attr-defined]
+
+        # Apply is_active filter
+        if is_active is not None:
+            stmt = stmt.where(User.is_active == is_active)
+
+        # Apply is_deleted filter
+        if is_deleted is not None:
+            if is_deleted:
+                stmt = stmt.where(User.deleted_at.is_not(None))  # type: ignore [union-attr]
+            else:
+                stmt = stmt.where(User.deleted_at.is_(None))  # type: ignore [union-attr]
 
         # Apply sorting
         sort_columns = {
