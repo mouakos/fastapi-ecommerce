@@ -30,9 +30,7 @@ class Product(ModelBase, TimestampMixin, table=True):
     sku: str = Field(unique=True, index=True, max_length=100)
     image_url: str | None = Field(default=None, max_length=500)
     is_active: bool = Field(default=True)
-    category_id: UUID | None = Field(
-        default=None, foreign_key="categories.id", ondelete="CASCADE", index=True
-    )
+    category_id: UUID | None = Field(default=None, foreign_key="categories.id", index=True)
 
     # Relationships
     category: Optional["Category"] = Relationship(back_populates="products")

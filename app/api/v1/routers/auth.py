@@ -91,7 +91,7 @@ async def get_new_access_token(
     description="Revoke a refresh token to prevent further use.",
 )
 async def revoke_refresh_token(
-    token_data: RefreshTokenDep,
+    token_data: RefreshTokenDep,  # TODD: Should this be AccessTokenDep?
 ) -> UserActionResponse:
     """Revoke a refresh token to prevent further use."""
     await revoke_token(token_data.jti, token_data.exp)

@@ -182,7 +182,7 @@ class UserService:
         user.first_name = None
         user.last_name = None
         user.phone_number = None
-        user.email = f"deleted+{user.id}@example.invalid"
+        user.email = f"deleted+{user.id}@example.com"
         user.hashed_password = hash_password(f"deleted:{user.id}:{utcnow().isoformat()}")
         user.deleted_at = utcnow()
 

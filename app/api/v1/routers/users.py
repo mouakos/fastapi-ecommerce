@@ -7,6 +7,7 @@ from app.api.jwt_bearer import revoke_token
 from app.api.v1.dependencies import (
     AccessTokenDep,
     CurrentUserDep,
+    RefreshTokenDep,
     UserServiceDep,
 )
 from app.schemas.user import (
@@ -76,7 +77,7 @@ async def change_user_password(
 async def delete_user(
     current_user: CurrentUserDep,
     user_service: UserServiceDep,
-    token_data: AccessTokenDep,
+    token_data: RefreshTokenDep,  # TODO: Should this be AccessTokenDep?
 ) -> None:
     """Delete the current user's account."""
     await user_service.delete_user(current_user.id)
