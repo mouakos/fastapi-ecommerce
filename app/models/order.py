@@ -63,6 +63,8 @@ class Order(ModelBase, TimestampMixin, table=True):
     paid_at: datetime | None = Field(default=None)
     canceled_at: datetime | None = Field(default=None)
     delivered_at: datetime | None = Field(default=None)
+    tax_amount: Decimal = Field(Decimal("0.00"), max_digits=10, decimal_places=2)
+    shipping_amount: Decimal = Field(Decimal("0.00"), max_digits=10, decimal_places=2)
 
     # Relationships
     user: "User" = Relationship(back_populates="orders")

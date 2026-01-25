@@ -44,6 +44,8 @@ class OrderPublic(UUIDMixin, TwoDecimalBaseModel):
     paid_at: datetime | None
     canceled_at: datetime | None
     delivered_at: datetime | None
+    tax_amount: Decimal
+    shipping_amount: Decimal
 
     model_config = ConfigDict(frozen=True)
 
