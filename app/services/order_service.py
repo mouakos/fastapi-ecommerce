@@ -3,6 +3,8 @@
 from decimal import Decimal
 from uuid import UUID
 
+import ulid
+
 from app.core.exceptions import (
     AddressNotFoundError,
     EmptyCartError,
@@ -16,7 +18,6 @@ from app.models.address import Address
 from app.models.cart import Cart, CartItem
 from app.models.order import Order, OrderAddress, OrderAddressKind, OrderItem, OrderStatus
 from app.schemas.order import OrderCreate
-from app.utils.order import generate_order_number
 
 
 class OrderService:
@@ -59,7 +60,7 @@ class OrderService:
         new_order = Order(
             user_id=user_id,
             total_amount=total_amount,
-            order_number=generate_order_number(),
+            order_number=self._generate_order_number(),
             tax_amount=tax_amount,
             shipping_amount=shipping_amount,
         )
@@ -234,3 +235,7 @@ class OrderService:
             )
             order_items.append(order_item)
         return order_items
+
+    def _generate_order_number(self) -> str:
+        """Generate a unique order number."""
+        return f"ORD-{ulid.new().str}"

@@ -1,5 +1,6 @@
 """Service for handling payment operations."""
 
+import hashlib
 from typing import Any
 from uuid import UUID
 
@@ -18,7 +19,6 @@ from app.models.order import Order, OrderStatus
 from app.models.payment import Payment, PaymentStatus
 from app.schemas.payment import PaymentIntentResponse
 from app.utils.datetime import utcnow
-from app.utils.stripe import generate_idempotency_key
 
 
 class PaymentService:
@@ -61,7 +61,7 @@ class PaymentService:
                 amount=int(order.total_amount * 100),  # Amount in cents
                 currency="usd",
                 metadata={"order_id": str(order.id), "user_id": str(user_id)},
-                idempotency_key=generate_idempotency_key(order.id, user_id),
+                idempotency_key=self.generate_idempotency_key(user_id, order.id),
                 automatic_payment_methods={"enabled": True},
             )
         except stripe.error.StripeError as e:
@@ -263,3 +263,20 @@ class PaymentService:
                 product_id=str(product.id),
                 new_stock=product.stock,
             )
+
+    def generate_idempotency_key(self, user_id: UUID, order_id: UUID) -> str:
+        """Generate a unique idempotency key for Stripe requests.
+
+        This prevents duplicate charges if the same request is made multiple times.
+        Stripe uses idempotency keys to safely retry requests without performing
+        the same operation twice.
+
+        Args:
+            user_id (UUID): The ID of the user making the payment.
+            order_id (UUID): The ID of the order for which to create the payment.
+
+        Returns:
+            str: A unique idempotency key for the Stripe request.
+        """
+        combined = f"{user_id}:{order_id}"
+        return hashlib.sha256(combined.encode()).hexdigest()

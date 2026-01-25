@@ -6,11 +6,11 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
+from app.api.pagination import build_page
 from app.api.v1.dependencies import CurrentUserDep, OrderServiceDep
 from app.models.order import OrderStatus
 from app.schemas.common import Page, SortOrder
 from app.schemas.order import OrderCreate, OrderDetail, OrderPublic, OrderSortByField
-from app.utils.pagination import build_page
 
 router = APIRouter()
 

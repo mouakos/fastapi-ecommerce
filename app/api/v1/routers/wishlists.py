@@ -4,6 +4,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query, status
 
+from app.api.pagination import build_page
 from app.api.v1.dependencies import CurrentUserDep, WishlistServiceDep
 from app.schemas.common import Page
 from app.schemas.wishlist import (
@@ -12,7 +13,6 @@ from app.schemas.wishlist import (
     WishlistItemPublic,
     WishlistStatsResponse,
 )
-from app.utils.pagination import build_page
 
 router = APIRouter()
 

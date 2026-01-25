@@ -3,6 +3,7 @@
 from decimal import Decimal
 from uuid import UUID
 
+import ulid
 from pydantic import HttpUrl
 
 from app.core.exceptions import CategoryNotFoundError, ProductNotFoundError
@@ -10,7 +11,6 @@ from app.core.logger import logger
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.product import Product
 from app.schemas.product import ProductCreate, ProductUpdate
-from app.utils.product import generate_sku
 
 
 class ProductService:
@@ -166,7 +166,7 @@ class ProductService:
                 raise CategoryNotFoundError(category_id=data.category_id)
 
         slug = await self.uow.products.generate_slug(data.name)
-        sku = generate_sku(data.name)
+        sku = self._generate_sku(data.name)
 
         product_data = data.model_dump(exclude_unset=True)
         if isinstance(product_data.get("image_url"), HttpUrl):
@@ -230,3 +230,7 @@ class ProductService:
         product = await self.get_product_by_id(product_id)
         await self.uow.products.delete(product)
         logger.info("product_deleted", product_id=str(product_id))
+
+    def _generate_sku(self, prefix: str = "PRD") -> str:
+        """Generate a unique SKU code with a given prefix."""
+        return f"{prefix}-{ulid.new().str}"
