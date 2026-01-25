@@ -35,6 +35,7 @@ class OrderItemPublic(TwoDecimalBaseModel):
 class OrderPublic(UUIDMixin, TwoDecimalBaseModel):
     """Schema for reading orders."""
 
+    user_id: UUID
     order_number: str
     total_amount: Decimal = Field(..., max_digits=10)
     status: OrderStatus
