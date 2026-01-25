@@ -1,10 +1,16 @@
 """Schemas for authentication operations."""
 
+from enum import StrEnum
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.core.security import TokenType
+
+class TokenType(StrEnum):
+    """Enumeration for token types."""
+
+    ACCESS = "access"
+    REFRESH = "refresh"
 
 
 class Token(BaseModel):

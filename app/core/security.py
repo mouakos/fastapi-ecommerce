@@ -1,7 +1,6 @@
 """Security utilities for handling passwords and JWT tokens."""
 
 from datetime import timedelta
-from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -11,16 +10,8 @@ from pwdlib import PasswordHash
 from app.core.config import auth_settings
 from app.core.logger import logger
 from app.db.redis_client import redis_client
-from app.schemas.auth import TokenData
+from app.schemas.auth import TokenData, TokenType
 from app.utils.datetime import utcnow
-
-
-class TokenType(StrEnum):
-    """Enumeration for token types."""
-
-    ACCESS = "access"
-    REFRESH = "refresh"
-
 
 password_hash = PasswordHash.recommended()
 

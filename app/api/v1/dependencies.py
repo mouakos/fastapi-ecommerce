@@ -14,11 +14,11 @@ from app.core.exceptions import (
     InactiveUserError,
     UserNotFoundError,
 )
-from app.core.security import TokenType, decode_token, is_token_revoked
+from app.core.security import decode_token, is_token_revoked
 from app.db.database import get_session
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.user import User, UserRole
-from app.schemas.auth import TokenData
+from app.schemas.auth import TokenData, TokenType
 from app.services.address_service import AddressService
 from app.services.admin_service import AdminService
 from app.services.cart_service import CartService
