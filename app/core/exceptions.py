@@ -1,62 +1,8 @@
 """Application-specific exceptions.
 
-These exceptions are raised in the service layer and translated into HTTP
-responses by the API exception handlers.
-
-Exception groups (by HTTP status code)
---------------------------------------
-
-400 Bad Request (validation / business rules):
-    ValidationError (base)
-    ├── ResourceLimitError
-    ├── CategorySelfReferenceError
-    ├── InsufficientStockError
-    ├── ProductInactiveError
-    ├── InvalidCartSessionError
-    ├── EmptyCartError
-    ├── WebhookValidationError
-    ├── InvalidOrderStatusError
-    └── OrderStatusTransitionError
-
-401 Unauthorized (authentication):
-    AuthenticationError (base)
-    ├── InvalidCredentialsError
-    ├── IncorrectPasswordError
-    └── PasswordMismatchError
-
-403 Forbidden (authorization):
-    AuthorizationError (base)
-    └── SelfActionError
-
-404 Not Found:
-    NotFoundError (base)
-    ├── UserNotFoundError
-    ├── ProductNotFoundError
-    ├── OrderNotFoundError
-    ├── ReviewNotFoundError
-    ├── AddressNotFoundError
-    ├── CategoryNotFoundError
-    ├── ProductNotInWishlistError
-    └── ProductNotInCartError
-
-409 Conflict (duplicates):
-    DuplicateResourceError (base)
-    ├── DuplicateUserError
-    ├── DuplicateReviewError
-    └── DuplicateWishlistItemError
-
-502 Bad Gateway (external services):
-    PaymentGatewayError
-
-Common fields:
-    - message: Human-readable error message
-    - status_code: HTTP status code
-    - error_code: Machine-readable error code (snake_case)
-    - details: Dictionary with additional context
-
-Examples:
-    raise UserNotFoundError(user_id=user_id)
-    raise ValidationError(message="Invalid input")
+This module defines custom exception classes for handling various error scenarios
+within the application. Each exception class provides meaningful error messages and
+status codes to facilitate error handling and debugging.
 """
 
 from typing import Any
@@ -148,7 +94,7 @@ class ProductInactiveError(ValidationError):
         self.details["product_id"] = str(product_id)
 
 
-class InvalidCartSessionError(ValidationError):  # TODO
+class InvalidCartSessionError(ValidationError):
     """Invalid cart session."""
 
     def __init__(self, message: str = "Session ID is required for guest cart operations.") -> None:
@@ -165,7 +111,7 @@ class EmptyCartError(ValidationError):
         self.details["cart_id"] = str(cart_id)
 
 
-class WebhookValidationError(ValidationError):  # TODO
+class WebhookValidationError(ValidationError):
     """Webhook validation failed."""
 
     def __init__(self, reason: str) -> None:
