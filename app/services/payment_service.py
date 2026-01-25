@@ -76,8 +76,9 @@ class PaymentService:
         )
         await self.uow.payments.add(payment)
 
+        assert intent.client_secret is not None  # for mypy type checking
         payment_intent_response = PaymentIntentResponse(
-            client_secret=intent.client_secret,  # type: ignore [arg-type]
+            client_secret=intent.client_secret,
             intent_id=intent.id,
             amount=order.total_amount,
             currency=intent.currency,

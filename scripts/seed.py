@@ -17,19 +17,22 @@ from __future__ import annotations
 import argparse
 import asyncio
 import random
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
-from typing import cast
 
+import phonenumbers
+import ulid
 from faker import Faker
+from phonenumbers import PhoneNumberFormat, PhoneNumberType
+from phonenumbers.phonenumberutil import example_number_for_type
 from slugify import slugify
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.core.config import Config, settings
+from app.core.config import settings
 from app.core.logger import logger
 from app.core.security import hash_password
 from app.db.database import AsyncSessionLocal, async_engine
@@ -43,7 +46,6 @@ from app.models.review import Review, ReviewStatus
 from app.models.user import User, UserRole
 from app.models.wishlist_item import WishlistItem
 from app.utils.datetime import utcnow
-from app.utils.product import generate_sku
 
 SEED_TARGETS: set[str] = {
     "categories",
@@ -187,6 +189,35 @@ def _tax_rate_for_country(country_code: str) -> Decimal:
     return Decimal("0.20") if country_code.upper() in eu_like else Decimal("0.00")
 
 
+_VALID_SEED_COUNTRIES: tuple[str, ...] = (
+    "US",
+    "DE",
+    "FR",
+    "NL",
+    "ES",
+    "IT",
+    "GB",
+    "CA",
+    "CH",
+    "AT",
+)
+
+
+def _valid_country_code() -> str:
+    return random.choice(_VALID_SEED_COUNTRIES)
+
+
+def _valid_e164_phone_number(country_code: str) -> str:
+    """Generate a valid E.164 phone number for a given ISO alpha-2 region."""
+    number = example_number_for_type(country_code, PhoneNumberType.MOBILE)
+    if number is None:
+        number = example_number_for_type(country_code, PhoneNumberType.FIXED_LINE_OR_MOBILE)
+    if number is None:
+        # Fallback to a known-valid US example.
+        return "+12025550123"
+    return phonenumbers.format_number(number, PhoneNumberFormat.E164)
+
+
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     """Parse CLI arguments for the seeding script."""
     parser = argparse.ArgumentParser(description="Seed the database with Faker data")
@@ -231,24 +262,18 @@ async def _reset_db(*, async_engine: AsyncEngine) -> None:
 async def _ensure_superuser(
     *,
     session: AsyncSession,
-    settings: Config,
-    user_model: type[User],
-    user_role: type[UserRole],
-    hash_password: Callable[[str], str],
 ) -> User:
     """Ensure configured superuser exists and return it."""
-    stmt = await session.exec(
-        select(user_model).where(user_model.email == settings.superuser_email)
-    )
+    stmt = await session.exec(select(User).where(User.email == settings.superuser_email))
     user = stmt.first()
     if user:
         return user
 
-    admin = user_model(
+    admin = User(
         email=settings.superuser_email,
         hashed_password=hash_password(settings.superuser_password),
         is_superuser=True,
-        role=user_role.ADMIN,
+        role=UserRole.ADMIN,
         is_active=True,
         first_name="Admin",
         last_name="User",
@@ -259,156 +284,496 @@ async def _ensure_superuser(
     return admin
 
 
+async def _seed_categories(
+    *,
+    session: AsyncSession,
+    faker: Faker,
+    seed_counts: SeedCounts,
+    slug_used_categories: set[str],
+) -> list[Category]:
+    logger.info("seed_categories_start")
+    parents: list[Category] = []
+    faker.unique.clear()
+    for _ in range(seed_counts.categories):
+        name = f"{faker.unique.word().title()} {faker.word().title()}"[:100]
+        parents.append(
+            Category(
+                name=name,
+                slug=_unique_slug(name, used=slug_used_categories),
+                description=faker.sentence(nb_words=12)[:500],
+                image_url=faker.image_url(width=640, height=480),
+            )
+        )
+    session.add_all(parents)
+    await session.commit()
+
+    children: list[Category] = []
+    for parent in parents:
+        for _ in range(seed_counts.child_categories):
+            name = f"{faker.unique.word().title()} {parent.name}"[:100]
+            children.append(
+                Category(
+                    name=name,
+                    slug=_unique_slug(name, used=slug_used_categories),
+                    parent_id=parent.id,
+                    description=faker.sentence(nb_words=10)[:500],
+                    image_url=faker.image_url(width=640, height=480),
+                )
+            )
+    session.add_all(children)
+    await session.commit()
+    all_categories = parents + children
+    logger.info("seed_categories_done", count=len(all_categories))
+    return all_categories
+
+
+async def _seed_products(
+    *,
+    session: AsyncSession,
+    faker: Faker,
+    seed_counts: SeedCounts,
+    categories: list[Category],
+    slug_used_products: set[str],
+) -> list[Product]:
+    logger.info("seed_products_start")
+    products: list[Product] = []
+    for _ in range(seed_counts.products):
+        name = faker.unique.catch_phrase()[:255]
+        product_slug = _unique_slug(name, used=slug_used_products)
+        category = random.choice(categories)
+        price = _money(faker.pydecimal(left_digits=3, right_digits=2, positive=True))
+        stock = random.randint(0, 200)
+        discount_percentage = random.choices(
+            [0, 5, 10, 15, 20, 25, 30, 40, 50],
+            weights=[60, 8, 8, 6, 5, 4, 3, 3, 3],
+            k=1,
+        )[0]
+        products.append(
+            Product(
+                name=name,
+                slug=product_slug,
+                description=faker.paragraph(nb_sentences=3)[:2000],
+                price=price,
+                stock=stock,
+                sku=f"PRD-{ulid.new().str}",
+                image_url=faker.image_url(width=800, height=800),
+                is_active=True,
+                discount_percentage=discount_percentage,
+                category_id=category.id,
+            )
+        )
+    session.add_all(products)
+    await session.commit()
+    logger.info("seed_products_done", count=len(products))
+    return products
+
+
+async def _seed_users(
+    *,
+    session: AsyncSession,
+    faker: Faker,
+    seed_counts: SeedCounts,
+    show_logins: bool,
+) -> tuple[list[User], list[str]]:
+    logger.info("seed_users_start")
+    users: list[User] = []
+    user_country_codes: list[str] = []
+    for _ in range(seed_counts.users):
+        is_active = random.random() > 0.04
+        now = utcnow()
+        country_code = _valid_country_code()
+        phone_number = _valid_e164_phone_number(country_code)
+        users.append(
+            User(
+                email=faker.unique.email().lower(),
+                hashed_password=hash_password("Password123!"),
+                first_name=faker.first_name()[:50],
+                last_name=faker.last_name()[:50],
+                phone_number=phone_number,
+                role=UserRole.USER,
+                is_superuser=False,
+                is_active=is_active,
+                newsletter_subscribed=random.random() < 0.35,
+                last_login=(now - timedelta(days=random.randint(0, 60))) if is_active else None,
+                deleted_at=(now - timedelta(days=random.randint(0, 60))) if not is_active else None,
+            )
+        )
+        user_country_codes.append(country_code)
+    session.add_all(users)
+    await session.commit()
+    logger.info("seed_users_done", count=len(users))
+
+    if show_logins:
+        sample_emails = [u.email for u in users[: min(5, len(users))]]
+        logger.warning(
+            "seed_login_examples",
+            password="Password123!",
+            emails=sample_emails,
+        )
+
+    return users, user_country_codes
+
+
+async def _seed_addresses(
+    *,
+    session: AsyncSession,
+    faker: Faker,
+    users: list[User],
+    user_country_codes: list[str],
+) -> dict[str, list[Address]]:
+    logger.info("seed_addresses_start")
+    addresses: list[Address] = []
+    user_addresses: dict[str, list[Address]] = {}
+
+    for idx, user in enumerate(users):
+        country_code = (
+            user_country_codes[idx] if idx < len(user_country_codes) else _valid_country_code()
+        )
+        shipping = Address(
+            user_id=user.id,
+            full_name=f"{user.first_name} {user.last_name}".strip() or faker.name(),
+            company=faker.company()[:100] if random.random() < 0.2 else None,
+            line1=faker.street_address()[:255],
+            line2=faker.secondary_address()[:255] if random.random() < 0.3 else None,
+            city=faker.city()[:100],
+            state=faker.state()[:100] if random.random() < 0.6 else None,
+            postal_code=faker.postcode()[:20],
+            country=country_code,
+            phone_number=user.phone_number,
+            is_default_shipping=True,
+            is_default_billing=False,
+        )
+        billing = Address(
+            user_id=user.id,
+            full_name=shipping.full_name,
+            company=shipping.company,
+            line1=shipping.line1,
+            line2=shipping.line2,
+            city=shipping.city,
+            state=shipping.state,
+            postal_code=shipping.postal_code,
+            country=country_code,
+            phone_number=shipping.phone_number,
+            is_default_shipping=False,
+            is_default_billing=True,
+        )
+        extra: list[Address] = []
+        if random.random() < 0.35:
+            extra.append(
+                Address(
+                    user_id=user.id,
+                    full_name=shipping.full_name,
+                    company=None,
+                    line1=faker.street_address()[:255],
+                    line2=None,
+                    city=faker.city()[:100],
+                    state=faker.state()[:100] if random.random() < 0.6 else None,
+                    postal_code=faker.postcode()[:20],
+                    country=country_code,
+                    phone_number=shipping.phone_number,
+                    is_default_shipping=False,
+                    is_default_billing=False,
+                )
+            )
+
+        user_addr_list = [shipping, billing, *extra]
+        addresses.extend(user_addr_list)
+        user_addresses[str(user.id)] = user_addr_list
+
+    session.add_all(addresses)
+    await session.commit()
+    logger.info("seed_addresses_done", count=len(addresses))
+    return user_addresses
+
+
+async def _seed_carts(
+    *,
+    session: AsyncSession,
+    users: list[User],
+    in_stock_products: list[Product],
+    seed_counts: SeedCounts,
+) -> None:
+    logger.info("seed_carts_start")
+    carts: list[Cart] = []
+    cart_users = random.sample(users, k=min(seed_counts.carts, len(users)))
+    for user in cart_users:
+        cart = Cart(user_id=user.id)
+        session.add(cart)
+        await session.flush()
+        cart_products = random.sample(
+            in_stock_products,
+            k=min(len(in_stock_products), random.randint(1, seed_counts.max_cart_items)),
+        )
+        for product in cart_products:
+            unit_price = _apply_percentage_discount(product.price, product.discount_percentage)
+            session.add(
+                CartItem(
+                    cart_id=cart.id,
+                    product_id=product.id,
+                    quantity=random.randint(1, 3),
+                    unit_price=unit_price,
+                    product_name=product.name,
+                    product_image_url=product.image_url,
+                )
+            )
+        carts.append(cart)
+    await session.commit()
+    logger.info("seed_carts_done", count=len(carts))
+
+
+async def _seed_orders(
+    *,
+    session: AsyncSession,
+    faker: Faker,
+    users: list[User],
+    user_addresses: dict[str, list[Address]],
+    in_stock_products: list[Product],
+    seed_counts: SeedCounts,
+) -> None:
+    logger.info("seed_orders_start")
+    payments: list[Payment] = []
+    order_numbers: set[str] = set()
+    order_items_count = 0
+    orders_count = 0
+
+    for user in users:
+        num_orders = random.randint(0, seed_counts.max_orders_per_user)
+        if num_orders == 0:
+            continue
+        addrs = user_addresses[str(user.id)]
+        shipping_addr = next((a for a in addrs if a.is_default_shipping), addrs[0])
+        billing_addr = next((a for a in addrs if a.is_default_billing), addrs[0])
+
+        for _ in range(num_orders):
+            base = faker.date_time_this_year().strftime("%Y%m%d")
+            order_number = f"ORD-{base}-{random.randint(100000, 999999)}"
+            while order_number in order_numbers:
+                order_number = f"ORD-{base}-{random.randint(100000, 999999)}"
+            order_numbers.add(order_number)
+
+            status_choice = random.choices(
+                [
+                    OrderStatus.PENDING,
+                    OrderStatus.PAID,
+                    OrderStatus.SHIPPED,
+                    OrderStatus.DELIVERED,
+                    OrderStatus.CANCELED,
+                ],
+                weights=[30, 25, 20, 15, 10],
+                k=1,
+            )[0]
+
+            order = Order(
+                user_id=user.id,
+                status=status_choice,
+                total_amount=_money("0.00"),
+                order_number=order_number,
+            )
+            session.add(order)
+            await session.flush()
+
+            session.add(
+                OrderAddress(
+                    order_id=order.id,
+                    kind=OrderAddressKind.SHIPPING,
+                    full_name=shipping_addr.full_name,
+                    company=shipping_addr.company,
+                    line1=shipping_addr.line1,
+                    line2=shipping_addr.line2,
+                    city=shipping_addr.city,
+                    state=shipping_addr.state,
+                    postal_code=shipping_addr.postal_code,
+                    country=shipping_addr.country,
+                    phone_number=shipping_addr.phone_number,
+                )
+            )
+            session.add(
+                OrderAddress(
+                    order_id=order.id,
+                    kind=OrderAddressKind.BILLING,
+                    full_name=billing_addr.full_name,
+                    company=billing_addr.company,
+                    line1=billing_addr.line1,
+                    line2=billing_addr.line2,
+                    city=billing_addr.city,
+                    state=billing_addr.state,
+                    postal_code=billing_addr.postal_code,
+                    country=billing_addr.country,
+                    phone_number=billing_addr.phone_number,
+                )
+            )
+
+            chosen_products = random.sample(
+                in_stock_products,
+                k=min(
+                    len(in_stock_products),
+                    random.randint(1, seed_counts.max_items_per_order),
+                ),
+            )
+            subtotal = Decimal("0.00")
+            for product in chosen_products:
+                qty = random.randint(1, 3)
+                unit_price = _apply_percentage_discount(product.price, product.discount_percentage)
+                subtotal += unit_price * qty
+                session.add(
+                    OrderItem(
+                        order_id=order.id,
+                        product_id=product.id,
+                        quantity=qty,
+                        unit_price=unit_price,
+                        product_name=product.name,
+                        product_image_url=product.image_url,
+                    )
+                )
+                order_items_count += 1
+
+            shipping_amount = _money(faker.pydecimal(left_digits=2, right_digits=2, positive=True))
+            tax_rate = _tax_rate_for_country(shipping_addr.country)
+            tax_amount = (subtotal * tax_rate).quantize(Decimal("0.01"))
+
+            order.shipping_amount = shipping_amount
+            order.tax_amount = tax_amount
+            order.total_amount = (subtotal + shipping_amount + tax_amount).quantize(Decimal("0.01"))
+
+            now = utcnow()
+            if status_choice in {OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.DELIVERED}:
+                order.paid_at = now - timedelta(days=random.randint(0, 30))
+            if status_choice in {OrderStatus.SHIPPED, OrderStatus.DELIVERED}:
+                order.shipped_at = (order.paid_at or now) + timedelta(days=random.randint(1, 5))
+            if status_choice == OrderStatus.DELIVERED:
+                order.delivered_at = (order.shipped_at or now) + timedelta(
+                    days=random.randint(1, 7)
+                )
+            if status_choice == OrderStatus.CANCELED:
+                order.canceled_at = now - timedelta(days=random.randint(0, 30))
+
+            if status_choice == OrderStatus.CANCELED:
+                pay_status = PaymentStatus.FAILED
+            elif status_choice == OrderStatus.PENDING:
+                pay_status = PaymentStatus.PENDING
+            else:
+                pay_status = PaymentStatus.SUCCESS
+
+            payments.append(
+                Payment(
+                    order_id=order.id,
+                    amount=order.total_amount,
+                    currency="usd",
+                    payment_method=random.choice(["card", "paypal"]),
+                    status=pay_status,
+                    transaction_id=str(faker.uuid4()),
+                )
+            )
+            orders_count += 1
+
+    session.add_all(payments)
+    await session.commit()
+    logger.info(
+        "seed_orders_done",
+        orders=orders_count,
+        order_items=order_items_count,
+        payments=len(payments),
+    )
+
+
+async def _seed_wishlist_and_reviews(
+    *,
+    session: AsyncSession,
+    faker: Faker,
+    users: list[User],
+    products: list[Product],
+    admin_user: User | None,
+    seed_counts: SeedCounts,
+    targets: set[str],
+) -> None:
+    logger.info("seed_wishlist_reviews_start")
+    wishlist_count = 0
+    review_count = 0
+
+    for user in users:
+        if "wishlist" in targets:
+            wishlist_products = random.sample(
+                products, k=min(len(products), seed_counts.wishlist_items_per_user)
+            )
+            for product in wishlist_products:
+                session.add(WishlistItem(user_id=user.id, product_id=product.id))
+                wishlist_count += 1
+
+        if "reviews" in targets and random.random() < seed_counts.review_probability:
+            reviewed_products = random.sample(products, k=min(len(products), random.randint(1, 3)))
+            for product in reviewed_products:
+                review_status_choice = random.choices(
+                    [ReviewStatus.APPROVED, ReviewStatus.PENDING, ReviewStatus.REJECTED],
+                    weights=[70, 25, 5],
+                    k=1,
+                )[0]
+                review = Review(
+                    user_id=user.id,
+                    product_id=product.id,
+                    rating=random.randint(1, 5),
+                    comment=faker.sentence(nb_words=16)[:1000],
+                    status=review_status_choice,
+                )
+                if review_status_choice in {ReviewStatus.APPROVED, ReviewStatus.REJECTED}:
+                    review.moderated_at = utcnow()
+                    review.moderated_by = getattr(admin_user, "id", None)
+                session.add(review)
+                review_count += 1
+
+    await session.commit()
+    logger.info(
+        "seed_wishlist_reviews_done",
+        wishlist_items=wishlist_count,
+        reviews=review_count,
+    )
+
+
 async def _seed_data(
     *,
     session: AsyncSession,
     faker: Faker,
     seed_counts: SeedCounts,
-    ctx: dict[str, object],
     targets: set[str],
     show_logins: bool,
 ) -> None:
     """Seed all entities in FK-safe order into the provided session."""
-    category_model = cast(type[Category], ctx["Category"])
-    product_model = cast(type[Product], ctx["Product"])
-    user_model = cast(type[User], ctx["User"])
-    user_role = cast(type[UserRole], ctx["UserRole"])
-    address_model = cast(type[Address], ctx["Address"])
-    cart_model = cast(type[Cart], ctx["Cart"])
-    cart_item_model = cast(type[CartItem], ctx["CartItem"])
-    order_model = cast(type[Order], ctx["Order"])
-    order_address_model = cast(type[OrderAddress], ctx["OrderAddress"])
-    order_address_kind = cast(type[OrderAddressKind], ctx["OrderAddressKind"])
-    order_item_model = cast(type[OrderItem], ctx["OrderItem"])
-    order_status = cast(type[OrderStatus], ctx["OrderStatus"])
-    payment_model = cast(type[Payment], ctx["Payment"])
-    payment_status = cast(type[PaymentStatus], ctx["PaymentStatus"])
-    review_model = cast(type[Review], ctx["Review"])
-    review_status = cast(type[ReviewStatus], ctx["ReviewStatus"])
-    wishlist_item_model = cast(type[WishlistItem], ctx["WishlistItem"])
-    hash_password = cast(Callable[[str], str], ctx["hash_password"])
-    generate_sku = cast(Callable[[], str], ctx["generate_sku"])
-    utcnow = cast(Callable[[], datetime], ctx["utcnow"])
-    settings = cast(Config, ctx["settings"])
-
     slug_used_categories: set[str] = set()
     slug_used_products: set[str] = set()
-    order_numbers: set[str] = set()
 
-    all_categories: list[Category] = []
+    categories: list[Category] = []
     products: list[Product] = []
     users: list[User] = []
+    user_country_codes: list[str] = []
     user_addresses: dict[str, list[Address]] = {}
     admin_user: User | None = None
 
     if "categories" in targets:
-        logger.info("seed_categories_start")
-        parents: list[Category] = []
-        faker.unique.clear()
-        for _ in range(seed_counts.categories):
-            name = f"{faker.unique.word().title()} {faker.word().title()}"[:100]
-            parents.append(
-                category_model(
-                    name=name,
-                    slug=_unique_slug(name, used=slug_used_categories),
-                    description=faker.sentence(nb_words=12)[:500],
-                    image_url=faker.image_url(width=640, height=480),
-                )
-            )
-        session.add_all(parents)
-        await session.commit()
-
-        children: list[Category] = []
-        for parent in parents:
-            for _ in range(seed_counts.child_categories):
-                name = f"{faker.unique.word().title()} {parent.name}"[:100]
-                children.append(
-                    category_model(
-                        name=name,
-                        slug=_unique_slug(name, used=slug_used_categories),
-                        parent_id=parent.id,
-                        description=faker.sentence(nb_words=10)[:500],
-                        image_url=faker.image_url(width=640, height=480),
-                    )
-                )
-        session.add_all(children)
-        await session.commit()
-        all_categories = parents + children
-        logger.info("seed_categories_done", count=len(all_categories))
+        categories = await _seed_categories(
+            session=session,
+            faker=faker,
+            seed_counts=seed_counts,
+            slug_used_categories=slug_used_categories,
+        )
 
     if "products" in targets:
-        logger.info("seed_products_start")
-        for _ in range(seed_counts.products):
-            name = faker.unique.catch_phrase()[:255]
-            product_slug = _unique_slug(name, used=slug_used_products)
-            category = random.choice(all_categories)
-            price = _money(faker.pydecimal(left_digits=3, right_digits=2, positive=True))
-            stock = random.randint(0, 200)
-            discount_percentage = random.choices(
-                [0, 5, 10, 15, 20, 25, 30, 40, 50],
-                weights=[60, 8, 8, 6, 5, 4, 3, 3, 3],
-                k=1,
-            )[0]
-            products.append(
-                product_model(
-                    name=name,
-                    slug=product_slug,
-                    description=faker.paragraph(nb_sentences=3)[:2000],
-                    price=price,
-                    stock=stock,
-                    sku=generate_sku(),
-                    image_url=faker.image_url(width=800, height=800),
-                    is_active=True,
-                    discount_percentage=discount_percentage,
-                    category_id=category.id,
-                )
-            )
-        session.add_all(products)
-        await session.commit()
-        logger.info("seed_products_done", count=len(products))
+        products = await _seed_products(
+            session=session,
+            faker=faker,
+            seed_counts=seed_counts,
+            categories=categories,
+            slug_used_products=slug_used_products,
+        )
 
     if "users" in targets:
-        logger.info("seed_users_start")
-        for _ in range(seed_counts.users):
-            is_active = random.random() > 0.04
-            now = utcnow()
-            users.append(
-                user_model(
-                    email=faker.unique.email().lower(),
-                    hashed_password=hash_password("Password123!"),
-                    first_name=faker.first_name()[:50],
-                    last_name=faker.last_name()[:50],
-                    phone_number=faker.msisdn()[:20],
-                    role=user_role.USER,
-                    is_superuser=False,
-                    is_active=is_active,
-                    newsletter_subscribed=random.random() < 0.35,
-                    last_login=(now - timedelta(days=random.randint(0, 60))) if is_active else None,
-                    deleted_at=(now - timedelta(days=random.randint(0, 60)))
-                    if not is_active
-                    else None,
-                )
-            )
-        session.add_all(users)
-        await session.commit()
-        logger.info("seed_users_done", count=len(users))
-
-        if show_logins:
-            sample_emails = [u.email for u in users[: min(5, len(users))]]
-            logger.warning(
-                "seed_login_examples",
-                password="Password123!",
-                emails=sample_emails,
-            )
+        users, user_country_codes = await _seed_users(
+            session=session,
+            faker=faker,
+            seed_counts=seed_counts,
+            show_logins=show_logins,
+        )
 
     if "users" in targets or "reviews" in targets:
-        admin_user = await _ensure_superuser(
-            session=session,
-            settings=settings,
-            user_model=user_model,
-            user_role=user_role,
-            hash_password=hash_password,
-        )
+        admin_user = await _ensure_superuser(session=session)
         if show_logins:
             logger.warning(
                 "seed_superuser",
@@ -417,61 +782,12 @@ async def _seed_data(
             )
 
     if "addresses" in targets:
-        logger.info("seed_addresses_start")
-        addresses: list[Address] = []
-        for user in users:
-            shipping = address_model(
-                user_id=user.id,
-                full_name=f"{user.first_name} {user.last_name}".strip() or faker.name(),
-                company=faker.company()[:100] if random.random() < 0.2 else None,
-                line1=faker.street_address()[:255],
-                line2=faker.secondary_address()[:255] if random.random() < 0.3 else None,
-                city=faker.city()[:100],
-                state=faker.state()[:100] if random.random() < 0.6 else None,
-                postal_code=faker.postcode()[:20],
-                country=faker.country_code()[:2],
-                phone_number=user.phone_number,
-                is_default_shipping=True,
-                is_default_billing=False,
-            )
-            billing = address_model(
-                user_id=user.id,
-                full_name=shipping.full_name,
-                company=shipping.company,
-                line1=shipping.line1,
-                line2=shipping.line2,
-                city=shipping.city,
-                state=shipping.state,
-                postal_code=shipping.postal_code,
-                country=shipping.country,
-                phone_number=shipping.phone_number,
-                is_default_shipping=False,
-                is_default_billing=True,
-            )
-            extra: list[Address] = []
-            if random.random() < 0.35:
-                extra.append(
-                    address_model(
-                        user_id=user.id,
-                        full_name=shipping.full_name,
-                        company=None,
-                        line1=faker.street_address()[:255],
-                        line2=None,
-                        city=faker.city()[:100],
-                        state=faker.state()[:100] if random.random() < 0.6 else None,
-                        postal_code=faker.postcode()[:20],
-                        country=faker.country_code()[:2],
-                        phone_number=shipping.phone_number,
-                        is_default_shipping=False,
-                        is_default_billing=False,
-                    )
-                )
-            user_addr_list = [shipping, billing, *extra]
-            addresses.extend(user_addr_list)
-            user_addresses[str(user.id)] = user_addr_list
-        session.add_all(addresses)
-        await session.commit()
-        logger.info("seed_addresses_done", count=len(addresses))
+        user_addresses = await _seed_addresses(
+            session=session,
+            faker=faker,
+            users=users,
+            user_country_codes=user_country_codes,
+        )
 
     if {"carts", "orders", "wishlist", "reviews"} & targets:
         in_stock_products = [p for p in products if p.stock > 0 and p.is_active]
@@ -479,231 +795,32 @@ async def _seed_data(
             raise RuntimeError("No in-stock products available to seed carts/orders.")
 
     if "carts" in targets:
-        logger.info("seed_carts_start")
-        carts: list[Cart] = []
-        cart_users = random.sample(users, k=min(seed_counts.carts, len(users)))
-        for user in cart_users:
-            cart = cart_model(user_id=user.id)
-            session.add(cart)
-            await session.flush()
-            cart_products = random.sample(
-                in_stock_products,
-                k=min(len(in_stock_products), random.randint(1, seed_counts.max_cart_items)),
-            )
-            for product in cart_products:
-                unit_price = _apply_percentage_discount(product.price, product.discount_percentage)
-                session.add(
-                    cart_item_model(
-                        cart_id=cart.id,
-                        product_id=product.id,
-                        quantity=random.randint(1, 3),
-                        unit_price=unit_price,
-                        product_name=product.name,
-                        product_image_url=product.image_url,
-                    )
-                )
-            carts.append(cart)
-        await session.commit()
-        logger.info("seed_carts_done", count=len(carts))
+        await _seed_carts(
+            session=session,
+            users=users,
+            in_stock_products=in_stock_products,
+            seed_counts=seed_counts,
+        )
 
     if "orders" in targets:
-        logger.info("seed_orders_start")
-        payments: list[Payment] = []
-        order_items_count = 0
-        orders_count = 0
-        for user in users:
-            num_orders = random.randint(0, seed_counts.max_orders_per_user)
-            if num_orders == 0:
-                continue
-            addrs = user_addresses[str(user.id)]
-            shipping_addr = next((a for a in addrs if a.is_default_shipping), addrs[0])
-            billing_addr = next((a for a in addrs if a.is_default_billing), addrs[0])
-
-            for _ in range(num_orders):
-                base = faker.date_time_this_year().strftime("%Y%m%d")
-                order_number = f"ORD-{base}-{random.randint(100000, 999999)}"
-                while order_number in order_numbers:
-                    order_number = f"ORD-{base}-{random.randint(100000, 999999)}"
-                order_numbers.add(order_number)
-
-                status_choice = random.choices(
-                    [
-                        order_status.PENDING,
-                        order_status.PAID,
-                        order_status.SHIPPED,
-                        order_status.DELIVERED,
-                        order_status.CANCELED,
-                    ],
-                    weights=[30, 25, 20, 15, 10],
-                    k=1,
-                )[0]
-
-                order = order_model(
-                    user_id=user.id,
-                    status=status_choice,
-                    total_amount=_money("0.00"),
-                    order_number=order_number,
-                )
-                session.add(order)
-                await session.flush()
-
-                session.add(
-                    order_address_model(
-                        order_id=order.id,
-                        kind=order_address_kind.SHIPPING,
-                        full_name=shipping_addr.full_name,
-                        company=shipping_addr.company,
-                        line1=shipping_addr.line1,
-                        line2=shipping_addr.line2,
-                        city=shipping_addr.city,
-                        state=shipping_addr.state,
-                        postal_code=shipping_addr.postal_code,
-                        country=shipping_addr.country,
-                        phone_number=shipping_addr.phone_number,
-                    )
-                )
-                session.add(
-                    order_address_model(
-                        order_id=order.id,
-                        kind=order_address_kind.BILLING,
-                        full_name=billing_addr.full_name,
-                        company=billing_addr.company,
-                        line1=billing_addr.line1,
-                        line2=billing_addr.line2,
-                        city=billing_addr.city,
-                        state=billing_addr.state,
-                        postal_code=billing_addr.postal_code,
-                        country=billing_addr.country,
-                        phone_number=billing_addr.phone_number,
-                    )
-                )
-
-                chosen_products = random.sample(
-                    in_stock_products,
-                    k=min(
-                        len(in_stock_products),
-                        random.randint(1, seed_counts.max_items_per_order),
-                    ),
-                )
-                subtotal = Decimal("0.00")
-                for product in chosen_products:
-                    qty = random.randint(1, 3)
-                    unit_price = _apply_percentage_discount(
-                        product.price, product.discount_percentage
-                    )
-                    subtotal += unit_price * qty
-                    session.add(
-                        order_item_model(
-                            order_id=order.id,
-                            product_id=product.id,
-                            quantity=qty,
-                            unit_price=unit_price,
-                            product_name=product.name,
-                            product_image_url=product.image_url,
-                        )
-                    )
-                    order_items_count += 1
-
-                shipping_amount = _money(
-                    faker.pydecimal(left_digits=2, right_digits=2, positive=True)
-                )
-                tax_rate = _tax_rate_for_country(shipping_addr.country)
-                tax_amount = (subtotal * tax_rate).quantize(Decimal("0.01"))
-
-                order.shipping_amount = shipping_amount
-                order.tax_amount = tax_amount
-                order.total_amount = (subtotal + shipping_amount + tax_amount).quantize(
-                    Decimal("0.01")
-                )
-                now = utcnow()
-                if status_choice in {
-                    order_status.PAID,
-                    order_status.SHIPPED,
-                    order_status.DELIVERED,
-                }:
-                    order.paid_at = now - timedelta(days=random.randint(0, 30))
-                if status_choice in {order_status.SHIPPED, order_status.DELIVERED}:
-                    order.shipped_at = (order.paid_at or now) + timedelta(days=random.randint(1, 5))
-                if status_choice == order_status.DELIVERED:
-                    order.delivered_at = (order.shipped_at or now) + timedelta(
-                        days=random.randint(1, 7)
-                    )
-                if status_choice == order_status.CANCELED:
-                    order.canceled_at = now - timedelta(days=random.randint(0, 30))
-
-                if status_choice == order_status.CANCELED:
-                    pay_status = payment_status.FAILED
-                elif status_choice == order_status.PENDING:
-                    pay_status = payment_status.PENDING
-                else:
-                    pay_status = payment_status.SUCCESS
-
-                payments.append(
-                    payment_model(
-                        order_id=order.id,
-                        amount=order.total_amount,
-                        currency="usd",
-                        payment_method=random.choice(["card", "paypal"]),
-                        status=pay_status,
-                        transaction_id=str(faker.uuid4()),
-                    )
-                )
-                orders_count += 1
-
-        session.add_all(payments)
-        await session.commit()
-        logger.info(
-            "seed_orders_done",
-            orders=orders_count,
-            order_items=order_items_count,
-            payments=len(payments),
+        await _seed_orders(
+            session=session,
+            faker=faker,
+            users=users,
+            user_addresses=user_addresses,
+            in_stock_products=in_stock_products,
+            seed_counts=seed_counts,
         )
 
     if {"wishlist", "reviews"} & targets:
-        logger.info("seed_wishlist_reviews_start")
-        wishlist_count = 0
-        review_count = 0
-        for user in users:
-            if "wishlist" in targets:
-                wishlist_products = random.sample(
-                    products, k=min(len(products), seed_counts.wishlist_items_per_user)
-                )
-                for product in wishlist_products:
-                    session.add(wishlist_item_model(user_id=user.id, product_id=product.id))
-                    wishlist_count += 1
-
-            if "reviews" in targets and random.random() < seed_counts.review_probability:
-                reviewed_products = random.sample(
-                    products, k=min(len(products), random.randint(1, 3))
-                )
-                for product in reviewed_products:
-                    review_status_choice = random.choices(
-                        [
-                            review_status.APPROVED,
-                            review_status.PENDING,
-                            review_status.REJECTED,
-                        ],
-                        weights=[70, 25, 5],
-                        k=1,
-                    )[0]
-                    review = review_model(
-                        user_id=user.id,
-                        product_id=product.id,
-                        rating=random.randint(1, 5),
-                        comment=faker.sentence(nb_words=16)[:1000],
-                        status=review_status_choice,
-                    )
-                    if review_status_choice in {review_status.APPROVED, review_status.REJECTED}:
-                        review.moderated_at = utcnow()
-                        review.moderated_by = getattr(admin_user, "id", None)
-                    session.add(review)
-                    review_count += 1
-
-        await session.commit()
-        logger.info(
-            "seed_wishlist_reviews_done",
-            wishlist_items=wishlist_count,
-            reviews=review_count,
+        await _seed_wishlist_and_reviews(
+            session=session,
+            faker=faker,
+            users=users,
+            products=products,
+            admin_user=admin_user,
+            seed_counts=seed_counts,
+            targets=targets,
         )
 
 
@@ -749,36 +866,11 @@ async def run(argv: Sequence[str] | None = None) -> None:
 
     logger.info("seed_targets", targets=sorted(targets))
 
-    ctx: dict[str, object] = {
-        "settings": settings,
-        "hash_password": hash_password,
-        "generate_sku": generate_sku,
-        "utcnow": utcnow,
-        "Category": Category,
-        "Product": Product,
-        "User": User,
-        "UserRole": UserRole,
-        "Address": Address,
-        "Cart": Cart,
-        "CartItem": CartItem,
-        "Order": Order,
-        "OrderAddress": OrderAddress,
-        "OrderAddressKind": OrderAddressKind,
-        "OrderItem": OrderItem,
-        "OrderStatus": OrderStatus,
-        "Payment": Payment,
-        "PaymentStatus": PaymentStatus,
-        "Review": Review,
-        "ReviewStatus": ReviewStatus,
-        "WishlistItem": WishlistItem,
-    }
-
     async with AsyncSessionLocal() as session:
         await _seed_data(
             session=session,
             faker=faker,
             seed_counts=seed_counts,
-            ctx=ctx,
             targets=targets,
             show_logins=args.show_logins,
         )
