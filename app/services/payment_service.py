@@ -14,7 +14,7 @@ from app.core.exceptions import (
 )
 from app.core.logger import logger
 from app.interfaces.unit_of_work import UnitOfWork
-from app.models.order import OrderStatus
+from app.models.order import Order, OrderStatus
 from app.models.payment import Payment, PaymentStatus
 from app.schemas.payment import PaymentIntentResponse
 from app.utils.datetime import utcnow
@@ -137,24 +137,8 @@ class PaymentService:
         Args:
             transaction_intent (dict[str, Any]): Stripe payment intent object from webhook.
         """
-        transaction_id = transaction_intent.get("id")
-        if not transaction_id:
-            logger.warning("stripe_webhook_missing_intent_id")
-            return
-
-        raw_user_id = (transaction_intent.get("metadata") or {}).get("user_id")
-        if not raw_user_id:
-            logger.warning("stripe_webhook_missing_user_id", transaction_id=transaction_id)
-            return
-        try:
-            user_id = UUID(raw_user_id)
-        except (TypeError, ValueError):
-            logger.warning(
-                "stripe_webhook_invalid_user_id",
-                transaction_id=transaction_id,
-                raw_user_id=str(raw_user_id),
-            )
-            return
+        transaction_id = transaction_intent["id"]
+        user_id = transaction_intent["metadata"]["user_id"]
 
         # Find existing payment record (created during checkout)
         payment = await self.uow.payments.find_by_transaction_id(transaction_id=transaction_id)
@@ -162,7 +146,7 @@ class PaymentService:
             logger.warning(
                 "payment_not_found",
                 transaction_id=transaction_id,
-                user_id=str(user_id),
+                user_id=user_id,
             )
             return  # Ignore unknown payments
 
@@ -171,7 +155,7 @@ class PaymentService:
             logger.info(
                 "payment_already_processed",
                 order_id=str(payment.order_id),
-                user_id=str(user_id),
+                user_id=user_id,
                 transaction_id=payment.transaction_id,
             )
             return  # Already processed, do nothing
@@ -181,7 +165,7 @@ class PaymentService:
             logger.warning(
                 "order_not_found_for_payment",
                 order_id=str(payment.order_id),
-                user_id=str(user_id),
+                user_id=user_id,
                 transaction_id=payment.transaction_id,
             )
             return
@@ -190,7 +174,7 @@ class PaymentService:
             logger.warning(
                 "payment_user_mismatch",
                 order_id=str(order.id),
-                user_id=str(user_id),
+                user_id=user_id,
                 order_user_id=str(order.user_id),
                 transaction_id=payment.transaction_id,
             )
@@ -223,6 +207,9 @@ class PaymentService:
         order.paid_at = utcnow()
         await self.uow.orders.update(order)
 
+        # Reduce product stock levels
+        await self._update_stock(order)
+
         logger.info(
             "payment_successful",
             order_id=str(order.id),
@@ -239,17 +226,8 @@ class PaymentService:
         Args:
             transaction_intent (dict[str, Any]): Stripe payment intent object from webhook.
         """
-        transaction_id = transaction_intent.get("id")
-        if not transaction_id:
-            logger.warning("stripe_webhook_missing_intent_id")
-            return
-
-        raw_user_id = (transaction_intent.get("metadata") or {}).get("user_id")
-        user_id: UUID | None
-        try:
-            user_id = UUID(raw_user_id) if raw_user_id else None
-        except (TypeError, ValueError):
-            user_id = None
+        transaction_id = transaction_intent["id"]
+        user_id = transaction_intent["metadata"]["user_id"]
 
         # Find existing payment record (created during checkout)
         payment = await self.uow.payments.find_by_transaction_id(transaction_id=transaction_id)
@@ -257,7 +235,7 @@ class PaymentService:
             logger.warning(
                 "payment_not_found",
                 transaction_id=transaction_id,
-                user_id=str(user_id) if user_id else None,
+                user_id=user_id,
             )
             return  # Ignore unknown payments
 
@@ -266,6 +244,22 @@ class PaymentService:
         logger.warning(
             "payment_failed",
             order_id=str(payment.order_id),
-            user_id=str(user_id) if user_id else None,
+            user_id=user_id,
             transaction_id=payment.transaction_id,
         )
+
+    async def _update_stock(self, order: Order) -> None:
+        """Update stock levels for products in the order.
+
+        Args:
+            order (Order): The order containing items to update stock for.
+        """
+        for item in order.items:
+            product = item.product
+            product.stock -= item.quantity
+            await self.uow.products.update(product)
+            logger.info(
+                "product_stock_updated",
+                product_id=str(product.id),
+                new_stock=product.stock,
+            )
