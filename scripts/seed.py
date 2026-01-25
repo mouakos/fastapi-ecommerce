@@ -143,6 +143,50 @@ def _money(value: Decimal | float | int | str) -> Decimal:
     return Decimal(str(value)).quantize(Decimal("0.01"))
 
 
+def _apply_percentage_discount(amount: Decimal, discount_percentage: int) -> Decimal:
+    """Return amount after applying an integer percentage discount."""
+    discount = Decimal(discount_percentage) / Decimal("100")
+    factor = Decimal("1") - discount
+    return (amount * factor).quantize(Decimal("0.01"))
+
+
+def _tax_rate_for_country(country_code: str) -> Decimal:
+    """Very small dev-only tax heuristic.
+
+    For real tax logic, integrate a provider (Stripe Tax / TaxJar / Avalara).
+    """
+    eu_like = {
+        "AT",
+        "BE",
+        "BG",
+        "CY",
+        "CZ",
+        "DE",
+        "DK",
+        "EE",
+        "ES",
+        "FI",
+        "FR",
+        "GR",
+        "HR",
+        "HU",
+        "IE",
+        "IT",
+        "LT",
+        "LU",
+        "LV",
+        "MT",
+        "NL",
+        "PL",
+        "PT",
+        "RO",
+        "SE",
+        "SI",
+        "SK",
+    }
+    return Decimal("0.20") if country_code.upper() in eu_like else Decimal("0.00")
+
+
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     """Parse CLI arguments for the seeding script."""
     parser = argparse.ArgumentParser(description="Seed the database with Faker data")
@@ -300,6 +344,11 @@ async def _seed_data(
             category = random.choice(all_categories)
             price = _money(faker.pydecimal(left_digits=3, right_digits=2, positive=True))
             stock = random.randint(0, 200)
+            discount_percentage = random.choices(
+                [0, 5, 10, 15, 20, 25, 30, 40, 50],
+                weights=[60, 8, 8, 6, 5, 4, 3, 3, 3],
+                k=1,
+            )[0]
             products.append(
                 product_model(
                     name=name,
@@ -310,6 +359,7 @@ async def _seed_data(
                     sku=generate_sku(),
                     image_url=faker.image_url(width=800, height=800),
                     is_active=True,
+                    discount_percentage=discount_percentage,
                     category_id=category.id,
                 )
             )
@@ -441,12 +491,13 @@ async def _seed_data(
                 k=min(len(in_stock_products), random.randint(1, seed_counts.max_cart_items)),
             )
             for product in cart_products:
+                unit_price = _apply_percentage_discount(product.price, product.discount_percentage)
                 session.add(
                     cart_item_model(
                         cart_id=cart.id,
                         product_id=product.id,
                         quantity=random.randint(1, 3),
-                        unit_price=product.price,
+                        unit_price=unit_price,
                         product_name=product.name,
                         product_image_url=product.image_url,
                     )
@@ -534,23 +585,36 @@ async def _seed_data(
                         random.randint(1, seed_counts.max_items_per_order),
                     ),
                 )
-                total = Decimal("0.00")
+                subtotal = Decimal("0.00")
                 for product in chosen_products:
                     qty = random.randint(1, 3)
-                    total += product.price * qty
+                    unit_price = _apply_percentage_discount(
+                        product.price, product.discount_percentage
+                    )
+                    subtotal += unit_price * qty
                     session.add(
                         order_item_model(
                             order_id=order.id,
                             product_id=product.id,
                             quantity=qty,
-                            unit_price=product.price,
+                            unit_price=unit_price,
                             product_name=product.name,
                             product_image_url=product.image_url,
                         )
                     )
                     order_items_count += 1
 
-                order.total_amount = total.quantize(Decimal("0.01"))
+                shipping_amount = _money(
+                    faker.pydecimal(left_digits=2, right_digits=2, positive=True)
+                )
+                tax_rate = _tax_rate_for_country(shipping_addr.country)
+                tax_amount = (subtotal * tax_rate).quantize(Decimal("0.01"))
+
+                order.shipping_amount = shipping_amount
+                order.tax_amount = tax_amount
+                order.total_amount = (subtotal + shipping_amount + tax_amount).quantize(
+                    Decimal("0.01")
+                )
                 now = utcnow()
                 if status_choice in {
                     order_status.PAID,
