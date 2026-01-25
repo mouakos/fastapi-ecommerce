@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Request, status
 
-from app.api.v1.dependencies import CurrentUserDep, PaymentServiceDep
+from app.api.dependencies import CurrentUserDep, PaymentServiceDep
 from app.schemas.payment import PaymentIntentRequest, PaymentIntentResponse
 
 router = APIRouter()

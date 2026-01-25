@@ -5,7 +5,7 @@ from enum import StrEnum
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from app.api.v1.dependencies import SessionDep
+from app.api.dependencies import SessionDep
 from app.db.database import check_db_health
 
 router = APIRouter()

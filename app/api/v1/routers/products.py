@@ -8,9 +8,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 
 from app.api.cache import cache
+from app.api.dependencies import AdminRoleDep, ProductServiceDep
 from app.api.pagination import build_page
 from app.api.rate_limit import rate_limit
-from app.api.v1.dependencies import AdminRoleDep, ProductServiceDep
 from app.schemas.common import Page, SortOrder
 from app.schemas.product import (
     ProductAutocompleteResponse,

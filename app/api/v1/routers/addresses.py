@@ -5,7 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, status
 
-from app.api.v1.dependencies import AddressServiceDep, CurrentUserDep
+from app.api.dependencies import AddressServiceDep, CurrentUserDep
 from app.schemas.address import AddressCreate, AddressPublic, AddressUpdate
 
 router = APIRouter()

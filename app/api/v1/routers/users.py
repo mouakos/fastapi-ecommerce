@@ -3,7 +3,7 @@
 # mypy: disable-error-code=return-value
 from fastapi import APIRouter, status
 
-from app.api.v1.dependencies import (
+from app.api.dependencies import (
     AccessTokenDataDep,
     CurrentUserDep,
     RefreshTokenDataDep,

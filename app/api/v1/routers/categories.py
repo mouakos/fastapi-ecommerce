@@ -7,8 +7,8 @@ from fastapi import APIRouter, status
 from fastapi.params import Depends
 
 from app.api.cache import cache
+from app.api.dependencies import AdminRoleDep, CategoryServiceDep
 from app.api.rate_limit import rate_limit
-from app.api.v1.dependencies import AdminRoleDep, CategoryServiceDep
 from app.schemas.category import CategoryCreate, CategoryDetail, CategoryPublic, CategoryUpdate
 
 router = APIRouter()

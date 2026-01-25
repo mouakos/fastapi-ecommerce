@@ -4,8 +4,7 @@
 
 from fastapi import APIRouter, Depends, Response, status
 
-from app.api.rate_limit import rate_limit
-from app.api.v1.dependencies import (
+from app.api.dependencies import (
     AccessTokenDataDep,
     CartServiceDep,
     CartSessionIdDep,
@@ -13,6 +12,7 @@ from app.api.v1.dependencies import (
     RequestFormDep,
     UserServiceDep,
 )
+from app.api.rate_limit import rate_limit
 from app.core.config import auth_settings
 from app.core.security import create_access_token, create_refresh_token, revoke_token
 from app.schemas.auth import Token

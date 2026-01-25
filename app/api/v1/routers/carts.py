@@ -5,7 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, status
 
-from app.api.v1.dependencies import (
+from app.api.dependencies import (
     CartServiceDep,
     CartSessionIdOrCreateDep,
     OptionalCurrentUserDep,

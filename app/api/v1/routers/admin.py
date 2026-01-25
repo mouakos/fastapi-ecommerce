@@ -8,8 +8,8 @@ from uuid import UUID
 from fastapi import APIRouter, Query, status
 
 from app.api.cache import cache
+from app.api.dependencies import AdminRoleDep, AdminServiceDep, CurrentUserDep
 from app.api.pagination import build_page
-from app.api.v1.dependencies import AdminRoleDep, AdminServiceDep, CurrentUserDep
 from app.models.order import OrderStatus
 from app.models.review import ReviewStatus
 from app.models.user import UserRole
