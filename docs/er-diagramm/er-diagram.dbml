@@ -1,0 +1,281 @@
+// dbdiagram.io (DBML) ER Diagram
+// Source: app/models/*.py (SQLModel)
+
+Enum user_role {
+  user
+  admin
+}
+
+Enum order_status {
+  pending
+  paid
+  shipped
+  delivered
+  canceled
+}
+
+Enum order_address_kind {
+  shipping
+  billing
+}
+
+Enum payment_status {
+  pending
+  failed
+  success
+}
+
+Enum review_status {
+  pending
+  approved
+  rejected
+}
+
+Table users {
+  id uuid [pk]
+  email varchar [not null, unique]
+  hashed_password varchar [not null]
+  first_name varchar
+  last_name varchar
+  phone_number varchar
+  role user_role [not null]
+  is_superuser boolean [not null]
+  is_active boolean [not null]
+  last_login timestamp
+  deleted_at timestamp
+  newsletter_subscribed boolean [not null]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table addresses {
+  id uuid [pk]
+  user_id uuid [not null]
+  full_name varchar [not null]
+  company varchar
+  line1 varchar [not null]
+  line2 varchar
+  city varchar [not null]
+  state varchar
+  postal_code varchar [not null]
+  country char(2) [not null]
+  phone_number varchar
+  is_default_shipping boolean [not null]
+  is_default_billing boolean [not null]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  Indexes {
+    user_id
+  }
+}
+
+Table carts {
+  id uuid [pk]
+  user_id uuid [unique]
+  session_id varchar [unique]
+  updated_at timestamp [not null]
+  created_at timestamp [not null]
+
+  Indexes {
+    user_id
+    session_id
+  }
+}
+
+Table cart_items {
+  id uuid [pk]
+  cart_id uuid [not null]
+  product_id uuid [not null]
+  quantity int [not null]
+  added_at timestamp [not null]
+  unit_price decimal(10,2) [not null]
+  product_name varchar [not null]
+  product_image_url varchar
+
+  Indexes {
+    (cart_id, product_id) [unique]
+    cart_id
+    product_id
+  }
+}
+
+Table categories {
+  id uuid [pk]
+  name varchar [not null]
+  slug varchar [not null, unique]
+  parent_id uuid
+  description varchar
+  image_url varchar
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  Indexes {
+    parent_id
+    slug
+  }
+}
+
+Table products {
+  id uuid [pk]
+  name varchar [not null]
+  slug varchar [not null, unique]
+  description varchar
+  price decimal(10,2) [not null]
+  stock int [not null]
+  sku varchar [not null, unique]
+  image_url varchar
+  is_active boolean [not null]
+  discount_percentage int [not null]
+  category_id uuid
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  Indexes {
+    category_id
+    slug
+    sku
+  }
+}
+
+Table orders {
+  id uuid [pk]
+  user_id uuid [not null]
+  status order_status [not null]
+  total_amount decimal(10,2) [not null]
+  order_number varchar [not null, unique]
+  shipped_at timestamp
+  paid_at timestamp
+  canceled_at timestamp
+  delivered_at timestamp
+  tax_amount decimal(10,2) [not null]
+  shipping_amount decimal(10,2) [not null]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  Indexes {
+    user_id
+    order_number
+    status
+  }
+}
+
+Table order_items {
+  id uuid [pk]
+  order_id uuid [not null]
+  product_id uuid [not null]
+  quantity int [not null]
+  unit_price decimal(10,2) [not null]
+  product_name varchar [not null]
+  product_image_url varchar
+
+  Indexes {
+    (order_id, product_id) [unique]
+    order_id
+    product_id
+  }
+}
+
+Table order_addresses {
+  id uuid [pk]
+  order_id uuid [not null]
+  kind order_address_kind [not null]
+  full_name varchar [not null]
+  company varchar
+  line1 varchar [not null]
+  line2 varchar
+  city varchar [not null]
+  state varchar
+  postal_code varchar [not null]
+  country char(2) [not null]
+  phone_number varchar
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  Indexes {
+    (order_id, kind) [unique]
+    order_id
+    kind
+  }
+}
+
+Table payments {
+  id uuid [pk]
+  order_id uuid [not null]
+  amount decimal(10,2) [not null]
+  currency varchar [not null]
+  payment_method varchar [not null]
+  status payment_status [not null]
+  transaction_id varchar [not null]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  Indexes {
+    order_id
+    currency
+    status
+    payment_method
+  }
+}
+
+Table reviews {
+  id uuid [pk]
+  user_id uuid [not null]
+  product_id uuid [not null]
+  rating int [not null]
+  comment varchar
+  status review_status [not null]
+  moderated_at timestamp
+  moderated_by uuid
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  Indexes {
+    (user_id, product_id) [unique]
+    user_id
+    product_id
+    moderated_by
+    status
+  }
+}
+
+Table wishlist_items {
+  id uuid [pk]
+  user_id uuid [not null]
+  product_id uuid [not null]
+  created_at timestamp [not null]
+
+  Indexes {
+    (user_id, product_id) [unique]
+    user_id
+    product_id
+  }
+}
+
+// Foreign keys
+Ref: addresses.user_id > users.id [delete: cascade]
+
+Ref: carts.user_id > users.id
+
+Ref: cart_items.cart_id > carts.id [delete: cascade]
+Ref: cart_items.product_id > products.id [delete: cascade]
+
+Ref: categories.parent_id > categories.id
+
+Ref: products.category_id > categories.id
+
+Ref: orders.user_id > users.id
+
+Ref: order_items.order_id > orders.id [delete: cascade]
+Ref: order_items.product_id > products.id [delete: cascade]
+
+Ref: order_addresses.order_id > orders.id [delete: cascade]
+
+Ref: payments.order_id > orders.id [delete: cascade]
+
+Ref: reviews.user_id > users.id
+Ref: reviews.product_id > products.id [delete: cascade]
+Ref: reviews.moderated_by > users.id
+
+Ref: wishlist_items.user_id > users.id [delete: cascade]
+Ref: wishlist_items.product_id > products.id [delete: cascade]

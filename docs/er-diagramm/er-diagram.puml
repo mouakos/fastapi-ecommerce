@@ -1,0 +1,203 @@
+@startuml ERDiagram
+' ER Diagram (PlantUML)
+' Render in VS Code with the PlantUML extension, or via a PlantUML server.
+
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+
+entity "users" as USERS {
+  * id : UUID <<PK>>
+  --
+  email : string
+  hashed_password : string
+  first_name : string
+  last_name : string
+  phone_number : string
+  role : string
+  is_superuser : boolean
+  is_active : boolean
+  last_login : datetime
+  deleted_at : datetime
+  newsletter_subscribed : boolean
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "addresses" as ADDRESSES {
+  * id : UUID <<PK>>
+  --
+  user_id : UUID <<FK>>
+  full_name : string
+  company : string
+  line1 : string
+  line2 : string
+  city : string
+  state : string
+  postal_code : string
+  country : string
+  phone_number : string
+  is_default_shipping : boolean
+  is_default_billing : boolean
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "carts" as CARTS {
+  * id : UUID <<PK>>
+  --
+  user_id : UUID <<FK>>
+  session_id : string
+  updated_at : datetime
+  created_at : datetime
+}
+
+entity "cart_items" as CART_ITEMS {
+  * id : UUID <<PK>>
+  --
+  cart_id : UUID <<FK>>
+  product_id : UUID <<FK>>
+  quantity : int
+  added_at : datetime
+  unit_price : decimal
+  product_name : string
+  product_image_url : string
+}
+
+entity "categories" as CATEGORIES {
+  * id : UUID <<PK>>
+  --
+  name : string
+  slug : string
+  parent_id : UUID <<FK>>
+  description : string
+  image_url : string
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "products" as PRODUCTS {
+  * id : UUID <<PK>>
+  --
+  name : string
+  slug : string
+  description : string
+  price : decimal
+  stock : int
+  sku : string
+  image_url : string
+  is_active : boolean
+  discount_percentage : int
+  category_id : UUID <<FK>>
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "orders" as ORDERS {
+  * id : UUID <<PK>>
+  --
+  user_id : UUID <<FK>>
+  status : string
+  total_amount : decimal
+  order_number : string
+  shipped_at : datetime
+  paid_at : datetime
+  canceled_at : datetime
+  delivered_at : datetime
+  tax_amount : decimal
+  shipping_amount : decimal
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "order_items" as ORDER_ITEMS {
+  * id : UUID <<PK>>
+  --
+  order_id : UUID <<FK>>
+  product_id : UUID <<FK>>
+  quantity : int
+  unit_price : decimal
+  product_name : string
+  product_image_url : string
+}
+
+entity "order_addresses" as ORDER_ADDRESSES {
+  * id : UUID <<PK>>
+  --
+  order_id : UUID <<FK>>
+  kind : string
+  full_name : string
+  company : string
+  line1 : string
+  line2 : string
+  city : string
+  state : string
+  postal_code : string
+  country : string
+  phone_number : string
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "payments" as PAYMENTS {
+  * id : UUID <<PK>>
+  --
+  order_id : UUID <<FK>>
+  amount : decimal
+  currency : string
+  payment_method : string
+  status : string
+  transaction_id : string
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "reviews" as REVIEWS {
+  * id : UUID <<PK>>
+  --
+  user_id : UUID <<FK>>
+  product_id : UUID <<FK>>
+  rating : int
+  comment : string
+  status : string
+  moderated_at : datetime
+  moderated_by : UUID <<FK>>
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "wishlist_items" as WISHLIST_ITEMS {
+  * id : UUID <<PK>>
+  --
+  user_id : UUID <<FK>>
+  product_id : UUID <<FK>>
+  created_at : datetime
+}
+
+' Relationships (multiplicity labels)
+USERS "1" -- "0..*" ADDRESSES : has
+
+' Cart can be anonymous (session_id) or user-linked; user has at most one cart
+USERS "0..1" -- "0..1" CARTS : owns
+CARTS "1" -- "0..*" CART_ITEMS : contains
+PRODUCTS "1" -- "0..*" CART_ITEMS : in
+
+' Category hierarchy + product categorization
+CATEGORIES "0..1 parent" -- "0..* children" CATEGORIES : parent_of
+CATEGORIES "0..*" -- "0..1" PRODUCTS : categorizes
+
+USERS "1" -- "0..*" ORDERS : places
+ORDERS "1" -- "0..*" ORDER_ITEMS : includes
+PRODUCTS "1" -- "0..*" ORDER_ITEMS : ordered_as
+
+ORDERS "1" -- "0..*" ORDER_ADDRESSES : uses
+ORDERS "1" -- "0..*" PAYMENTS : has
+
+USERS "1" -- "0..*" REVIEWS : writes
+USERS "0..*" -- "0..1" REVIEWS : moderates
+PRODUCTS "1" -- "0..*" REVIEWS : receives
+
+USERS "1" -- "0..*" WISHLIST_ITEMS : keeps
+PRODUCTS "1" -- "0..*" WISHLIST_ITEMS : saved
+
+@enduml
