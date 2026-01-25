@@ -7,13 +7,11 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.backends.redis import RedisBackend
 
+from app.api.constants import CACHE_DEFAULT_TTL_SECONDS, CACHE_PREFIX
 from app.core.config import settings
 from app.db.redis_client import redis_client
 
 F = TypeVar("F", bound=Callable[..., object])
-
-CACHE_PREFIX = "e-commerce"
-CACHE_DEFAULT_TTL_SECONDS = 60
 
 
 def init_redis_caching() -> None:

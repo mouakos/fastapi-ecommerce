@@ -8,6 +8,7 @@ from fastapi import Depends, Request, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.api.constants import CART_SESSION_COOKIE, CART_SESSION_MAX_AGE, REFRESH_TOKEN_COOKIE
 from app.core.exceptions import (
     AuthenticationError,
     AuthorizationError,
@@ -126,9 +127,6 @@ async def get_access_token_data(
     return token_data
 
 
-REFRESH_TOKEN_COOKIE = "refresh_token"
-
-
 async def get_refresh_token_data(
     request: Request,
 ) -> TokenData:
@@ -210,10 +208,6 @@ class RoleChecker:
 
 
 AdminRoleDep = Depends(RoleChecker([UserRole.ADMIN]))
-
-# Cart session constants
-CART_SESSION_COOKIE = "cart_session_id"
-CART_SESSION_MAX_AGE = 60 * 60 * 24 * 30  # 30 days
 
 
 def get_cart_session_id(request: Request) -> str | None:
