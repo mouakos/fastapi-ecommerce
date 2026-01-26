@@ -54,9 +54,15 @@ class Review(ModelBase, TimestampMixin, table=True):
     moderated_at: datetime | None = None
     moderated_by: UUID | None = Field(default=None, foreign_key="users.id", index=True)
 
-    # Relationships
+    # Relationships - Use selectin for eager loading to avoid lazy load issues
     user: "User" = Relationship(
         back_populates="reviews",
-        sa_relationship_kwargs={"foreign_keys": "[Review.user_id]"},
+        sa_relationship_kwargs={
+            "foreign_keys": "[Review.user_id]",
+            "lazy": "selectin",
+        },
     )
-    product: "Product" = Relationship(back_populates="reviews")
+    product: "Product" = Relationship(
+        back_populates="reviews",
+        sa_relationship_kwargs={"lazy": "selectin"},
+    )
