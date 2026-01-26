@@ -12,6 +12,7 @@ Enum order_status {
   shipped
   delivered
   canceled
+  refunded
 }
 
 Enum order_address_kind {
@@ -204,7 +205,7 @@ Table payments {
   order_id uuid [not null]
   amount decimal(10,2) [not null]
   currency varchar [not null]
-  payment_method varchar [not null]
+  payment_provider varchar [not null]
   status payment_status [not null]
   transaction_id varchar [not null]
   created_at timestamp [not null]
@@ -214,7 +215,7 @@ Table payments {
     order_id
     currency
     status
-    payment_method
+    payment_provider
   }
 }
 

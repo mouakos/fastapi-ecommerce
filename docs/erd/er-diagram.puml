@@ -145,7 +145,7 @@ entity "payments" as PAYMENTS {
   order_id : UUID <<FK>>
   amount : decimal
   currency : string
-  payment_method : string
+  payment_provider : string
   status : string
   transaction_id : string
   created_at : datetime

@@ -131,7 +131,7 @@ erDiagram
         UUID order_id FK
         decimal amount
         string currency
-        string payment_method
+        string payment_provider
         string status
         string transaction_id
         datetime created_at
