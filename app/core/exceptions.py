@@ -341,6 +341,15 @@ class ProductNotInCartError(NotFoundError):
         self.details["cart_id"] = str(cart_id)
 
 
+class PaymentNotFoundError(NotFoundError):
+    """Payment not found exception."""
+
+    def __init__(self, transaction_id: str) -> None:
+        """Initialize PaymentNotFoundError."""
+        super().__init__(resource="Payment", error_code="payment_not_found")
+        self.details["transaction_id"] = transaction_id
+
+
 # ============================================================================
 # 409 CONFLICT - RESOURCE CONFLICT ERRORS
 # ============================================================================

@@ -22,11 +22,12 @@ async def create_payment_intent(
 ) -> PaymentIntentResponse:
     """Create a payment intent for the specified order ID."""
     # These URLs point to API endpoints (for testing without frontend)
-    return await payment_service.create_payment_intent(current_user.id, data.order_id)
+    client_secret = await payment_service.create_payment_intent(current_user.id, data.order_id)
+    return PaymentIntentResponse(client_secret=client_secret)
 
 
 @router.post(
-    "/webhook",
+    "/webhooks/stripe",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Stripe webhook handler",
     description="Process Stripe webhook events for payment confirmations. This endpoint is called by Stripe servers, not by clients.",

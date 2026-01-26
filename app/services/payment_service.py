@@ -11,13 +11,13 @@ from app.core.exceptions import (
     InvalidOrderStatusError,
     OrderNotFoundError,
     PaymentGatewayError,
+    PaymentNotFoundError,
     WebhookValidationError,
 )
 from app.core.logger import logger
 from app.interfaces.unit_of_work import UnitOfWork
 from app.models.order import Order, OrderStatus
 from app.models.payment import Payment, PaymentStatus
-from app.schemas.payment import PaymentIntentResponse
 from app.utils.datetime import utcnow
 
 
@@ -29,7 +29,24 @@ class PaymentService:
         self.uow = uow
         stripe.api_key = settings.stripe_api_key
 
-    async def create_payment_intent(self, user_id: UUID, order_id: UUID) -> PaymentIntentResponse:
+    async def get_payment(self, transaction_id: str) -> Payment:
+        """Retrieve a payment by its transaction ID.
+
+        Args:
+            transaction_id (str): The transaction ID of the payment.
+
+        Returns:
+            Payment: The payment if found.
+
+        Raises:
+            PaymentNotFoundError: If no payment is found with the given transaction ID.
+        """
+        payment = await self.uow.payments.find_by_transaction_id(transaction_id=transaction_id)
+        if not payment:
+            raise PaymentNotFoundError(transaction_id=transaction_id)
+        return payment
+
+    async def create_payment_intent(self, user_id: UUID, order_id: UUID) -> str:
         """Create a Stripe Checkout Session for the specified order.
 
         Args:
@@ -37,7 +54,7 @@ class PaymentService:
             order_id (UUID): ID of the order to create checkout session for (must be PENDING).
 
         Returns:
-            PaymentIntentResponse: The response containing payment intent details.
+            str: The client secret needed to complete the payment.
 
         Raises:
             OrderNotFoundError: If the order is not found.
@@ -61,7 +78,7 @@ class PaymentService:
                 amount=int(order.total_amount * 100),  # Amount in cents
                 currency="usd",
                 metadata={"order_id": str(order.id), "user_id": str(user_id)},
-                idempotency_key=self.generate_idempotency_key(user_id, order.id),
+                idempotency_key=self._generate_idempotency_key(user_id, order.id),
                 automatic_payment_methods={"enabled": True},
             )
         except stripe.error.StripeError as e:
@@ -71,25 +88,20 @@ class PaymentService:
             order_id=order_id,
             amount=order.total_amount,
             currency=intent.currency,
-            payment_method="stripe",
             transaction_id=intent.id,
+            payment_provider="stripe",
+            status=PaymentStatus.PENDING,
         )
         await self.uow.payments.add(payment)
 
         assert intent.client_secret is not None  # for mypy type checking
-        payment_intent_response = PaymentIntentResponse(
-            client_secret=intent.client_secret,
-            intent_id=intent.id,
-            amount=order.total_amount,
-            currency=intent.currency,
-        )
+
         logger.info(
             "payment_intent_created",
             order_id=str(order_id),
-            user_id=str(user_id),
             transaction_id=intent.id,
         )
-        return payment_intent_response
+        return intent.client_secret
 
     async def process_stripe_webhook(self, payload: bytes, stripe_signature: str | None) -> None:
         """Process Stripe webhook events for payment confirmations.
@@ -103,6 +115,7 @@ class PaymentService:
 
         Raises:
             WebhookValidationError: If the webhook payload or signature is invalid.
+            PaymentNotFoundError: If no payment is found with the given transaction ID.
         """
         if not stripe_signature:
             raise WebhookValidationError(reason="Missing Stripe signature")
@@ -137,84 +150,35 @@ class PaymentService:
 
         Args:
             transaction_intent (dict[str, Any]): Stripe payment intent object from webhook.
+
+        Raises:
+            PaymentNotFoundError: If no payment is found with the given transaction ID.
         """
         transaction_id = transaction_intent["id"]
-        user_id = transaction_intent["metadata"]["user_id"]
 
-        # Find existing payment record (created during checkout)
-        payment = await self.uow.payments.find_by_transaction_id(transaction_id=transaction_id)
-        if not payment:
-            logger.warning(
-                "payment_not_found",
-                transaction_id=transaction_id,
-                user_id=user_id,
-            )
-            return  # Ignore unknown payments
+        payment = await self.get_payment(transaction_id=transaction_id)
 
         # Prevent duplicate processing
         if payment.status == PaymentStatus.SUCCESS:
             logger.info(
                 "payment_already_processed",
                 order_id=str(payment.order_id),
-                user_id=user_id,
                 transaction_id=payment.transaction_id,
             )
             return  # Already processed, do nothing
 
-        order = await self.uow.orders.find_by_id(payment.order_id)
-        if not order:
-            logger.warning(
-                "order_not_found_for_payment",
-                order_id=str(payment.order_id),
-                user_id=user_id,
-                transaction_id=payment.transaction_id,
-            )
-            return
-
-        if order.user_id != user_id:
-            logger.warning(
-                "payment_user_mismatch",
-                order_id=str(order.id),
-                user_id=user_id,
-                order_user_id=str(order.user_id),
-                transaction_id=payment.transaction_id,
-            )
-            return
-
-        # Update payment status to SUCCESS
+        # Update payment and order statuses
         payment.status = PaymentStatus.SUCCESS
+        payment.order.status = OrderStatus.PAID
+        payment.order.paid_at = utcnow()
         await self.uow.payments.update(payment)
 
-        if order.status == OrderStatus.PAID:
-            logger.info(
-                "order_already_paid",
-                order_id=str(order.id),
-                user_id=str(user_id),
-                transaction_id=payment.transaction_id,
-            )
-            return
-
-        if order.status != OrderStatus.PENDING:
-            logger.warning(
-                "order_not_payable",
-                order_id=str(order.id),
-                user_id=str(user_id),
-                current_status=order.status.value,
-                transaction_id=payment.transaction_id,
-            )
-            return
-
-        order.status = OrderStatus.PAID
-        order.paid_at = utcnow()
-        await self.uow.orders.update(order)
-
         # Reduce product stock levels
-        await self._update_stock(order)
+        await self._update_stock(payment.order)
 
         logger.info(
             "payment_successful",
-            order_id=str(order.id),
-            user_id=str(user_id),
+            order_id=str(payment.order.id),
             transaction_id=payment.transaction_id,
         )
 
@@ -226,26 +190,18 @@ class PaymentService:
 
         Args:
             transaction_intent (dict[str, Any]): Stripe payment intent object from webhook.
+
+        Raises:
+            PaymentNotFoundError: If no payment is found with the given transaction ID.
         """
         transaction_id = transaction_intent["id"]
-        user_id = transaction_intent["metadata"]["user_id"]
 
-        # Find existing payment record (created during checkout)
-        payment = await self.uow.payments.find_by_transaction_id(transaction_id=transaction_id)
-        if not payment:
-            logger.warning(
-                "payment_not_found",
-                transaction_id=transaction_id,
-                user_id=user_id,
-            )
-            return  # Ignore unknown payments
-
+        payment = await self.get_payment(transaction_id=transaction_id)
         payment.status = PaymentStatus.FAILED
         await self.uow.payments.update(payment)
         logger.warning(
             "payment_failed",
-            order_id=str(payment.order_id),
-            user_id=user_id,
+            order_id=str(payment.order.id),
             transaction_id=payment.transaction_id,
         )
 
@@ -265,7 +221,7 @@ class PaymentService:
                 new_stock=product.stock,
             )
 
-    def generate_idempotency_key(self, user_id: UUID, order_id: UUID) -> str:
+    def _generate_idempotency_key(self, user_id: UUID, order_id: UUID) -> str:
         """Generate a unique idempotency key for Stripe requests.
 
         This prevents duplicate charges if the same request is made multiple times.

@@ -34,6 +34,7 @@ class OrderStatus(StrEnum):
     SHIPPED = "shipped"
     DELIVERED = "delivered"
     CANCELED = "canceled"
+    REFUNDED = "refunded"
 
 
 class Order(ModelBase, TimestampMixin, table=True):

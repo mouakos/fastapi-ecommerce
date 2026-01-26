@@ -1,11 +1,8 @@
 """Schemas for payment processing."""
 
-from decimal import Decimal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
-
-from app.schemas.common import TwoDecimalBaseModel
 
 
 class PaymentIntentRequest(BaseModel):
@@ -16,12 +13,9 @@ class PaymentIntentRequest(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class PaymentIntentResponse(TwoDecimalBaseModel):
+class PaymentIntentResponse(BaseModel):
     """Schema for payment intent response."""
 
-    client_secret: str
-    intent_id: str
-    amount: Decimal = Field(max_digits=10)
-    currency: str
+    client_secret: str = Field(..., description="The client secret needed to complete the payment.")
 
     model_config = ConfigDict(frozen=True)

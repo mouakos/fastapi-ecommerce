@@ -28,8 +28,8 @@ class Payment(ModelBase, TimestampMixin, table=True):
     __tablename__ = "payments"
     order_id: UUID = Field(default=None, foreign_key="orders.id", index=True, ondelete="CASCADE")
     amount: Decimal = Field(default=Decimal("0.00"), max_digits=10, decimal_places=2)
-    currency: str = Field(max_length=50, default="usd", index=True)
-    payment_method: str = Field(max_length=50, index=True)
+    currency: str = Field(max_length=50, default="usd")
+    payment_provider: str = Field(default="stripe", max_length=50, index=True)
     status: PaymentStatus = Field(
         default=PaymentStatus.PENDING,
         sa_column=Column(
@@ -46,7 +46,7 @@ class Payment(ModelBase, TimestampMixin, table=True):
             index=True,
         ),
     )
-    transaction_id: str = Field(max_length=100)
+    transaction_id: str = Field(max_length=100, index=True)
 
     # Relationships
     order: "Order" = Relationship(back_populates="payments")
