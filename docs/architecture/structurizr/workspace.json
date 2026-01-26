@@ -1,0 +1,698 @@
+{
+  "configuration" : {
+    "scope" : "SoftwareSystem"
+  },
+  "description" : "Description",
+  "documentation" : { },
+  "id" : 1,
+  "lastModifiedDate" : "2026-01-26T11:46:48Z",
+  "model" : {
+    "people" : [ {
+      "description" : "An e-commerce customer who browses and buys products online.",
+      "id" : "1",
+      "name" : "Customer",
+      "properties" : {
+        "structurizr.dsl.identifier" : "user"
+      },
+      "relationships" : [ {
+        "description" : "Views products and does shopping",
+        "destinationId" : "4",
+        "id" : "14",
+        "sourceId" : "1",
+        "tags" : "Relationship",
+        "technology" : "HTTPS"
+      }, {
+        "description" : "Views products and does shopping",
+        "destinationId" : "3",
+        "id" : "15",
+        "linkedRelationshipId" : "14",
+        "sourceId" : "1",
+        "technology" : "HTTPS"
+      }, {
+        "description" : "Makes API requests",
+        "destinationId" : "5",
+        "id" : "16",
+        "sourceId" : "1",
+        "tags" : "Relationship",
+        "technology" : "HTTPS/JSON"
+      } ],
+      "tags" : "Element,Person"
+    }, {
+      "description" : "System administrator who manages products, categories, orders, and users.",
+      "id" : "2",
+      "name" : "Administrator",
+      "properties" : {
+        "structurizr.dsl.identifier" : "admin"
+      },
+      "relationships" : [ {
+        "description" : "Manages products, orders, and system",
+        "destinationId" : "4",
+        "id" : "17",
+        "sourceId" : "2",
+        "tags" : "Relationship",
+        "technology" : "HTTPS"
+      }, {
+        "description" : "Manages products, orders, and system",
+        "destinationId" : "3",
+        "id" : "18",
+        "linkedRelationshipId" : "17",
+        "sourceId" : "2",
+        "technology" : "HTTPS"
+      }, {
+        "description" : "Makes admin API requests",
+        "destinationId" : "5",
+        "id" : "19",
+        "sourceId" : "2",
+        "tags" : "Relationship",
+        "technology" : "HTTPS/JSON"
+      } ],
+      "tags" : "Element,Person,Admin"
+    } ],
+    "softwareSystems" : [ {
+      "containers" : [ {
+        "components" : [ {
+          "description" : "RESTful API endpoints for all business operations",
+          "documentation" : { },
+          "id" : "5",
+          "name" : "REST API",
+          "properties" : {
+            "structurizr.dsl.identifier" : "shopping.web.api"
+          },
+          "relationships" : [ {
+            "description" : "Validates JWT tokens",
+            "destinationId" : "9",
+            "id" : "20",
+            "sourceId" : "5",
+            "tags" : "Relationship",
+            "technology" : "Python"
+          }, {
+            "description" : "Delegates business logic to",
+            "destinationId" : "6",
+            "id" : "21",
+            "sourceId" : "5",
+            "tags" : "Relationship",
+            "technology" : "Python"
+          }, {
+            "description" : "Caches data in",
+            "destinationId" : "11",
+            "id" : "26",
+            "sourceId" : "5",
+            "tags" : "Relationship",
+            "technology" : "Redis Protocol"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "FastAPI Routes"
+        }, {
+          "description" : "Business logic for users, products, orders, cart, payments, and reviews",
+          "documentation" : { },
+          "id" : "6",
+          "name" : "Services",
+          "properties" : {
+            "structurizr.dsl.identifier" : "shopping.web.services"
+          },
+          "relationships" : [ {
+            "description" : "Persists data using",
+            "destinationId" : "8",
+            "id" : "22",
+            "sourceId" : "6",
+            "tags" : "Relationship",
+            "technology" : "Python"
+          }, {
+            "description" : "Uses domain models",
+            "destinationId" : "7",
+            "id" : "23",
+            "sourceId" : "6",
+            "tags" : "Relationship",
+            "technology" : "Python"
+          }, {
+            "description" : "Processes payments using",
+            "destinationId" : "13",
+            "id" : "28",
+            "sourceId" : "6",
+            "tags" : "Relationship",
+            "technology" : "HTTPS/API"
+          }, {
+            "description" : "Sends notifications using",
+            "destinationId" : "12",
+            "id" : "34",
+            "sourceId" : "6",
+            "tags" : "Relationship",
+            "technology" : "SMTP/API"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "Python"
+        }, {
+          "description" : "Core domain models",
+          "documentation" : { },
+          "id" : "7",
+          "name" : "Domain Models",
+          "properties" : {
+            "structurizr.dsl.identifier" : "shopping.web.domain"
+          },
+          "tags" : "Element,Component",
+          "technology" : "SQLModel"
+        }, {
+          "description" : "Data access layer with unit of work pattern",
+          "documentation" : { },
+          "id" : "8",
+          "name" : "Repositories",
+          "properties" : {
+            "structurizr.dsl.identifier" : "shopping.web.repositories"
+          },
+          "relationships" : [ {
+            "description" : "Reads from and writes to",
+            "destinationId" : "10",
+            "id" : "24",
+            "sourceId" : "8",
+            "tags" : "Relationship",
+            "technology" : "SQL"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "SQLModel/SQLAlchemy"
+        }, {
+          "description" : "Authentication and authorization using JWT tokens",
+          "documentation" : { },
+          "id" : "9",
+          "name" : "Security Component",
+          "properties" : {
+            "structurizr.dsl.identifier" : "shopping.web.securityComponent"
+          },
+          "tags" : "Element,Component,Security",
+          "technology" : "PyJWT"
+        } ],
+        "description" : "Allows customers to browse products, view product details, and make purchases. Handles JWT authentication.",
+        "documentation" : { },
+        "id" : "4",
+        "name" : "API Application",
+        "properties" : {
+          "structurizr.dsl.identifier" : "shopping.web"
+        },
+        "relationships" : [ {
+          "description" : "Reads from and writes to",
+          "destinationId" : "10",
+          "id" : "25",
+          "linkedRelationshipId" : "24",
+          "sourceId" : "4",
+          "technology" : "SQL"
+        }, {
+          "description" : "Caches data in",
+          "destinationId" : "11",
+          "id" : "27",
+          "linkedRelationshipId" : "26",
+          "sourceId" : "4",
+          "technology" : "Redis Protocol"
+        }, {
+          "description" : "Processes payments using",
+          "destinationId" : "13",
+          "id" : "29",
+          "linkedRelationshipId" : "28",
+          "sourceId" : "4",
+          "technology" : "HTTPS/API"
+        }, {
+          "description" : "Sends notifications using",
+          "destinationId" : "12",
+          "id" : "35",
+          "linkedRelationshipId" : "34",
+          "sourceId" : "4",
+          "technology" : "SMTP/API"
+        } ],
+        "tags" : "Element,Container,Web",
+        "technology" : "FastAPI"
+      }, {
+        "description" : "Stores product information, user data, and order details.",
+        "documentation" : { },
+        "id" : "10",
+        "name" : "Database Schema",
+        "properties" : {
+          "structurizr.dsl.identifier" : "shopping.db"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL"
+      }, {
+        "description" : "Caches the most popular product lists to improve performance.",
+        "documentation" : { },
+        "id" : "11",
+        "name" : "Cache Storage",
+        "properties" : {
+          "structurizr.dsl.identifier" : "shopping.cache"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "Redis"
+      } ],
+      "description" : "Allows customers to search, view and buy products.",
+      "documentation" : {
+        "decisions" : [ {
+          "content" : "# 1. Use FastAPI as Web Framework\n\nDate: 2026-01-25\n\n## Status\n\nAccepted\n\n## Context\n\nWe need a modern Python web framework to build a RESTful API for our e-commerce platform. The framework should provide:\n- High performance for handling concurrent requests\n- Automatic API documentation\n- Data validation\n- Type safety\n- Easy to learn and maintain\n\n## Decision\n\nWe will use FastAPI as the web framework for the Shopping System.\n\n## Consequences\n\n### Positive\n- Excellent performance (comparable to Node.js and Go)\n- Automatic OpenAPI/Swagger documentation generation\n- Built-in request/response validation using Pydantic\n- Native async/await support\n- Type hints throughout the codebase\n- Active community and good documentation\n\n### Negative\n- Relatively newer framework compared to Flask/Django\n- Smaller ecosystem of third-party extensions\n- Team needs to learn async programming patterns\n",
+          "date" : "2026-01-25T00:00:00Z",
+          "format" : "Markdown",
+          "id" : "1",
+          "status" : "Accepted",
+          "title" : "Use FastAPI as Web Framework"
+        }, {
+          "content" : "# 2. Use PostgreSQL as Primary Database\n\nDate: 2026-01-25\n\n## Status\n\nAccepted\n\n## Context\n\nWe need a reliable database system to store product catalog, user data, orders, and transactions. Requirements include:\n- ACID compliance for order and payment transactions\n- Support for complex queries and relationships\n- Proven reliability and performance\n- Good Python ecosystem support\n\n## Decision\n\nWe will use PostgreSQL as the primary relational database.\n\n## Consequences\n\n### Positive\n- Strong ACID guarantees for transactional integrity\n- Rich feature set (JSON support, full-text search, etc.)\n- Excellent performance and scalability\n- Mature ecosystem with good ORMs (SQLAlchemy, SQLModel)\n- Free and open source\n\n### Negative\n- Requires proper schema design and migration management\n- May be overkill for simple use cases\n- Needs regular maintenance (vacuuming, indexing)\n",
+          "date" : "2026-01-25T00:00:00Z",
+          "format" : "Markdown",
+          "id" : "2",
+          "status" : "Accepted",
+          "title" : "Use PostgreSQL as Primary Database"
+        }, {
+          "content" : "# 3. Implement Layered Architecture\n\nDate: 2026-01-25\n\n## Status\n\nAccepted\n\n## Context\n\nWe need a clear architectural pattern to organize code, separate concerns, and make the system maintainable as it grows. The architecture should support:\n- Clear separation between business logic and infrastructure\n- Testability\n- Flexibility to change implementations\n- Easy onboarding for new developers\n\n## Decision\n\nWe will implement a layered architecture with three main layers:\n1. **API Layer**: FastAPI routes, request/response handling\n2. **Service Layer**: Business logic and use cases\n3. **Repository Layer**: Data access with Unit of Work pattern\n\n## Consequences\n\n### Positive\n- Clear separation of concerns\n- Business logic isolated from framework and database\n- Easy to test each layer independently\n- Repository pattern allows switching data sources\n- Follows clean architecture principles\n\n### Negative\n- More boilerplate code compared to simple CRUD\n- Steeper learning curve for developers new to pattern\n- May seem over-engineered for simple operations\n",
+          "date" : "2026-01-25T00:00:00Z",
+          "format" : "Markdown",
+          "id" : "3",
+          "status" : "Accepted",
+          "title" : "Implement Layered Architecture"
+        }, {
+          "content" : "# 4. Use JWT for Authentication\n\nDate: 2026-01-25\n\n## Status\n\nAccepted\n\n## Context\n\nWe need a secure authentication mechanism for the API. The solution should:\n- Be stateless to support horizontal scaling\n- Work well with modern frontend applications\n- Provide both access and refresh token mechanisms\n- Be industry-standard\n\n## Decision\n\nWe will use JWT (JSON Web Tokens) for authentication and authorization.\n\nAccess tokens expire in 15 minutes, refresh tokens in 7 days.\n\n## Consequences\n\n### Positive\n- Stateless authentication enables easy horizontal scaling\n- No server-side session storage required\n- Works seamlessly with SPAs and mobile apps\n- Industry standard with good library support\n- Token contains user claims, reducing database lookups\n\n### Negative\n- Cannot revoke tokens before expiration (without blacklist)\n- Token size larger than session IDs\n- Needs careful key management\n- Requires HTTPS to prevent token theft\n",
+          "date" : "2026-01-25T00:00:00Z",
+          "format" : "Markdown",
+          "id" : "4",
+          "status" : "Accepted",
+          "title" : "Use JWT for Authentication"
+        }, {
+          "content" : "# 5. Use Redis for Caching\n\nDate: 2026-01-25\n\n## Status\n\nAccepted\n\n## Context\n\nProduct listings and popular queries can generate significant database load. We need a caching solution to:\n- Improve response times for frequently accessed data\n- Reduce database load\n- Support high concurrency\n- Be easy to integrate with FastAPI\n\n## Decision\n\nWe will use Redis as an in-memory cache for frequently accessed data such as product lists, categories, and user sessions.\n\n## Consequences\n\n### Positive\n- Extremely fast read performance (sub-millisecond)\n- Reduces database load significantly\n- Built-in expiration mechanisms\n- Rich data structures support\n- Can also be used for rate limiting and session storage\n\n### Negative\n- Additional infrastructure component to manage\n- Cache invalidation complexity\n- Data loss risk if Redis crashes (acceptable for cache)\n- Memory usage needs monitoring\n- Requires cache warming strategy\n",
+          "date" : "2026-01-25T00:00:00Z",
+          "format" : "Markdown",
+          "id" : "5",
+          "status" : "Accepted",
+          "title" : "Use Redis for Caching"
+        }, {
+          "content" : "# 6. Integrate External Payment Gateway\n\nDate: 2026-01-25\n\n## Status\n\nAccepted\n\n## Context\n\nHandling payment processing in-house requires:\n- PCI DSS compliance (extremely complex and costly)\n- Security expertise for handling card data\n- Integration with multiple payment methods\n- Fraud detection and prevention\n\nThis is beyond the scope and capability of our small team.\n\n## Decision\n\nWe will integrate with an external payment gateway (initially Stripe) rather than processing payments directly.\n\nThe integration will be abstracted behind a service layer to allow switching providers if needed.\n\n## Consequences\n\n### Positive\n- No PCI DSS compliance burden\n- Professional fraud detection\n- Multiple payment methods supported\n- Reliable and tested payment processing\n- Webhook notifications for payment events\n- Reduced security risk\n\n### Negative\n- Transaction fees per payment\n- Dependency on third-party availability\n- Limited control over payment flow\n- Must handle webhook reliability\n- Vendor lock-in risk (mitigated by abstraction layer)\n",
+          "date" : "2026-01-25T00:00:00Z",
+          "format" : "Markdown",
+          "id" : "6",
+          "status" : "Accepted",
+          "title" : "Integrate External Payment Gateway"
+        } ],
+        "sections" : [ {
+          "content" : "# Context\r\n\r\n## Overview\r\n\r\nThe Shopping System is a FastAPI-based e-commerce platform that enables customers to browse products, manage their shopping carts, place orders, and make secure payments online.\r\n\r\n## Business Goals\r\n\r\n- Provide a seamless online shopping experience\r\n- Enable secure payment processing\r\n- Maintain product catalog and inventory\r\n- Support user authentication and authorization\r\n- Deliver order notifications to customers\r\n\r\n## Key Stakeholders\r\n\r\n- **Customers**: Browse products, place orders, make payments\r\n- **Administrators**: Manage products, orders, and system configuration\r\n- **Development Team**: Maintain and extend the platform\r\n",
+          "filename" : "01-context.md",
+          "format" : "Markdown",
+          "order" : 1,
+          "title" : ""
+        }, {
+          "content" : "# Functional Overview\r\n\r\n## Core Features\r\n\r\n### Product Management\r\n- Browse product catalog with categories\r\n- Search and filter products\r\n- View detailed product information\r\n- Product reviews and ratings\r\n\r\n### User Management\r\n- User registration and authentication (JWT-based)\r\n- Profile management\r\n- Address management for shipping\r\n\r\n### Shopping Cart\r\n- Add/remove products from cart\r\n- Update product quantities\r\n- View cart summary\r\n\r\n### Order Processing\r\n- Checkout process\r\n- Order creation and tracking\r\n- Order history\r\n\r\n### Payment Processing\r\n- Integration with payment gateway (Stripe)\r\n- Secure payment processing\r\n- Payment status tracking\r\n- Webhook handling for payment events\r\n\r\n### Wishlist\r\n- Save products for later\r\n- Manage wishlist items\r\n",
+          "filename" : "02-functional-overview.md",
+          "format" : "Markdown",
+          "order" : 2,
+          "title" : ""
+        }, {
+          "content" : "# Quality Attributes\r\n\r\n## Security\r\n- JWT-based authentication and authorization\r\n- Secure password hashing\r\n- HTTPS for all communications\r\n- Protection against common web vulnerabilities\r\n- Secure payment processing via external gateway\r\n\r\n## Performance\r\n- Redis caching for frequently accessed data\r\n- Database query optimization\r\n- Connection pooling\r\n- Rate limiting to prevent abuse\r\n\r\n## Scalability\r\n- Stateless application design\r\n- Horizontal scaling capability\r\n- Separated concerns (API, Service, Repository layers)\r\n- Caching strategy to reduce database load\r\n\r\n## Maintainability\r\n- Clean architecture with clear layer separation\r\n- Repository pattern with Unit of Work\r\n- Dependency injection\r\n- Comprehensive error handling\r\n- Structured logging\r\n\r\n## Reliability\r\n- Error handling and validation\r\n- Transaction management\r\n- Webhook retry mechanisms\r\n- Database connection resilience\r\n",
+          "filename" : "03-quality-attributes.md",
+          "format" : "Markdown",
+          "order" : 3,
+          "title" : ""
+        }, {
+          "content" : "# Constraints\r\n\r\n## Technical Constraints\r\n- **Programming Language**: Python 3.x\r\n- **Web Framework**: FastAPI\r\n- **Database**: PostgreSQL\r\n- **Cache**: Redis\r\n- **Payment Gateway**: Stripe (configurable)\r\n\r\n## Deployment Constraints\r\n- Docker containerization\r\n- Docker Compose for local development\r\n- Environment-based configuration\r\n\r\n## External Dependencies\r\n- Payment gateway availability and SLA\r\n- Email service provider availability\r\n- Third-party API rate limits and costs\r\n\r\n## Development Constraints\r\n- RESTful API design principles\r\n- OpenAPI/Swagger documentation\r\n- Asynchronous programming patterns (async/await)\r\n",
+          "filename" : "04-constraints.md",
+          "format" : "Markdown",
+          "order" : 4,
+          "title" : ""
+        }, {
+          "content" : "# Architecture Principles\r\n\r\n## Separation of Concerns\r\nThe application follows a layered architecture:\r\n- **API Layer**: HTTP routing and request/response handling\r\n- **Service Layer**: Business logic implementation\r\n- **Repository Layer**: Data access abstraction\r\n- **Domain Models**: Business entities and rules\r\n\r\n## Dependency Inversion\r\n- High-level modules don't depend on low-level modules\r\n- Both depend on abstractions (interfaces)\r\n- Repository pattern with abstract base classes\r\n\r\n## Single Responsibility\r\n- Each service handles one specific business domain\r\n- Components have well-defined purposes\r\n- Clear boundaries between layers\r\n\r\n## Clean Code\r\n- Explicit is better than implicit\r\n- Type hints throughout the codebase\r\n- Comprehensive docstrings\r\n- Consistent naming conventions\r\n\r\n## API-First Design\r\n- RESTful API design\r\n- Comprehensive input validation (Pydantic schemas)\r\n- Automatic OpenAPI documentation\r\n- Versioned API endpoints (v1)\r\n",
+          "filename" : "05-principles.md",
+          "format" : "Markdown",
+          "order" : 5,
+          "title" : ""
+        } ]
+      },
+      "id" : "3",
+      "name" : "Shopping System",
+      "properties" : {
+        "structurizr.dsl.identifier" : "shopping"
+      },
+      "relationships" : [ {
+        "description" : "Processes payments using",
+        "destinationId" : "13",
+        "id" : "30",
+        "linkedRelationshipId" : "28",
+        "sourceId" : "3",
+        "technology" : "HTTPS/API"
+      }, {
+        "description" : "Sends notifications using",
+        "destinationId" : "12",
+        "id" : "36",
+        "linkedRelationshipId" : "34",
+        "sourceId" : "3",
+        "technology" : "SMTP/API"
+      } ],
+      "tags" : "Element,Software System,Main System"
+    }, {
+      "description" : "Handles sending e-mail notifications to customers.",
+      "documentation" : { },
+      "id" : "12",
+      "name" : "E-mail System",
+      "properties" : {
+        "structurizr.dsl.identifier" : "email"
+      },
+      "relationships" : [ {
+        "description" : "Sends e-mails to",
+        "destinationId" : "1",
+        "id" : "37",
+        "sourceId" : "12",
+        "tags" : "Relationship",
+        "technology" : "SMTP"
+      }, {
+        "description" : "Sends notifications to",
+        "destinationId" : "2",
+        "id" : "38",
+        "sourceId" : "12",
+        "tags" : "Relationship",
+        "technology" : "SMTP"
+      } ],
+      "tags" : "Element,Software System,External System"
+    }, {
+      "description" : "Processes payments and manages checkout sessions.",
+      "documentation" : { },
+      "id" : "13",
+      "name" : "Payment Gateway",
+      "properties" : {
+        "structurizr.dsl.identifier" : "payment"
+      },
+      "relationships" : [ {
+        "description" : "Sends payment webhooks to",
+        "destinationId" : "6",
+        "id" : "31",
+        "sourceId" : "13",
+        "tags" : "Relationship",
+        "technology" : "HTTPS"
+      }, {
+        "description" : "Sends payment webhooks to",
+        "destinationId" : "4",
+        "id" : "32",
+        "linkedRelationshipId" : "31",
+        "sourceId" : "13",
+        "technology" : "HTTPS"
+      }, {
+        "description" : "Sends payment webhooks to",
+        "destinationId" : "3",
+        "id" : "33",
+        "linkedRelationshipId" : "31",
+        "sourceId" : "13",
+        "technology" : "HTTPS"
+      } ],
+      "tags" : "Element,Software System,External System"
+    } ]
+  },
+  "name" : "E-commerce system",
+  "properties" : {
+    "structurizr.inspection.error" : "0",
+    "structurizr.inspection.info" : "0",
+    "structurizr.inspection.ignore" : "0",
+    "structurizr.inspection.warning" : "0"
+  },
+  "views" : {
+    "componentViews" : [ {
+      "containerId" : "4",
+      "dimensions" : {
+        "height" : 2607,
+        "width" : 4570
+      },
+      "elements" : [ {
+        "id" : "1",
+        "x" : 210,
+        "y" : 1015
+      }, {
+        "id" : "2",
+        "x" : 230,
+        "y" : 585
+      }, {
+        "id" : "5",
+        "x" : 1660,
+        "y" : 1087
+      }, {
+        "id" : "6",
+        "x" : 2410,
+        "y" : 1687
+      }, {
+        "id" : "7",
+        "x" : 3160,
+        "y" : 1687
+      }, {
+        "id" : "8",
+        "x" : 3150,
+        "y" : 1335
+      }, {
+        "id" : "9",
+        "x" : 2410,
+        "y" : 1087
+      }, {
+        "id" : "10",
+        "x" : 3895,
+        "y" : 1340
+      }, {
+        "id" : "11",
+        "x" : 1650,
+        "y" : 439
+      }, {
+        "id" : "12",
+        "x" : 180,
+        "y" : 1730
+      }, {
+        "id" : "13",
+        "x" : 185,
+        "y" : 2110
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "WebApplicationComponentDiagram",
+      "name" : "Component View: Shopping System - API Application",
+      "order" : 3,
+      "relationships" : [ {
+        "id" : "16"
+      }, {
+        "id" : "19"
+      }, {
+        "id" : "20"
+      }, {
+        "id" : "21"
+      }, {
+        "id" : "22"
+      }, {
+        "id" : "23"
+      }, {
+        "id" : "24"
+      }, {
+        "id" : "26"
+      }, {
+        "id" : "28",
+        "vertices" : [ {
+          "x" : 1685,
+          "y" : 1975
+        }, {
+          "x" : 780,
+          "y" : 2160
+        } ]
+      }, {
+        "id" : "31",
+        "vertices" : [ {
+          "x" : 580,
+          "y" : 2265
+        }, {
+          "x" : 1970,
+          "y" : 1995
+        }, {
+          "x" : 2155,
+          "y" : 1960
+        } ]
+      }, {
+        "id" : "34",
+        "vertices" : [ {
+          "x" : 985,
+          "y" : 1860
+        } ]
+      }, {
+        "id" : "37"
+      }, {
+        "id" : "38",
+        "vertices" : [ {
+          "x" : 60,
+          "y" : 1875
+        }, {
+          "x" : 65,
+          "y" : 785
+        } ]
+      } ]
+    } ],
+    "configuration" : {
+      "branding" : { },
+      "lastSavedView" : "ShoppingSystemContextDiagram",
+      "styles" : {
+        "elements" : [ {
+          "background" : "#ff6b6b",
+          "shape" : "Person",
+          "tag" : "Admin"
+        }, {
+          "background" : "#85c1e9",
+          "tag" : "Component"
+        }, {
+          "background" : "#1560bd",
+          "tag" : "Container"
+        }, {
+          "shape" : "Cylinder",
+          "tag" : "Database"
+        }, {
+          "color" : "#ffffff",
+          "tag" : "Element"
+        }, {
+          "background" : "#616569",
+          "tag" : "External System"
+        }, {
+          "background" : "#1560bd",
+          "tag" : "Internal System"
+        }, {
+          "background" : "#002366",
+          "color" : "#ffffff",
+          "tag" : "Main System"
+        }, {
+          "background" : "#1560bd",
+          "shape" : "Person",
+          "tag" : "Person"
+        }, {
+          "background" : "#28a745",
+          "shape" : "RoundedBox",
+          "tag" : "Security"
+        }, {
+          "shape" : "WebBrowser",
+          "tag" : "Web"
+        } ]
+      },
+      "terminology" : { }
+    },
+    "containerViews" : [ {
+      "dimensions" : {
+        "height" : 2709,
+        "width" : 3120
+      },
+      "elements" : [ {
+        "id" : "1",
+        "x" : 975,
+        "y" : 159
+      }, {
+        "id" : "2",
+        "x" : 975,
+        "y" : 859
+      }, {
+        "id" : "4",
+        "x" : 1700,
+        "y" : 1238
+      }, {
+        "id" : "10",
+        "x" : 2450,
+        "y" : 1538
+      }, {
+        "id" : "11",
+        "x" : 2450,
+        "y" : 938
+      }, {
+        "id" : "12",
+        "x" : 200,
+        "y" : 909
+      }, {
+        "id" : "13",
+        "x" : 950,
+        "y" : 2168
+      } ],
+      "externalSoftwareSystemBoundariesVisible" : false,
+      "key" : "ShoppingContainerDiagram",
+      "name" : "Container View: Shopping System",
+      "order" : 2,
+      "relationships" : [ {
+        "id" : "14"
+      }, {
+        "id" : "17"
+      }, {
+        "id" : "25"
+      }, {
+        "id" : "27"
+      }, {
+        "id" : "29",
+        "vertices" : [ {
+          "x" : 1433,
+          "y" : 1758
+        } ]
+      }, {
+        "id" : "32",
+        "vertices" : [ {
+          "x" : 1666,
+          "y" : 1947
+        } ]
+      }, {
+        "id" : "35",
+        "vertices" : [ {
+          "x" : 1400,
+          "y" : 1409
+        }, {
+          "x" : 950,
+          "y" : 1409
+        } ]
+      }, {
+        "id" : "37"
+      }, {
+        "id" : "38"
+      } ],
+      "softwareSystemId" : "3"
+    } ],
+    "systemContextViews" : [ {
+      "dimensions" : {
+        "height" : 1748,
+        "width" : 2480
+      },
+      "elements" : [ {
+        "id" : "1",
+        "x" : 45,
+        "y" : 15
+      }, {
+        "id" : "2",
+        "x" : 60,
+        "y" : 495
+      }, {
+        "id" : "3",
+        "x" : 1635,
+        "y" : 965
+      }, {
+        "id" : "12",
+        "x" : 1640,
+        "y" : 170
+      }, {
+        "id" : "13",
+        "x" : 70,
+        "y" : 950
+      } ],
+      "enterpriseBoundaryVisible" : true,
+      "key" : "ShoppingSystemContextDiagram",
+      "name" : "System Context View: Shopping System",
+      "order" : 1,
+      "paperSize" : "A5_Landscape",
+      "relationships" : [ {
+        "id" : "15"
+      }, {
+        "id" : "18"
+      }, {
+        "id" : "30",
+        "vertices" : [ {
+          "x" : 1625,
+          "y" : 1055
+        }, {
+          "x" : 1080,
+          "y" : 1055
+        } ]
+      }, {
+        "id" : "33",
+        "vertices" : [ {
+          "x" : 540,
+          "y" : 1125
+        }, {
+          "x" : 835,
+          "y" : 1120
+        } ]
+      }, {
+        "id" : "36"
+      }, {
+        "id" : "37"
+      }, {
+        "id" : "38"
+      } ],
+      "softwareSystemId" : "3"
+    } ]
+  }
+}
