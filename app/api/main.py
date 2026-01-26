@@ -13,7 +13,7 @@ from app.api.rate_limit import init_redis_rate_limiter
 from app.api.v1.routers import router
 from app.core.config import settings
 from app.core.logger import logger
-from app.db.database import async_engine, init_db
+from app.db.database import init_db
 from app.db.redis_client import redis_client
 
 
@@ -33,7 +33,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: ARG001
     finally:
         logger.info("application_shutting_down")
         await redis_client.close()
-        await async_engine.dispose()
         logger.info("application_stopped")
 
 

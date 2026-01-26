@@ -882,7 +882,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    finally:
-        asyncio.run(async_engine.dispose())
+    main()

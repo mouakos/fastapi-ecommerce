@@ -15,6 +15,8 @@ async_engine = create_async_engine(
     url=settings.database_url,
     echo=False,
     pool_pre_ping=True,  # Verify connections before using them
+    pool_recycle=3600,  # Recycle connections after 1 hour
+    pool_timeout=30,  # Timeout for getting connection from pool
 )
 
 AsyncSessionLocal = async_sessionmaker(
